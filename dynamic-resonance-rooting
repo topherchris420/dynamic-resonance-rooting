@@ -1,41 +1,59 @@
+# Dynamic Resonance Rooting (DRR) Framework
+# Author: Christopher Woodyard (2025)
 
-Dynamic Resonance Rooting (DRR) Framework
-A computational framework for analyzing Complex Adaptive Systems
-
-Author: Christopher Woodyard (2025)
-"""
 
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal
 from scipy.integrate import odeint
-from scipy.spatial.distance import pdist, squareform
-from scipy.stats import entropy
-from sklearn.neighbors import NearestNeighbors
-from sklearn.preprocessing import StandardScaler
+from scipy.spatial import ConvexHull
 import networkx as nx
 from typing import Tuple, Dict, List, Optional
 import warnings
+
+
+# Note: Ensure 'pyinform' is in your requirements.txt
+# pip install pyinform
+from pyinform import transfer_entropy as pyinform_te
+
+# Ignore common warnings for cleaner output
 warnings.filterwarnings('ignore')
+
+
+# To organize this project into a package, you could create the following structure:
+#
+# dynamic-resonance-rooting/
+# ├── drr_framework/
+# │   ├── __init__.py
+# │   ├── analysis.py  (contains DynamicResonanceRooting class)
+# │   ├── benchmarks.py (contains BenchmarkSystems class)
+# │   └── utils.py (for helper functions)
+# ├── notebooks/
+# │   └── DRR_Tutorial.ipynb
+# ├── .gitignore
+# ├── LICENSE
+# ├── README.md
+# └── requirements.txt
+# --------------------------------------------------------------------------
 
 class DynamicResonanceRooting:
     """
-    Dynamic Resonance Rooting framework for Complex Adaptive Systems analysis
+    Dynamic Resonance Rooting framework for Complex Adaptive Systems analysis.
     
-    Integrates three core modules:
-    1. Dynamic Resonance Detection
-    2. Rooting Analysis  
-    3. Resonance Depth Calculation
+    This framework integrates three core modules:
+    1. Dynamic Resonance Detection: Identifies dominant oscillatory patterns.
+    2. Rooting Analysis: Maps causal dependencies using transfer entropy.
+    3. Resonance Depth Calculation: Quantifies the stability of resonances.
     """
     
     def __init__(self, embedding_dim: int = 3, tau: int = 1, sampling_rate: float = 1.0):
         """
-        Initialize DRR framework
+        Initializes the DRR framework.
         
         Args:
-            embedding_dim: Dimension for phase space reconstruction
-            tau: Time delay for embedding
-            sampling_rate: Sampling rate of the data
+            embedding_dim (int): Dimension for phase space reconstruction.
+            tau (int): Time delay for time-delay embedding.
+            sampling_rate (float): The sampling rate of the input data in Hz.
         """
         self.embedding_dim = embedding_dim
         self.tau = tau
@@ -47,401 +65,72 @@ class DynamicResonanceRooting:
         
     def time_delay_embedding(self, data: np.ndarray) -> np.ndarray:
         """
-        Perform time-delay embedding for phase space reconstruction
+        Performs time-delay embedding for phase space reconstruction.
         
         Args:
-            data: 1D time series data
+            data (np.ndarray): 1D time series data.
             
         Returns:
-            Embedded phase space coordinates
+            np.ndarray: The embedded phase space coordinates.
         """
-        N = len(data)
-        M = self.embedding_dim
-        tau = self.tau
+        n = len(data)
+        m = self.embedding_dim
         
-        # Create embedding matrix
-        embedded = np.zeros((N - (M-1)*tau, M))
-        for i in range(M):
-            embedded[:, i] = data[i*tau:N-(M-1-i)*tau]
+        embedded = np.zeros((n - (m - 1) * self.tau, m))
+        for i in range(m):
+            embedded[:, i] = data[i * self.tau : n - (m - 1 - i) * self.tau]
             
         return embedded
     
-    def detect_resonances(self, data: np.ndarray, method: str = 'fft') -> Dict:
+    def detect_resonances(
+        self, 
+        data: np.ndarray, 
+        method: str = 'fft', 
+        peak_height_ratio: float = 0.1
+    ) -> Dict:
         """
-        Dynamic Resonance Detection Module
+        Identifies dominant resonances in the time series data.
         
         Args:
-            data: Time series data (1D or multivariate)
-            method: Method for spectral analysis ('fft' or 'wavelet')
+            data (np.ndarray): Time series data (1D or multivariate).
+            method (str): Method for spectral analysis ('fft' or 'wavelet').
+            peak_height_ratio (float): Ratio of the max power for peak detection.
             
         Returns:
-            Dictionary containing resonance information
+            Dict: A dictionary containing resonance information.
         """
         if data.ndim == 1:
-            # Reconstruct phase space for univariate data
             self.phase_space = self.time_delay_embedding(data)
         else:
-            # Use multivariate data directly
             self.phase_space = data
             
         resonances = {}
         
-        if method == 'fft':
-            # Fourier analysis on each dimension
-            for dim in range(self.phase_space.shape[1]):
-                series = self.phase_space[:, dim]
-                
-                # Compute FFT
+        for dim in range(self.phase_space.shape[1]):
+            series = self.phase_space[:, dim]
+            key = f'dim_{dim}'
+            
+            if method == 'fft':
                 fft_vals = np.fft.fft(series)
-                freqs = np.fft.fftfreq(len(series), 1/self.sampling_rate)
-                
-                # Find dominant frequencies
+                freqs = np.fft.fftfreq(len(series), 1 / self.sampling_rate)
                 power_spectrum = np.abs(fft_vals)**2
-                dominant_indices = signal.find_peaks(power_spectrum, height=np.max(power_spectrum)*0.1)[0]
                 
-                resonances[f'dim_{dim}'] = {
+                # Find dominant frequencies using a configurable peak height
+                dominant_indices, _ = signal.find_peaks(
+                    power_spectrum, height=np.max(power_spectrum) * peak_height_ratio
+                )
+                
+                resonances[key] = {
                     'frequencies': freqs[dominant_indices],
                     'amplitudes': np.abs(fft_vals[dominant_indices]),
                     'power': power_spectrum[dominant_indices]
                 }
                 
-        elif method == 'wavelet':
-            # Wavelet analysis for time-frequency representation
-            from scipy.signal import morlet2
-            
-            for dim in range(self.phase_space.shape[1]):
-                series = self.phase_space[:, dim]
-                
-                # Create frequency range
-                freqs = np.logspace(-2, 1, 50)
-                
-                # Compute continuous wavelet transform
-                widths = self.sampling_rate / freqs
+            elif method == 'wavelet':
+                from scipy.signal import morlet2
+                freqs_wavelet = np.logspace(-2, 1, 50)
+                widths = self.sampling_rate / freqs_wavelet
                 cwt_matrix = signal.cwt(series, morlet2, widths)
                 
-                resonances[f'dim_{dim}'] = {
-                    'frequencies': freqs,
-                    'cwt_matrix': cwt_matrix,
-                    'time_freq_power': np.abs(cwt_matrix)**2
-                }
-        
-        self.resonances = resonances
-        return resonances
-    
-    def transfer_entropy(self, x: np.ndarray, y: np.ndarray, k: int = 1) -> float:
-        """
-        Calculate transfer entropy from x to y
-        
-        Args:
-            x, y: Time series data
-            k: Number of lags to consider
-            
-        Returns:
-            Transfer entropy value
-        """
-        # Simple implementation - in practice, more sophisticated methods needed
-        def _entropy(data):
-            _, counts = np.unique(data, return_counts=True)
-            return entropy(counts)
-        
-        # Discretize data for entropy calculation
-        x_disc = np.digitize(x, bins=np.percentile(x, np.linspace(0, 100, 11)))
-        y_disc = np.digitize(y, bins=np.percentile(y, np.linspace(0, 100, 11)))
-        
-        # Calculate conditional entropies
-        n = len(x_disc) - k
-        
-        # Joint distributions
-        xy_joint = np.column_stack([x_disc[:-k], y_disc[k:]])
-        y_future = y_disc[k:]
-        y_past = y_disc[:-k]
-        
-        # Transfer entropy calculation (simplified)
-        h_y_future = _entropy(y_future)
-        h_y_future_given_past = h_y_future - _entropy(y_past)  # Simplified
-        h_y_future_given_xy = h_y_future - _entropy(xy_joint[:, 0]) - _entropy(xy_joint[:, 1])  # Simplified
-        
-        te = max(0, h_y_future_given_past - h_y_future_given_xy)
-        return te
-    
-    def rooting_analysis(self, multivariate_data: np.ndarray) -> nx.DiGraph:
-        """
-        Rooting Analysis Module - construct influence network
-        
-        Args:
-            multivariate_data: Multivariate time series data
-            
-        Returns:
-            NetworkX directed graph representing influence network
-        """
-        n_vars = multivariate_data.shape[1]
-        G = nx.DiGraph()
-        
-        # Add nodes
-        for i in range(n_vars):
-            G.add_node(i, label=f'Variable_{i}')
-        
-        # Calculate transfer entropy between all pairs
-        influence_matrix = np.zeros((n_vars, n_vars))
-        
-        for i in range(n_vars):
-            for j in range(n_vars):
-                if i != j:
-                    te = self.transfer_entropy(multivariate_data[:, i], multivariate_data[:, j])
-                    influence_matrix[i, j] = te
-                    
-                    # Add edge if transfer entropy is significant
-                    if te > np.percentile(influence_matrix[influence_matrix > 0], 75):
-                        G.add_edge(i, j, weight=te)
-        
-        self.influence_network = G
-        return G
-    
-    def calculate_basin_volume(self, attractor_points: np.ndarray) -> float:
-        """
-        Estimate basin of attraction volume using convex hull
-        
-        Args:
-            attractor_points: Points on the attractor
-            
-        Returns:
-            Estimated basin volume
-        """
-        from scipy.spatial import ConvexHull
-        
-        try:
-            hull = ConvexHull(attractor_points)
-            return hull.volume
-        except:
-            # Fallback to bounding box volume
-            ranges = np.ptp(attractor_points, axis=0)
-            return np.prod(ranges)
-    
-    def calculate_energy_threshold(self, attractor_points: np.ndarray) -> float:
-        """
-        Estimate energy threshold for escaping attractor
-        
-        Args:
-            attractor_points: Points on the attractor
-            
-        Returns:
-            Energy threshold estimate
-        """
-        # Calculate distances from centroid
-        centroid = np.mean(attractor_points, axis=0)
-        distances = np.linalg.norm(attractor_points - centroid, axis=1)
-        
-        # Energy threshold as function of maximum distance
-        return np.percentile(distances, 95)
-    
-    def calculate_temporal_persistence(self, resonance_data: Dict) -> float:
-        """
-        Calculate temporal persistence of resonance
-        
-        Args:
-            resonance_data: Resonance information from detection module
-            
-        Returns:
-            Persistence score
-        """
-        # Simplified persistence calculation based on amplitude stability
-        if 'amplitudes' in resonance_data:
-            amplitudes = resonance_data['amplitudes']
-            return 1.0 / (1.0 + np.std(amplitudes) / np.mean(amplitudes))
-        return 0.5
-    
-    def calculate_resonance_depth(self, resonance_key: str) -> float:
-        """
-        Resonance Depth Calculation Module
-        
-        Args:
-            resonance_key: Key identifying the resonance
-            
-        Returns:
-            Resonance depth value
-        """
-        if self.phase_space is None or resonance_key not in self.resonances:
-            return 0.0
-        
-        # Component calculations
-        basin_volume = self.calculate_basin_volume(self.phase_space)
-        energy_threshold = self.calculate_energy_threshold(self.phase_space)
-        temporal_persistence = self.calculate_temporal_persistence(self.resonances[resonance_key])
-        
-        # Composite resonance depth metric
-        # Normalize components and combine
-        normalized_volume = basin_volume / (basin_volume + 1)
-        normalized_energy = energy_threshold / (energy_threshold + 1)
-        
-        resonance_depth = (normalized_volume * normalized_energy * temporal_persistence) ** (1/3)
-        
-        self.resonance_depths[resonance_key] = resonance_depth
-        return resonance_depth
-    
-    def analyze_system(self, data: np.ndarray, multivariate: bool = False) -> Dict:
-        """
-        Complete DRR analysis pipeline
-        
-        Args:
-            data: Time series data
-            multivariate: Whether data is multivariate
-            
-        Returns:
-            Complete analysis results
-        """
-        results = {}
-        
-        # Step 1: Dynamic Resonance Detection
-        print("Performing Dynamic Resonance Detection...")
-        resonances = self.detect_resonances(data)
-        results['resonances'] = resonances
-        
-        # Step 2: Rooting Analysis (if multivariate)
-        if multivariate and data.ndim > 1:
-            print("Performing Rooting Analysis...")
-            influence_network = self.rooting_analysis(data)
-            results['influence_network'] = influence_network
-        
-        # Step 3: Resonance Depth Calculation
-        print("Calculating Resonance Depths...")
-        depths = {}
-        for key in resonances.keys():
-            depth = self.calculate_resonance_depth(key)
-            depths[key] = depth
-        results['resonance_depths'] = depths
-        
-        return results
-    
-    def plot_results(self, results: Dict, data: np.ndarray):
-        """
-        Visualize DRR analysis results
-        """
-        fig, axes = plt.subplots(2, 2, figsize=(15, 12))
-        
-        # Plot 1: Original time series
-        axes[0, 0].plot(data[:, 0] if data.ndim > 1 else data)
-        axes[0, 0].set_title('Original Time Series')
-        axes[0, 0].set_xlabel('Time')
-        axes[0, 0].set_ylabel('Amplitude')
-        
-        # Plot 2: Phase space reconstruction
-        if self.phase_space is not None and self.phase_space.shape[1] >= 2:
-            axes[0, 1].plot(self.phase_space[:, 0], self.phase_space[:, 1], alpha=0.7)
-            axes[0, 1].set_title('Phase Space Reconstruction')
-            axes[0, 1].set_xlabel('x(t)')
-            axes[0, 1].set_ylabel('x(t+τ)')
-        
-        # Plot 3: Resonance depths
-        if 'resonance_depths' in results:
-            depths = list(results['resonance_depths'].values())
-            keys = list(results['resonance_depths'].keys())
-            axes[1, 0].bar(range(len(depths)), depths)
-            axes[1, 0].set_title('Resonance Depths')
-            axes[1, 0].set_xlabel('Resonance')
-            axes[1, 0].set_ylabel('Depth')
-            axes[1, 0].set_xticks(range(len(depths)))
-            axes[1, 0].set_xticklabels(keys, rotation=45)
-        
-        # Plot 4: Power spectrum
-        if 'resonances' in results and 'dim_0' in results['resonances']:
-            res = results['resonances']['dim_0']
-            if 'frequencies' in res and 'power' in res:
-                axes[1, 1].semilogy(res['frequencies'], res['power'])
-                axes[1, 1].set_title('Power Spectrum')
-                axes[1, 1].set_xlabel('Frequency')
-                axes[1, 1].set_ylabel('Power')
-        
-        plt.tight_layout()
-        plt.show()
-
-
-# Benchmark Systems for Validation
-class BenchmarkSystems:
-    """
-    Benchmark chaotic systems for DRR validation
-    """
-    
-    @staticmethod
-    def lorenz_system(t, state, sigma=10.0, rho=28.0, beta=8.0/3.0):
-        """Lorenz system equations"""
-        x, y, z = state
-        return [
-            sigma * (y - x),
-            x * (rho - z) - y,
-            x * y - beta * z
-        ]
-    
-    @staticmethod
-    def rossler_system(t, state, a=0.2, b=0.2, c=5.7):
-        """Rössler system equations"""
-        x, y, z = state
-        return [
-            -y - z,
-            x + a * y,
-            b + z * (x - c)
-        ]
-    
-    @staticmethod
-    def generate_lorenz_data(duration=50, dt=0.01, initial_state=[1.0, 1.0, 1.0]):
-        """Generate Lorenz attractor data"""
-        t = np.arange(0, duration, dt)
-        trajectory = odeint(lambda state, t: BenchmarkSystems.lorenz_system(t, state), 
-                          initial_state, t)
-        return t, trajectory
-    
-    @staticmethod
-    def generate_rossler_data(duration=50, dt=0.01, initial_state=[1.0, 1.0, 1.0]):
-        """Generate Rössler attractor data"""
-        t = np.arange(0, duration, dt)
-        trajectory = odeint(lambda state, t: BenchmarkSystems.rossler_system(t, state), 
-                          initial_state, t)
-        return t, trajectory
-
-
-def demo_drr_framework():
-    """
-    Demonstration of the DRR framework using benchmark systems
-    """
-    print("=== Dynamic Resonance Rooting Framework Demo ===\n")
-    
-    # Initialize DRR framework
-    drr = DynamicResonanceRooting(embedding_dim=3, tau=10, sampling_rate=100)
-    
-    # Generate benchmark data
-    print("Generating Lorenz attractor data...")
-    t_lorenz, lorenz_data = BenchmarkSystems.generate_lorenz_data(duration=20, dt=0.01)
-    
-    print("Generating Rössler attractor data...")
-    t_rossler, rossler_data = BenchmarkSystems.generate_rossler_data(duration=20, dt=0.01)
-    
-    # Analyze Lorenz system
-    print("\n=== Analyzing Lorenz System ===")
-    lorenz_results = drr.analyze_system(lorenz_data, multivariate=True)
-    
-    print("Lorenz Resonance Depths:")
-    for key, depth in lorenz_results['resonance_depths'].items():
-        print(f"  {key}: {depth:.4f}")
-    
-    # Analyze Rössler system
-    print("\n=== Analyzing Rössler System ===")
-    drr_rossler = DynamicResonanceRooting(embedding_dim=3, tau=10, sampling_rate=100)
-    rossler_results = drr_rossler.analyze_system(rossler_data, multivariate=True)
-    
-    print("Rössler Resonance Depths:")
-    for key, depth in rossler_results['resonance_depths'].items():
-        print(f"  {key}: {depth:.4f}")
-    
-    # Plot results
-    print("\nGenerating visualizations...")
-    drr.plot_results(lorenz_results, lorenz_data)
-    
-    return lorenz_results, rossler_results
-
-
-if __name__ == "__main__":
-    # Run demonstration
-    lorenz_results, rossler_results = demo_drr_framework()
-    
-    print("\n=== Demo Complete ===")
-    print("The DRR framework successfully analyzed both benchmark systems.")
-    print("Check the generated plots for visual analy
+                resonances[key] = {
+                    'frequencies
