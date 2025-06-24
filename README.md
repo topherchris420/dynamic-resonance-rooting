@@ -33,7 +33,7 @@ The Dynamic Resonance Rooting (DRR) framework provides a unified approach to und
 
 1.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/yourusername/dynamic-resonance-rooting.git](https://github.com/yourusername/dynamic-resonance-rooting.git)
+    git clone [https://github.com/topherchris420/dynamic-resonance-rooting.git](https://github.com/topherchris420/dynamic-resonance-rooting.git)
     cd dynamic-resonance-rooting
     ```
 
