@@ -1,6 +1,7 @@
 # Dynamic Resonance Rooting (DRR) Framework
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Tests](https://github.com/yourusername/dynamic-resonance-rooting/actions/workflows/python-app.yml/badge.svg)](https://github.com/yourusername/dynamic-resonance-rooting/actions/workflows/python-app.yml)
 
 A computational framework for analyzing Complex Adaptive Systems, based on the research paper "Dynamic Resonance Rooting: A Computational Framework for Complex Adaptive Systems" by Christopher Woodyard.
 
@@ -25,8 +26,8 @@ The Dynamic Resonance Rooting (DRR) framework provides a unified approach to und
 
 ### Prerequisites
 
--   Python 3.8 or higher
--   `pip` and `venv` for package management
+* Python 3.8 or higher
+* `pip` and `venv` for package management
 
 ### Installation
 
@@ -47,6 +48,26 @@ The Dynamic Resonance Rooting (DRR) framework provides a unified approach to und
     pip install -r requirements.txt
     ```
 
-## Project Structure
+## Usage
 
-I recommend the following project structure for scalability and maintainability:
+To get started with the DRR framework, please see the tutorial notebook:
+
+* [DRR_Tutorial.ipynb](notebooks/DRR_Tutorial.ipynb)
+
+This notebook provides a step-by-step guide on how to use the framework for analyzing time-series data.
+
+## Testing
+
+To run the test suite, use `pytest`:
+
+```bash
+pytest
+```
+
+## Contributing
+
+Contributions are welcome! Please open an issue or submit a pull request if you have any improvements or suggestions.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
