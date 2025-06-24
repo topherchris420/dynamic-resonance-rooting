@@ -1,0 +1,22 @@
+# Configuration for DRR Analysis
+
+# System settings
+system: 'lorenz' # 'lorenz', 'rossler', or 'physio'
+is_multivariate: true
+
+# Data generation/loading parameters
+data:
+  source: 'generate' # 'generate' or 'file'
+  file_path: 'path/to/your/data.csv' # if source is 'file'
+  duration: 30
+  dt: 0.01
+
+# DRR Framework parameters
+drr_parameters:
+  embedding_dim: 3
+  tau: 10
+  sampling_rate: 100
+
+# Analysis modules
+analysis:
+  resonance_detection_method: 'fft' # 'fft' or 'wavelet'
