@@ -1,22 +1,66 @@
 # Configuration for DRR Analysis
 
-# System settings
-system: 'lorenz' # 'lorenz', 'rossler', or 'physio'
-is_multivariate: true
-
 # Data generation/loading parameters
 data:
-  source: 'generate' # 'generate' or 'file'
-  file_path: 'path/to/your/data.csv' # if source is 'file'
-  duration: 30
-  dt: 0.01
+  source: 'file'
+  file_path: 'data/uci_har_processed.csv'
+  sampling_rate: 50
+  duration: null
+  dt: 0.02
 
-# DRR Framework parameters
-drr_parameters:
-  embedding_dim: 3
-  tau: 10
-  sampling_rate: 100
+# Datasets definition for loader
+datasets:
+  uci_har:
+    path: data/uci_har_processed.csv
+    sampling_rate: 50
+    columns:
+      - body_acc_x
+      - body_acc_y
+      - body_acc_z
+      - body_gyro_x
+      - body_gyro_y
+      - body_gyro_z
+      - acc_magnitude
+      - gyro_magnitude
+      - acc_gyro_correlation
+    description: 'UCI Human Activity Recognition Dataset - Smartphone Sensor Data'
 
 # Analysis modules
 analysis:
-  resonance_detection_method: 'fft' # 'fft' or 'wavelet'
+  methods:
+    - resonance_detection
+    - phase_space
+    - spectral_analysis
+  window_size: 512
+  overlap: 0.5
+  frequency_range:
+    - 0.1
+    - 25.0
+
+# Resonance detection parameters
+resonance_detection:
+  min_frequency: 0.1
+  max_frequency: 25.0
+  prominence_threshold: 0.1
+  persistence_threshold: 0.05
+
+# Phase space reconstruction parameters
+phase_space:
+  embedding_dimension: 3
+  time_delay: 1
+  method: 'takens'
+
+# Visualization settings
+visualization:
+  save_plots: True
+  plot_format: 'png'
+  dpi: 300
+  output_dir: 'results'
+
+# Output settings
+output:
+  save_results: True
+  results_dir: 'results'
+  export_format:
+    - csv
+    - json
