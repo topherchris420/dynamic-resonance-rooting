@@ -1,7 +1,7 @@
 # Dynamic Resonance Rooting (DRR) Framework
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://github.com/yourusername/dynamic-resonance-rooting/actions/workflows/python-app.yml/badge.svg)](https://github.com/yourusername/dynamic-resonance-rooting/actions/workflows/python-app.yml)
+[![Tests](https://github.com/topherchris420/dynamic-resonance-rooting/actions/workflows/python-app.yml/badge.svg)](https://github.com/yourusername/dynamic-resonance-rooting/actions/workflows/python-app.yml)
 
 A computational framework for analyzing Complex Adaptive Systems, based on the research paper "Dynamic Resonance Rooting: A Computational Framework for Complex Adaptive Systems" by Christopher Woodyard.
 
