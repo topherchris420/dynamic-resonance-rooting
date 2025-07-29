@@ -1,3 +1,3 @@
 #!/bin/bash
-export PYTHONPATH=.
+pip install -e .
 pytest
