@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from drr_framework.modules import ResonanceDetector, RootingAnalyzer, DepthCalculator
+from drr_framework.modules import ResonanceDetector, RootingAnalyzer, DepthCalculator, AnomalyDetector
 from drr_framework.benchmarks import BenchmarkSystems
 from drr_framework.realtime import RealTimeDRR
 
@@ -10,7 +10,7 @@ def test_resonance_detector():
     """
     data = np.sin(np.linspace(0, 100, 1000))
     detector = ResonanceDetector()
-    result = detector.detect(data)
+    result = detector.detect(data, sampling_rate=100)
     assert 'dominant_freq' in result
     assert len(result['dominant_freq']) > 0
 
@@ -30,9 +30,17 @@ def test_depth_calculator():
     """
     data = np.random.rand(100)
     calculator = DepthCalculator()
-    result = calculator.calculate(data, {})
+    result = calculator.calculate(data, window_size=10)
     assert 'resonance_depth' in result
     assert isinstance(result['resonance_depth'], float)
+
+def test_anomaly_detector():
+    """
+    Tests the AnomalyDetector module.
+    """
+    detector = AnomalyDetector(threshold=0.5)
+    assert detector.detect(0.6) is True
+    assert detector.detect(0.4) is False
 
 def test_benchmark_systems():
     """
@@ -50,14 +58,19 @@ def test_benchmark_systems():
     assert len(t) == 100
     assert data.shape == (100, 2)
 
+    t, data = BenchmarkSystems.generate_heston_data(duration=1, dt=1/252)
+    assert len(t) == 252
+    assert data.shape == (252, 2)
+
 def test_real_time_drr():
     """
     Tests the RealTimeDRR module.
     """
-    rt_drr = RealTimeDRR(window_size=10, threshold=0.5)
+    rt_drr = RealTimeDRR(window_size=10, n_variables=2, threshold=0.5)
     for i in range(10):
-        result = rt_drr.process_data_point(np.random.rand())
+        result = rt_drr.process_data_point(np.random.rand(2))
     assert result is not None
-    assert 'resonances' in result
-    assert 'depth' in result
-    assert 'anomaly' in result
+    assert len(result) == 2
+    assert 'resonances' in result[0]
+    assert 'depth' in result[0]
+    assert 'anomaly' in result[0]

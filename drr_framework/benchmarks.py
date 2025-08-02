@@ -19,6 +19,30 @@ class BenchmarkSystems:
         return t, xyz
 
     @staticmethod
+    def generate_heston_data(duration=252, dt=1/252, initial_state={'s0': 100, 'v0': 0.04}):
+        """
+        Generates data from the Heston model for stochastic volatility.
+        """
+        print("Generating Heston model data...")
+        n_steps = int(duration * (1/dt))
+        s = np.zeros(n_steps)
+        v = np.zeros(n_steps)
+        s[0] = initial_state['s0']
+        v[0] = initial_state['v0']
+
+        kappa, theta, sigma, rho = 2.0, 0.04, 0.2, -0.7
+
+        for i in range(1, n_steps):
+            w_s = np.random.normal()
+            w_v = rho * w_s + np.sqrt(1 - rho**2) * np.random.normal()
+
+            s[i] = s[i-1] * np.exp((0.05 - 0.5 * v[i-1]) * dt + np.sqrt(v[i-1] * dt) * w_s)
+            v[i] = np.maximum(0, v[i-1] + kappa * (theta - v[i-1]) * dt + sigma * np.sqrt(v[i-1] * dt) * w_v)
+
+        t = np.linspace(0, duration, n_steps)
+        return t, np.vstack((s, v)).T
+
+    @staticmethod
     def generate_fitzhugh_nagumo_data(duration=500, dt=0.1, initial_state=[0.1, 0.1]):
         """
         Generates data from the FitzHugh-Nagumo model.
