@@ -1,89 +1,87 @@
 import numpy as np
-import pytest
-from drr_framework.modules import ResonanceDetector, RootingAnalyzer, DepthCalculator, AnomalyDetector
-from drr_framework.benchmarks import BenchmarkSystems
-from drr_framework.realtime import RealTimeDRR
+from collections import deque
+from .modules import ResonanceDetector, DepthCalculator, AnomalyDetector
 
-def test_resonance_detector():
+class RealTimeDRR:
     """
-    Tests the ResonanceDetector module.
+    Performs real-time DRR analysis on streaming data.
     """
-    data = np.sin(np.linspace(0, 100, 1000))
-    detector = ResonanceDetector()
-    result = detector.detect(data, sampling_rate=100)
-    assert 'dominant_freq' in result
-    assert isinstance(result['dominant_freq'], np.ndarray)
 
-def test_rooting_analyzer():
-    """
-    Tests the RootingAnalyzer module.
-    """
-    data = np.random.rand(100, 2)
-    analyzer = RootingAnalyzer()
-    result = analyzer.analyze(data)
-    assert 'transfer_entropy' in result
-    assert result['transfer_entropy'].shape == (2, 2)
+    def __init__(self, window_size: int, n_variables: int = 1, threshold: float = 0.5):
+        """
+        Initializes the real-time DRR analyzer.
 
-def test_depth_calculator():
-    """
-    Tests the DepthCalculator module.
-    """
-    data = np.random.rand(100)
-    calculator = DepthCalculator()
-    result = calculator.calculate(data, window_size=10)
-    assert 'resonance_depth' in result
-    assert isinstance(result['resonance_depth'], float)
+        Args:
+            window_size (int): The size of the sliding window.
+            n_variables (int): The number of variables in the time series.
+            threshold (float): The anomaly detection threshold.
+        """
+        self.window_size = window_size
+        self.n_variables = n_variables
+        self.data_window = deque(maxlen=window_size)
+        self.resonance_detector = ResonanceDetector()
+        self.depth_calculator = DepthCalculator()
+        self.anomaly_detector = AnomalyDetector(threshold)
 
-def test_anomaly_detector():
-    """
-    Tests the AnomalyDetector module.
-    """
-    detector = AnomalyDetector(threshold=0.5)
-    assert detector.detect(0.6) is True
-    assert detector.detect(0.4) is False
+    def process_data_point(self, data_point: np.ndarray) -> dict:
+        """
+        Processes a single data point.
 
-def test_benchmark_systems():
-    """
-    Tests the BenchmarkSystems module.
-    """
-    # Test Lorenz system
-    t, data = BenchmarkSystems.generate_lorenz_data(duration=1, dt=0.01)
-    assert len(t) == 100
-    assert data.shape == (100, 3)
+        Args:
+            data_point: The new data point, shape (n_variables,) or scalar.
 
-    # Test Rossler system
-    t, data = BenchmarkSystems.generate_rossler_data(duration=1, dt=0.01)
-    assert len(t) == 100
-    assert data.shape == (100, 3)
+        Returns:
+            dict: A dictionary of analysis results, including any detected anomalies.
+        """
+        # Handle scalar input for single variable case
+        if np.isscalar(data_point):
+            if self.n_variables != 1:
+                raise ValueError(f"Expected {self.n_variables} variables, got scalar value")
+            data_point = np.array([data_point])
+        else:
+            data_point = np.asarray(data_point)
+            if data_point.shape != (self.n_variables,):
+                raise ValueError(f"data_point must have shape ({self.n_variables},), got {data_point.shape}")
 
-def test_real_time_drr():
-    """
-    Tests the RealTimeDRR module.
-    """
-    rt_drr = RealTimeDRR(window_size=10, n_variables=2, threshold=0.5)
-    
-    # Feed it 10 data points to fill the window
-    result = None
-    for i in range(10):
-        result = rt_drr.process_data_point(np.random.rand(2))
-    
-    # Should have a result after 10 points
-    assert result is not None
-    assert len(result) == 2  # 2 variables
-    assert 'resonances' in result[0]
-    assert 'depth' in result[0]
-    assert 'anomaly' in result[0]
+        self.data_window.append(data_point)
 
-def test_real_time_drr_single_variable():
-    """
-    Test RealTimeDRR with single variable (scalar input).
-    """
-    rt_drr = RealTimeDRR(window_size=5, n_variables=1, threshold=0.5)
-    
-    # Feed scalar values
-    result = None
-    for i in range(5):
-        result = rt_drr.process_data_point(np.random.rand())
-    
-    assert result is not None
-    assert len(result) == 1  # 1 variable
+        if len(self.data_window) == self.window_size:
+            data_array = np.array(self.data_window)
+            results = []
+            
+            for i in range(self.n_variables):
+                series = data_array[:, i]
+                
+                try:
+                    resonances = self.resonance_detector.detect(series)
+                    depth = self.depth_calculator.calculate(series, self.window_size)
+                    anomaly = self.anomaly_detector.detect(depth['resonance_depth'])
+                    
+                    results.append({
+                        'resonances': resonances, 
+                        'depth': depth, 
+                        'anomaly': anomaly
+                    })
+                except Exception as e:
+                    # Handle errors gracefully
+                    print(f"Warning: Error processing variable {i}: {e}")
+                    results.append({
+                        'resonances': {'dominant_freq': np.array([])}, 
+                        'depth': {'resonance_depth': 0.0}, 
+                        'anomaly': False,
+                        'error': str(e)
+                    })
+            
+            return results
+        else:
+            return None
+
+    def reset(self):
+        """Reset the data window"""
+        self.data_window.clear()
+
+    def get_window_data(self):
+        """Get current window data as numpy array"""
+        if len(self.data_window) == 0:
+            return None
+        return np.array(self.data_window)
