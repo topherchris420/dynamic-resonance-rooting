@@ -8,21 +8,25 @@ Author: Christopher Woodyard
 License: MIT
 """
 
-from .analysis import DynamicResonanceRooting
+# Only import modules that actually exist in your current structure
 from .benchmarks import BenchmarkSystems
 from .modules import ResonanceDetector, RootingAnalyzer, DepthCalculator, AnomalyDetector
 from .realtime import RealTimeDRR
+
+# Comment out until you create analysis.py:
+# from .analysis import DynamicResonanceRooting
 
 __version__ = "0.1.0"
 __author__ = "Christopher Woodyard"
 __email__ = "ciao_chris@example.com"
 
 __all__ = [
-    'DynamicResonanceRooting',
     'BenchmarkSystems', 
     'ResonanceDetector',
     'RootingAnalyzer',
     'DepthCalculator',
     'AnomalyDetector',
     'RealTimeDRR'
+    # Add this back when you create analysis.py:
+    # 'DynamicResonanceRooting',
 ]
