@@ -1,0 +1,30 @@
+body {
+  margin: 0;
+  background-color: #000;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+  position: relative;
+}
+
+.axis {
+  position: absolute;
+  background-color: rgba(0, 255, 255, 0.2);
+  box-shadow: 0 0 15px 3px rgba(0, 255, 255, 0.8);
+}
+
+.x-axis {
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  transform: translateY(-50%);
+}
+
+.y-axis {
+  top: 0;
+  left: 50%;
+  width: 2px;
+  height: 100%;
+  transform: translateX(-50%);
+}
