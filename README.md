@@ -34,7 +34,7 @@ The DRR framework aims to provide:
 ## Installation:
 ```bash
 # Clone the repository
-git clone https://github.com/topherchris420/dynamic-resonance-rooting.git
+git clone topherchris420/dynamic-resonance-rooting.git
 cd dynamic-resonance-rooting
 
 # Install required dependencies
