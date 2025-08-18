@@ -11,7 +11,7 @@ project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(project_root)
 
 from drr_framework.analysis import DynamicResonanceRooting
-from drr_framework.models import BenchmarkSystems
+from drr_framework.benchmarks import BenchmarkSystems
 
 def load_data(config: Dict[str, Any]) -> np.ndarray:
     """
