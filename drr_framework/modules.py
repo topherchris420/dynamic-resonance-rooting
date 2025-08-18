@@ -2,6 +2,7 @@ import numpy as np
 from scipy.fft import fft
 from scipy.signal import find_peaks
 import pandas as pd
+from sklearn.cluster import KMeans
 
 # Handle pyinform import gracefully
 try:
@@ -12,12 +13,76 @@ except ImportError:
     print("Warning: pyinform not available. Transfer entropy analysis will be limited.")
 
 
+class MarkovChain:
+    """
+    A class to represent a first-order Markov chain.
+    """
+
+    def __init__(self, states: np.ndarray):
+        """
+        Initializes the MarkovChain object.
+        Args:
+            states (np.ndarray): A 1D array of discrete states.
+        """
+        self.states = states
+        self.unique_states = np.unique(states)
+        self.n_states = len(self.unique_states)
+        self.state_map = {state: i for i, state in enumerate(self.unique_states)}
+
+        self.transition_matrix = self._calculate_transition_matrix()
+        self.stationary_distribution = self._calculate_stationary_distribution()
+
+    def _calculate_transition_matrix(self) -> np.ndarray:
+        """
+        Calculates the transition matrix from the sequence of states.
+        Returns:
+            np.ndarray: The transition matrix.
+        """
+        matrix = np.zeros((self.n_states, self.n_states))
+        for i in range(len(self.states) - 1):
+            current_state_idx = self.state_map[self.states[i]]
+            next_state_idx = self.state_map[self.states[i+1]]
+            matrix[current_state_idx, next_state_idx] += 1
+
+        # Normalize rows to get probabilities
+        row_sums = matrix.sum(axis=1, keepdims=True)
+        # Avoid division by zero for states that are not visited
+        row_sums[row_sums == 0] = 1
+        return matrix / row_sums
+
+    def _calculate_stationary_distribution(self) -> np.ndarray:
+        """
+        Calculates the stationary distribution of the Markov chain.
+        This is the left eigenvector of the transition matrix with eigenvalue 1.
+        Returns:
+            np.ndarray: The stationary distribution.
+        """
+        try:
+            # We need to find the eigenvector of the transposed matrix
+            eigenvalues, eigenvectors = np.linalg.eig(self.transition_matrix.T)
+
+            # Find the eigenvector corresponding to the eigenvalue 1
+            one_eigenvalue_idx = np.isclose(eigenvalues, 1)
+
+            if np.any(one_eigenvalue_idx):
+                stationary_vector = eigenvectors[:, one_eigenvalue_idx].flatten().real
+                # Normalize to get a probability distribution
+                return stationary_vector / stationary_vector.sum()
+            else:
+                # Fallback for chains that may not have a clear stationary distribution
+                # (e.g., periodic chains)
+                return np.ones(self.n_states) / self.n_states
+        except np.linalg.LinAlgError:
+            # Fallback if eigenvalue decomposition fails
+            return np.ones(self.n_states) / self.n_states
+
+
 class ResonanceDetector:
     """
     Detects resonances in a time series.
     """
 
-    def detect(self, data: np.ndarray, method: str = 'fft', sampling_rate: int = 100) -> dict:
+    def detect(self, data: np.ndarray, method: str = 'fft', sampling_rate: int = 100, n_clusters: int = 4) -> dict:
         """
         Detects resonances using the specified method.
         Args:
@@ -26,6 +91,8 @@ class ResonanceDetector:
                                      Defaults to 'fft'.
             sampling_rate (int, optional): The sampling rate of the time series.
                                            Defaults to 100.
+            n_clusters (int, optional): The number of clusters to use for the Markov method.
+                                        Defaults to 4.
         Returns:
             dict: A dictionary of detected resonances.
         """
@@ -34,6 +101,8 @@ class ResonanceDetector:
         elif method == 'wavelet':
             # Placeholder for wavelet-based detection
             return self._detect_with_wavelet(data)
+        elif method == 'markov':
+            return self._detect_with_markov(data, n_clusters)
         else:
             raise ValueError(f"Unknown resonance detection method: {method}")
 
@@ -58,6 +127,31 @@ class ResonanceDetector:
         # In a real implementation, you would use a library like PyWavelets
         print("Wavelet detection is not yet implemented.")
         return {'dominant_freq': np.array([])}
+
+    def _detect_with_markov(self, data: np.ndarray, n_clusters: int) -> dict:
+        """
+        Detects resonances using a Markov chain analysis of clustered states.
+        """
+        if data.ndim == 1:
+            data = data.reshape(-1, 1)
+
+        # 1. Cluster the data to get discrete states
+        kmeans = KMeans(n_clusters=n_clusters, random_state=0, n_init=10)
+        states = kmeans.fit_predict(data)
+
+        # 2. Create and analyze the Markov chain
+        mc = MarkovChain(states)
+
+        # 3. Identify "resonance"
+        # Here, we define resonance as states with high self-transition probability
+        resonant_states = np.where(np.diag(mc.transition_matrix) > 0.9)[0]
+
+        return {
+            'transition_matrix': mc.transition_matrix,
+            'stationary_distribution': mc.stationary_distribution,
+            'resonant_states': resonant_states,
+            'clusters': states
+        }
 
 
 class RootingAnalyzer:
