@@ -47,11 +47,18 @@ class DynamicResonanceRooting:
         self.rooting_analyzer = RootingAnalyzer()
         self.depth_calculator = DepthCalculator()
         
+        # Initialize QBist Agent
+        self.agent = QBistAgent(
+            prior=0.5,
+            learning_rate=0.1
+        )
+
         # Storage for analysis results
         self.phase_space = None
         self.resonances = {}
         self.influence_network = None
         self.resonance_depths = {}
+        self.belief_states = {}
         
     def time_delay_embedding(self, data: np.ndarray) -> np.ndarray:
         """
@@ -181,6 +188,7 @@ class DynamicResonanceRooting:
             raise ValueError("Must detect resonances first")
             
         depths = {}
+        self.belief_states = {}
         
         for dim in range(self.phase_space.shape[1]):
             key = f'dim_{dim}'
@@ -188,7 +196,12 @@ class DynamicResonanceRooting:
             
             # Calculate depth using rolling statistics
             result = self.depth_calculator.calculate(series, window_size)
-            depths[key] = result['resonance_depth']
+            resonance_depth = result['resonance_depth']
+            depths[key] = resonance_depth
+
+            # Update agent belief
+            belief_state = self.agent.update_belief(resonance_depth)
+            self.belief_states[key] = belief_state
             
         self.resonance_depths = depths
         return depths
@@ -260,6 +273,18 @@ class DynamicResonanceRooting:
             print("Calculating resonance depths...")
             depths = self.calculate_resonance_depths(window_size)
             results['resonance_depths'] = depths
+            results['agent_belief'] = self.belief_states
+
+            # Determine rooted status (epistemic rooting)
+            # Use the mean belief if multivariate, or check if any dimension is rooted?
+            # User instructions: "rooted = belief_state > 0.65"
+            # We'll calculate a system-wide belief or check if all/any are rooted.
+            # Assuming system rootedness based on the final belief state of the agent
+            # (which accumulates across dimensions in the current implementation,
+            # but wait, the agent accumulates history, but self.belief is the CURRENT belief).
+            # If we iterate dimensions, the final belief reflects all dimensions.
+
+            results['is_rooted'] = self.agent.belief > 0.65
             
             # Step 3: Analyze influence network (if multivariate)
             if multivariate and data.ndim > 1:
