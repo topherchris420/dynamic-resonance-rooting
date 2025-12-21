@@ -1,8 +1,8 @@
 """
-Dynamic Resonance Rooting (DRR) Framework - Core Implementation
+Dynamic Resonance Rooting (DRR) Framework 
 Author: Christopher Woodyard (2025)
 """
-
+from .qbism_agent import QBistAgent
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal
