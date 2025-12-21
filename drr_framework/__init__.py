@@ -13,8 +13,7 @@ from .benchmarks import BenchmarkSystems
 from .modules import ResonanceDetector, RootingAnalyzer, DepthCalculator, AnomalyDetector
 from .realtime import RealTimeDRR
 
-# Comment out until you create analysis.py:
-# from .analysis import DynamicResonanceRooting
+from .analysis import DynamicResonanceRooting
 
 __version__ = "0.1.0"
 __author__ = "Christopher Woodyard"
@@ -26,7 +25,6 @@ __all__ = [
     'RootingAnalyzer',
     'DepthCalculator',
     'AnomalyDetector',
-    'RealTimeDRR'
-    # Add this back when you create analysis.py:
-    # 'DynamicResonanceRooting',
+    'RealTimeDRR',
+    'DynamicResonanceRooting',
 ]
