@@ -7,7 +7,7 @@ A computational framework for analyzing Complex Adaptive Systems, based on the r
 
 # Dynamic Resonance Rooting (DRR) – Official Implementation
 
-**Dynamic Resonance Rooting (DRR)** is an advanced computational framework designed to analyze complex adaptive systems (CAS) through the identification of dominant oscillatory patterns (resonances) and the underlying causal structures that drive system behavior.
+**Dynamic Resonance Rooting (DRR)** is a computational framework designed to analyze complex adaptive systems (CAS) through the identification of dominant oscillatory patterns (resonances) and the underlying causal structures that drive system behavior.
 
 ## Overview
 The DRR framework aims to provide:
