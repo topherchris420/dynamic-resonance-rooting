@@ -1,13 +1,127 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Glowing Axes</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sonic Sculptor · Dynamic Resonance Rooting</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="axis x-axis"></div>
-  <div class="axis y-axis"></div>
+  <div class="app-shell">
+    <header class="topbar glass">
+      <h1>Sonic Sculptor</h1>
+      <button id="validate-all" class="action-btn neon">Validate All</button>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab active" data-tab="audio">Audio</button>
+      <button class="tab" data-tab="generate">Generate</button>
+      <button class="tab" data-tab="biogrowth">BioGrowth</button>
+      <button class="tab" data-tab="structural">Structural</button>
+      <button class="tab" data-tab="export">Export</button>
+    </nav>
+
+    <main class="layout">
+      <section class="workspace">
+        <div class="panel tab-panel active glass" data-panel="audio">
+          <h2>1) Upload Audio</h2>
+          <input type="file" id="audio-file" accept="audio/*" />
+          <p id="audio-status">No audio loaded.</p>
+          <canvas id="audio-spectrum" width="820" height="210"></canvas>
+        </div>
+
+        <div class="panel tab-panel glass" data-panel="generate">
+          <h2>2) Generate Base Mesh</h2>
+          <div class="controls-row">
+            <label>Mesh Resolution <input id="mesh-resolution" type="range" min="32" max="180" value="96" /></label>
+            <button id="generate-mesh" class="action-btn neon">Generate Mesh</button>
+          </div>
+          <canvas id="mesh-view" width="820" height="380"></canvas>
+        </div>
+
+        <div class="panel tab-panel glass" data-panel="biogrowth">
+          <h2>3) Reaction-Diffusion BioGrowth</h2>
+          <div class="controls-grid">
+            <label>Pattern Preset
+              <select id="pattern-preset">
+                <option>Coral</option><option>Spots</option><option>Waves</option><option>Stripes</option>
+              </select>
+            </label>
+            <label>Growth Iterations
+              <input id="growth-iterations" type="range" min="0" max="500" value="120" />
+              <span id="growth-iterations-value">120</span>
+            </label>
+            <label>Strut Thickness (mm)
+              <input id="strut-thickness" type="range" min="0.5" max="2" step="0.1" value="1.1" />
+              <span id="strut-thickness-value">1.1</span>
+            </label>
+            <label class="inline"><input id="animate-growth" type="checkbox" /> Animate Growth</label>
+          </div>
+          <div class="controls-row">
+            <button id="run-growth" class="action-btn neon">Run Growth</button>
+            <button id="apply-growth" class="action-btn">Apply to Mesh</button>
+            <label class="inline"><input id="toggle-pattern" type="checkbox" checked /> Pattern View</label>
+          </div>
+          <div class="progress-wrap"><div id="growth-progress" class="progress"></div></div>
+          <canvas id="growth-view" width="820" height="320"></canvas>
+        </div>
+
+        <div class="panel tab-panel glass" data-panel="structural">
+          <h2>4) Structural + Resonance Analysis</h2>
+          <div class="controls-grid">
+            <label>Material
+              <select id="material-select">
+                <option>PLA</option><option>ABS</option><option>PETG</option><option>Resin</option>
+              </select>
+            </label>
+            <label>Wall Thickness (mm)
+              <input id="wall-thickness" type="range" min="0.8" max="5" step="0.1" value="1.8" />
+              <span id="wall-thickness-value">1.8</span>
+            </label>
+            <label>Infill Density (%)
+              <input id="infill-density" type="range" min="0" max="100" value="35" />
+              <span id="infill-density-value">35</span>
+            </label>
+            <label class="inline"><input id="show-deformed" type="checkbox" /> Show Deformed Shape ×10</label>
+          </div>
+          <div class="controls-row">
+            <button id="run-structural" class="action-btn neon">Run Analysis</button>
+            <button id="run-resonance" class="action-btn">Run Resonance</button>
+            <button id="optimize-design" class="action-btn warning hidden">Optimize Design</button>
+          </div>
+          <div class="progress-wrap"><div id="structural-progress" class="progress"></div></div>
+          <canvas id="stress-view" width="820" height="320"></canvas>
+          <h3>Resonance Analysis</h3>
+          <canvas id="resonance-view" width="820" height="180"></canvas>
+          <div id="resonance-modes" class="mode-list"></div>
+        </div>
+
+        <div class="panel tab-panel glass" data-panel="export">
+          <h2>5) Export</h2>
+          <p>Export STL after checks pass.</p>
+          <button id="export-stl" class="action-btn">Download STL</button>
+        </div>
+      </section>
+
+      <aside class="sidebar glass">
+        <h3>Analysis Results</h3>
+        <div id="badges" class="badges"></div>
+        <div class="results-box">
+          <div class="results-title">STRUCTURAL INTEGRITY</div>
+          <div class="mono" id="integrity-results">Run analysis to see metrics.</div>
+        </div>
+        <div class="results-box">
+          <div class="results-title">Acoustic Match Score</div>
+          <div class="mono" id="acoustic-score">--%</div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <div id="toast-stack"></div>
   <script src="script.js"></script>
 </body>
 </html>
