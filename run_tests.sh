@@ -1,4 +1,4 @@
 #!/bin/bash
 export PYTHONPATH=$PYTHONPATH:.
-python -m pip install -e . --no-build-isolation
+pip install -e .
 python -m pytest
