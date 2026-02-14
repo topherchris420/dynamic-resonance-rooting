@@ -121,3 +121,47 @@ def test_real_time_drr_single_variable():
     
     assert result is not None
     assert len(result) == 1  # 1 variable
+
+
+def test_real_time_drr_constructor_validation_and_reset():
+    with pytest.raises(ValueError, match="window_size"):
+        RealTimeDRR(window_size=0)
+
+    with pytest.raises(ValueError, match="n_variables"):
+        RealTimeDRR(window_size=5, n_variables=0)
+
+    with pytest.raises(ValueError, match="threshold"):
+        RealTimeDRR(window_size=5, threshold=float("nan"))
+
+    rt_drr = RealTimeDRR(window_size=3, n_variables=1)
+    for _ in range(3):
+        rt_drr.process_data_point(np.random.rand())
+
+    assert rt_drr.get_window_data() is not None
+    assert rt_drr.summarize_latest_results() is not None
+
+    rt_drr.reset()
+    assert rt_drr.get_window_data() is None
+    assert rt_drr.summarize_latest_results() is None
+
+
+def test_real_time_drr_summary_and_resonance_options():
+    rt_drr = RealTimeDRR(
+        window_size=4,
+        n_variables=2,
+        threshold=-1.0,
+        resonance_options={'peak_height_ratio': 0.2},
+    )
+
+    assert rt_drr.summarize_latest_results() is None
+
+    for _ in range(4):
+        rt_drr.process_data_point(np.random.rand(2))
+
+    summary = rt_drr.summarize_latest_results()
+    assert summary is not None
+    assert summary['n_variables'] == 2
+    assert len(summary['depths']) == 2
+    assert isinstance(summary['average_depth'], float)
+    assert summary['anomaly_count'] == 2
+    assert summary['has_anomaly'] is True

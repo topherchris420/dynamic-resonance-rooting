@@ -3,125 +3,133 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sonic Sculptor · Dynamic Resonance Rooting</title>
+  <title>Dynamic Resonance Rooting | Research Intelligence Platform</title>
+  <meta name="description" content="Dynamic Resonance Rooting helps researchers detect resonance signatures, map causal structure, and forecast instability in complex adaptive systems." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="app-shell">
-    <header class="topbar glass">
-      <h1>Sonic Sculptor</h1>
-      <button id="validate-all" class="action-btn neon">Validate All</button>
-    </header>
+  <div class="bg-orb orb-a" aria-hidden="true"></div>
+  <div class="bg-orb orb-b" aria-hidden="true"></div>
 
-    <nav class="tabs">
-      <button class="tab active" data-tab="audio">Audio</button>
-      <button class="tab" data-tab="generate">Generate</button>
-      <button class="tab" data-tab="biogrowth">BioGrowth</button>
-      <button class="tab" data-tab="structural">Structural</button>
-      <button class="tab" data-tab="export">Export</button>
+  <header class="site-header">
+    <a class="brand" href="#home">
+      <span class="brand-mark">DRR</span>
+      <span class="brand-text">Dynamic Resonance Rooting</span>
+    </a>
+    <nav class="nav-links">
+      <a href="#capabilities">Capabilities</a>
+      <a href="#workflow">Workflow</a>
+      <a href="#proof">Proof</a>
+      <a href="#contact">Contact</a>
     </nav>
+    <a class="btn btn-primary" href="#contact">Request Demo</a>
+  </header>
 
-    <main class="layout">
-      <section class="workspace">
-        <div class="panel tab-panel active glass" data-panel="audio">
-          <h2>1) Upload Audio</h2>
-          <input type="file" id="audio-file" accept="audio/*" />
-          <p id="audio-status">No audio loaded.</p>
-          <canvas id="audio-spectrum" width="820" height="210"></canvas>
-        </div>
+  <main id="home">
+    <section class="hero section reveal">
+      <p class="eyebrow">Built for research teams and advanced analytics labs</p>
+      <h1>Decode hidden system dynamics before instability emerges.</h1>
+      <p class="lead">
+        DRR gives researchers a trustable, high-fidelity framework to detect resonant patterns,
+        trace causal interactions, and quantify system fragility in real time.
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="#contact">Start with DRR</a>
+        <a class="btn btn-ghost" href="#workflow">See workflow</a>
+      </div>
+      <div class="hero-metrics">
+        <article>
+          <h3><span class="metric" data-target="14">0</span>+</h3>
+          <p>Automated analysis modules</p>
+        </article>
+        <article>
+          <h3><span class="metric" data-target="3">0</span>x</h3>
+          <p>Faster instability triage</p>
+        </article>
+        <article>
+          <h3><span class="metric" data-target="99">0</span>%</h3>
+          <p>Reproducible pipeline coverage</p>
+        </article>
+      </div>
+    </section>
 
-        <div class="panel tab-panel glass" data-panel="generate">
-          <h2>2) Generate Base Mesh</h2>
-          <div class="controls-row">
-            <label>Mesh Resolution <input id="mesh-resolution" type="range" min="32" max="180" value="96" /></label>
-            <button id="generate-mesh" class="action-btn neon">Generate Mesh</button>
-          </div>
-          <canvas id="mesh-view" width="820" height="380"></canvas>
-        </div>
+    <section id="capabilities" class="section reveal">
+      <div class="section-head">
+        <p class="eyebrow">Core capabilities</p>
+        <h2>Minimal interface. Maximum scientific signal.</h2>
+      </div>
+      <div class="card-grid">
+        <article class="feature-card">
+          <h3>Resonance Detection</h3>
+          <p>Extract dominant oscillatory structure from noisy time-series with FFT and stochastic-state analysis.</p>
+        </article>
+        <article class="feature-card">
+          <h3>Rooting Analysis</h3>
+          <p>Reveal directional influence across variables using transfer-entropy style causal inference.</p>
+        </article>
+        <article class="feature-card">
+          <h3>Resonance Depth</h3>
+          <p>Track depth as a compact stability proxy to surface early warning signs and transitions.</p>
+        </article>
+        <article class="feature-card">
+          <h3>Streaming Operation</h3>
+          <p>Deploy continuously with real-time windows, anomaly triggers, and concise decision summaries.</p>
+        </article>
+      </div>
+    </section>
 
-        <div class="panel tab-panel glass" data-panel="biogrowth">
-          <h2>3) Reaction-Diffusion BioGrowth</h2>
-          <div class="controls-grid">
-            <label>Pattern Preset
-              <select id="pattern-preset">
-                <option>Coral</option><option>Spots</option><option>Waves</option><option>Stripes</option>
-              </select>
-            </label>
-            <label>Growth Iterations
-              <input id="growth-iterations" type="range" min="0" max="500" value="120" />
-              <span id="growth-iterations-value">120</span>
-            </label>
-            <label>Strut Thickness (mm)
-              <input id="strut-thickness" type="range" min="0.5" max="2" step="0.1" value="1.1" />
-              <span id="strut-thickness-value">1.1</span>
-            </label>
-            <label class="inline"><input id="animate-growth" type="checkbox" /> Animate Growth</label>
-          </div>
-          <div class="controls-row">
-            <button id="run-growth" class="action-btn neon">Run Growth</button>
-            <button id="apply-growth" class="action-btn">Apply to Mesh</button>
-            <label class="inline"><input id="toggle-pattern" type="checkbox" checked /> Pattern View</label>
-          </div>
-          <div class="progress-wrap"><div id="growth-progress" class="progress"></div></div>
-          <canvas id="growth-view" width="820" height="320"></canvas>
-        </div>
-
-        <div class="panel tab-panel glass" data-panel="structural">
-          <h2>4) Structural + Resonance Analysis</h2>
-          <div class="controls-grid">
-            <label>Material
-              <select id="material-select">
-                <option>PLA</option><option>ABS</option><option>PETG</option><option>Resin</option>
-              </select>
-            </label>
-            <label>Wall Thickness (mm)
-              <input id="wall-thickness" type="range" min="0.8" max="5" step="0.1" value="1.8" />
-              <span id="wall-thickness-value">1.8</span>
-            </label>
-            <label>Infill Density (%)
-              <input id="infill-density" type="range" min="0" max="100" value="35" />
-              <span id="infill-density-value">35</span>
-            </label>
-            <label class="inline"><input id="show-deformed" type="checkbox" /> Show Deformed Shape ×10</label>
-          </div>
-          <div class="controls-row">
-            <button id="run-structural" class="action-btn neon">Run Analysis</button>
-            <button id="run-resonance" class="action-btn">Run Resonance</button>
-            <button id="optimize-design" class="action-btn warning hidden">Optimize Design</button>
-          </div>
-          <div class="progress-wrap"><div id="structural-progress" class="progress"></div></div>
-          <canvas id="stress-view" width="820" height="320"></canvas>
-          <h3>Resonance Analysis</h3>
-          <canvas id="resonance-view" width="820" height="180"></canvas>
-          <div id="resonance-modes" class="mode-list"></div>
-        </div>
-
-        <div class="panel tab-panel glass" data-panel="export">
-          <h2>5) Export</h2>
-          <p>Export STL after checks pass.</p>
-          <button id="export-stl" class="action-btn">Download STL</button>
-        </div>
-      </section>
-
-      <aside class="sidebar glass">
-        <h3>Analysis Results</h3>
-        <div id="badges" class="badges"></div>
-        <div class="results-box">
-          <div class="results-title">STRUCTURAL INTEGRITY</div>
-          <div class="mono" id="integrity-results">Run analysis to see metrics.</div>
-        </div>
-        <div class="results-box">
-          <div class="results-title">Acoustic Match Score</div>
-          <div class="mono" id="acoustic-score">--%</div>
-        </div>
+    <section id="workflow" class="section split reveal">
+      <div>
+        <p class="eyebrow">Research workflow</p>
+        <h2>From raw signal to defensible insight in one coherent pipeline.</h2>
+        <ol class="timeline">
+          <li><strong>Ingest</strong> multivariate streams, simulation logs, or experimental traces.</li>
+          <li><strong>Detect</strong> resonance signatures and state transitions at multiple scales.</li>
+          <li><strong>Attribute</strong> causal structure and hierarchical dependencies.</li>
+          <li><strong>Forecast</strong> risk with Resonance Depth and anomaly scoring.</li>
+        </ol>
+      </div>
+      <aside class="quote-card">
+        <p>“DRR combines interpretability and speed in a way most black-box pipelines do not. It has become our first-pass stability screening layer.”</p>
+        <span>Principal Investigator, Complex Systems Lab</span>
       </aside>
-    </main>
-  </div>
+    </section>
 
-  <div id="toast-stack"></div>
+    <section id="proof" class="section reveal">
+      <div class="section-head">
+        <p class="eyebrow">Why researchers choose DRR</p>
+        <h2>Engineered for rigor, reproducibility, and decision velocity.</h2>
+      </div>
+      <div class="proof-grid">
+        <article>
+          <h3>Transparent methods</h3>
+          <p>Every stage maps to interpretable signals and physically meaningful metrics.</p>
+        </article>
+        <article>
+          <h3>Domain flexibility</h3>
+          <p>Adaptable for biomedical, defense, climate, market, and engineered system datasets.</p>
+        </article>
+        <article>
+          <h3>Fast operationalization</h3>
+          <p>Move from notebook exploration to live monitoring without rebuilding the stack.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="contact" class="section cta reveal">
+      <h2>Ready to modernize your complex systems research stack?</h2>
+      <p>Book a technical walkthrough and align DRR to your data, methods, and publication goals.</p>
+      <a class="btn btn-primary" href="mailto:research@drr-framework.org">Book a walkthrough</a>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>© 2026 Dynamic Resonance Rooting Framework</p>
+  </footer>
+
   <script src="script.js"></script>
 </body>
 </html>
