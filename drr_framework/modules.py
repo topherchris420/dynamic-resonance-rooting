@@ -82,7 +82,14 @@ class ResonanceDetector:
     Detects resonances in a time series.
     """
 
-    def detect(self, data: np.ndarray, method: str = 'fft', sampling_rate: int = 100, n_clusters: int = 4) -> dict:
+    def detect(
+        self,
+        data: np.ndarray,
+        method: str = 'fft',
+        sampling_rate: int = 100,
+        n_clusters: int = 4,
+        peak_height_ratio: float = 0.1,
+    ) -> dict:
         """
         Detects resonances using the specified method.
         Args:
@@ -96,8 +103,14 @@ class ResonanceDetector:
         Returns:
             dict: A dictionary of detected resonances.
         """
+        data = np.asarray(data)
+        if data.size == 0:
+            raise ValueError("data must not be empty")
+        if not np.all(np.isfinite(data)):
+            raise ValueError("data contains non-finite values")
+
         if method == 'fft':
-            return self._detect_with_fft(data, sampling_rate)
+            return self._detect_with_fft(data, sampling_rate, peak_height_ratio)
         elif method == 'wavelet':
             # Placeholder for wavelet-based detection
             return self._detect_with_wavelet(data)
@@ -106,19 +119,35 @@ class ResonanceDetector:
         else:
             raise ValueError(f"Unknown resonance detection method: {method}")
 
-    def _detect_with_fft(self, data: np.ndarray, sampling_rate: int) -> dict:
+    def _detect_with_fft(self, data: np.ndarray, sampling_rate: int, peak_height_ratio: float) -> dict:
         """
         Detects resonances using the Fast Fourier Transform (FFT).
         """
+        if sampling_rate <= 0:
+            raise ValueError("sampling_rate must be positive")
+        if not 0 < peak_height_ratio <= 1:
+            raise ValueError("peak_height_ratio must be in the interval (0, 1]")
+
         n = len(data)
         yf = fft(data)
         xf = np.fft.fftfreq(n, 1 / sampling_rate)
+        magnitudes = np.abs(yf)
 
         # Find peaks in the positive frequency domain
-        peaks, _ = find_peaks(np.abs(yf[:n//2]), height=0.1)
+        peaks, _ = find_peaks(magnitudes[:n//2], height=np.max(magnitudes[:n//2]) * peak_height_ratio)
         dominant_freq = xf[peaks]
+        peak_magnitudes = magnitudes[peaks]
 
-        return {'dominant_freq': dominant_freq}
+        # Sort peaks by magnitude (largest first) for easier downstream usage.
+        if len(peak_magnitudes) > 0:
+            order = np.argsort(peak_magnitudes)[::-1]
+            dominant_freq = dominant_freq[order]
+            peak_magnitudes = peak_magnitudes[order]
+
+        return {
+            'dominant_freq': dominant_freq,
+            'peak_magnitude': peak_magnitudes,
+        }
 
     def _detect_with_wavelet(self, data: np.ndarray) -> dict:
         """
@@ -132,8 +161,14 @@ class ResonanceDetector:
         """
         Detects resonances using a Markov chain analysis of clustered states.
         """
+        if n_clusters <= 1:
+            raise ValueError("n_clusters must be greater than 1")
+
         if data.ndim == 1:
             data = data.reshape(-1, 1)
+
+        if len(data) < n_clusters:
+            raise ValueError("n_clusters cannot exceed number of observations")
 
         # 1. Cluster the data to get discrete states
         kmeans = KMeans(n_clusters=n_clusters, random_state=0, n_init=10)
@@ -222,6 +257,9 @@ class DepthCalculator:
         Returns:
             dict: A dictionary of resonance depths.
         """
+        if window_size <= 0:
+            raise ValueError("window_size must be a positive integer")
+
         if not isinstance(data, np.ndarray):
             data = np.array(data)
         
