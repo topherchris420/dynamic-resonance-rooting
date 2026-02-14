@@ -12,7 +12,35 @@ def test_resonance_detector():
     detector = ResonanceDetector()
     result = detector.detect(data, sampling_rate=100)
     assert 'dominant_freq' in result
+    assert 'peak_magnitude' in result
     assert isinstance(result['dominant_freq'], np.ndarray)
+    assert isinstance(result['peak_magnitude'], np.ndarray)
+
+
+def test_resonance_detector_validates_inputs():
+    detector = ResonanceDetector()
+
+    with pytest.raises(ValueError, match="empty"):
+        detector.detect(np.array([]))
+
+    with pytest.raises(ValueError, match="non-finite"):
+        detector.detect(np.array([0.0, np.nan, 1.0]))
+
+    with pytest.raises(ValueError, match="sampling_rate"):
+        detector.detect(np.array([0.0, 1.0, 0.0]), sampling_rate=0)
+
+    with pytest.raises(ValueError, match="peak_height_ratio"):
+        detector.detect(np.array([0.0, 1.0, 0.0]), peak_height_ratio=1.5)
+
+
+def test_markov_detector_validates_cluster_configuration():
+    detector = ResonanceDetector()
+
+    with pytest.raises(ValueError, match="greater than 1"):
+        detector.detect(np.random.rand(10), method='markov', n_clusters=1)
+
+    with pytest.raises(ValueError, match="cannot exceed"):
+        detector.detect(np.random.rand(3), method='markov', n_clusters=4)
 
 def test_rooting_analyzer():
     """
@@ -33,6 +61,12 @@ def test_depth_calculator():
     result = calculator.calculate(data, window_size=10)
     assert 'resonance_depth' in result
     assert isinstance(result['resonance_depth'], float)
+
+
+def test_depth_calculator_rejects_non_positive_window():
+    calculator = DepthCalculator()
+    with pytest.raises(ValueError, match="positive"):
+        calculator.calculate(np.random.rand(100), window_size=0)
 
 def test_anomaly_detector():
     """
