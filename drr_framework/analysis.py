@@ -6,7 +6,7 @@ from .qbism_agent import QBistAgent
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal
-from scipy.fft import fft, fftfreq
+from scipy.fft import fft, fftfreq, rfft, rfftfreq
 import networkx as nx
 from typing import Dict, List, Optional, Union, Tuple
 import warnings
@@ -119,11 +119,14 @@ class DynamicResonanceRooting:
             
             if method == 'fft':
                 # FFT-based resonance detection
-                fft_vals = fft(series)
-                freqs = fftfreq(len(series), 1 / self.sampling_rate)
+                # Optimization: Use rfft for real-valued input (approx 2x faster)
+                fft_vals = rfft(series)
+                freqs = rfftfreq(len(series), 1 / self.sampling_rate)
                 power_spectrum = np.abs(fft_vals)**2
                 
                 # Only consider positive frequencies
+                # rfftfreq returns [0, ..., nyquist] (all non-negative)
+                # We filter out 0 (DC component)
                 pos_mask = freqs > 0
                 freqs_pos = freqs[pos_mask]
                 power_pos = power_spectrum[pos_mask]
@@ -135,6 +138,8 @@ class DynamicResonanceRooting:
                         height=np.max(power_pos) * peak_height_ratio
                     )
                     
+                    # For rfft, fft_vals has same indices as freqs (length N/2 + 1)
+                    # So pos_mask aligns correctly with fft_vals
                     resonances[key] = {
                         'frequencies': freqs_pos[peaks],
                         'amplitudes': np.abs(fft_vals[pos_mask][peaks]),
