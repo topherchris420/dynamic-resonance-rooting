@@ -14,6 +14,7 @@ from .modules import ResonanceDetector, RootingAnalyzer, DepthCalculator, Anomal
 from .realtime import RealTimeDRR
 
 from .analysis import DynamicResonanceRooting
+from .generative_design_suite import GenerativeDesignSuite
 
 __version__ = "0.1.0"
 __author__ = "Christopher Woodyard"
@@ -27,4 +28,5 @@ __all__ = [
     'AnomalyDetector',
     'RealTimeDRR',
     'DynamicResonanceRooting',
+    'GenerativeDesignSuite',
 ]
