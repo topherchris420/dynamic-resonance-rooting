@@ -28,3 +28,20 @@ body {
   height: 100%;
   transform: translateX(-50%);
 }
+.neon { box-shadow: 0 0 14px rgba(79, 211, 255, 0.5); }
+.warning { border-color: rgba(255, 189, 66, 0.8); color: #ffd998; }
+.hidden { display: none; }
+.progress-wrap { background: rgba(255,255,255,0.08); border-radius: 6px; height: 8px; overflow: hidden; margin: 8px 0 12px; }
+.progress { height: 100%; width: 0; background: linear-gradient(90deg, #4fd3ff, #4dff89); transition: width 0.2s; }
+.results-box { border: 1px solid var(--line); border-radius: 12px; margin: 10px 0; padding: 10px; }
+.results-title { color: #a8bcff; font-weight: 700; margin-bottom: 6px; }
+.mono { font-family: 'Fira Code', monospace; white-space: pre-line; font-size: 13px; }
+.badges { display: flex; flex-wrap: wrap; gap: 8px; }
+.badge { font-size: 12px; padding: 4px 8px; border-radius: 999px; border: 1px solid; }
+.badge.success { color: #70ff9f; border-color: #70ff9f77; }
+.badge.warn { color: #ffcc6a; border-color: #ffcc6a77; }
+.badge.error { color: #ff7777; border-color: #ff777777; }
+#toast-stack { position: fixed; right: 18px; bottom: 18px; display: flex; flex-direction: column; gap: 8px; z-index: 99; }
+.toast { background: rgba(17, 24, 50, 0.92); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; min-width: 220px; }
+.mode-list button { margin: 3px; }
+@media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } }
