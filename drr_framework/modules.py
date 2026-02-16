@@ -1,7 +1,6 @@
 import numpy as np
 from scipy.fft import fft
 from scipy.signal import find_peaks
-import pandas as pd
 from sklearn.cluster import KMeans
 
 # Handle pyinform import gracefully
@@ -267,10 +266,17 @@ class DepthCalculator:
             return {'resonance_depth': 0.0}
         
         # We'll use a rolling standard deviation to capture changes in volatility.
+        # Optimized: Use NumPy slicing for the last window instead of Pandas rolling
         try:
-            rolling_std = pd.Series(data).rolling(window=window_size, min_periods=1).std().iloc[-1]
-            if pd.isna(rolling_std):
+            # Use only the last window_size elements
+            window_data = data[-window_size:]
+            # Calculate standard deviation with ddof=1 to match sample std behavior
+            rolling_std = np.std(window_data, ddof=1)
+
+            # handle cases where std might be NaN (e.g. window_size=1)
+            if np.isnan(rolling_std):
                 rolling_std = 0.0
+
         except Exception as e:
             print(f"Warning: Error calculating rolling std: {e}")
             rolling_std = np.std(data) if len(data) > 0 else 0.0
