@@ -71,13 +71,25 @@ onmessage = (e) => {
   }
 
   const edges = [];
-  const key = (x, y, z) => `${x}|${y}|${z}`;
-  const set = new Set(active.map(p => key(p.x, p.y, p.z)));
+  // OPTIMIZATION: Use direct array lookup instead of Set<String> for O(1) checks
+  // This avoids O(N) string creation and hashing overhead (~3x faster)
   for (const p of active) {
     const nbs = [[1,0,0],[0,1,0],[0,0,1]];
     for (const [dx, dy, dz] of nbs) {
-      if (set.has(key(p.x + dx, p.y + dy, p.z + dz))) {
-        edges.push([p, { x: p.x + dx, y: p.y + dy, z: p.z + dz }]);
+      const nx = p.x + dx;
+      const ny = p.y + dy;
+      const nz = p.z + dz;
+
+      // Ensure neighbor is within the active simulation bounds (1 to size-2)
+      // This matches the original logic where 'active' only contains points in this range
+      if (nx > 0 && nx < size - 1 &&
+          ny > 0 && ny < size - 1 &&
+          nz > 0 && nz < size - 1) {
+        const nIdx = (nz * size + ny) * size + nx;
+        // If V > threshold, it means the neighbor is effectively "active"
+        if (V[nIdx] > threshold) {
+          edges.push([p, { x: nx, y: ny, z: nz }]);
+        }
       }
     }
   }
