@@ -20,28 +20,42 @@ onmessage = (e) => {
     U[idx] = 0.5;
   }
 
-  const lap = (field, x, y, z) => {
-    const idx = (z * size + y) * size + x;
-    const xm = x > 0 ? idx - 1 : idx;
-    const xp = x < size - 1 ? idx + 1 : idx;
-    const ym = y > 0 ? idx - size : idx;
-    const yp = y < size - 1 ? idx + size : idx;
-    const zm = z > 0 ? idx - size * size : idx;
-    const zp = z < size - 1 ? idx + size * size : idx;
-    return field[xm] + field[xp] + field[ym] + field[yp] + field[zm] + field[zp] - 6 * field[idx];
-  };
+  // Pre-calculate strides for direct array access
+  const strideY = size;
+  const strideZ = size * size;
 
   for (let it = 0; it < iterations; it++) {
+    // Iterate over interior points only (1 to size-2)
     for (let z = 1; z < size - 1; z++) {
+      let rowIdx = (z * size + 1) * size;
       for (let y = 1; y < size - 1; y++) {
         for (let x = 1; x < size - 1; x++) {
-          const idx = (z * size + y) * size + x;
+          const idx = rowIdx + x;
           const u = U[idx];
           const v = V[idx];
           const uvv = u * v * v;
-          nextU[idx] = u + (du * lap(U, x, y, z) - uvv + feed * (1 - u));
-          nextV[idx] = v + (dv * lap(V, x, y, z) + uvv - (feed + kill) * v);
+
+          // Optimization: Inline Laplacian calculation
+          // Removes function call overhead and redundant boundary checks.
+          // Since we iterate strictly over the interior, neighbor indices are always valid.
+          const lapU = (
+            U[idx - 1] + U[idx + 1] +
+            U[idx - strideY] + U[idx + strideY] +
+            U[idx - strideZ] + U[idx + strideZ] -
+            6 * u
+          );
+
+          const lapV = (
+            V[idx - 1] + V[idx + 1] +
+            V[idx - strideY] + V[idx + strideY] +
+            V[idx - strideZ] + V[idx + strideZ] -
+            6 * v
+          );
+
+          nextU[idx] = u + (du * lapU - uvv + feed * (1 - u));
+          nextV[idx] = v + (dv * lapV + uvv - (feed + kill) * v);
         }
+        rowIdx += size;
       }
     }
     U.set(nextU);
@@ -71,14 +85,22 @@ onmessage = (e) => {
   }
 
   const edges = [];
-  const key = (x, y, z) => `${x}|${y}|${z}`;
-  const set = new Set(active.map(p => key(p.x, p.y, p.z)));
+  // Optimization: Direct array lookup instead of string Set for neighbor checking
   for (const p of active) {
-    const nbs = [[1,0,0],[0,1,0],[0,0,1]];
-    for (const [dx, dy, dz] of nbs) {
-      if (set.has(key(p.x + dx, p.y + dy, p.z + dz))) {
-        edges.push([p, { x: p.x + dx, y: p.y + dy, z: p.z + dz }]);
-      }
+    const {x, y, z} = p;
+    const idx = (z * size + y) * size + x;
+
+    // Check +x neighbor
+    if (V[idx + 1] > threshold) {
+      edges.push([p, { x: x + 1, y: y, z: z }]);
+    }
+    // Check +y neighbor
+    if (V[idx + strideY] > threshold) {
+      edges.push([p, { x: x, y: y + 1, z: z }]);
+    }
+    // Check +z neighbor
+    if (V[idx + strideZ] > threshold) {
+      edges.push([p, { x: x, y: y, z: z + 1 }]);
     }
   }
 
