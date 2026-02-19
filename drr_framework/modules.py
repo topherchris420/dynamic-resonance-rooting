@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.fft import fft
+from scipy.fft import fft, rfft, rfftfreq
 from scipy.signal import find_peaks
 from sklearn.cluster import KMeans
 
@@ -128,12 +128,14 @@ class ResonanceDetector:
             raise ValueError("peak_height_ratio must be in the interval (0, 1]")
 
         n = len(data)
-        yf = fft(data)
-        xf = np.fft.fftfreq(n, 1 / sampling_rate)
+        # Optimization: Use rfft for real-valued input (approx 2x faster)
+        yf = rfft(data)
+        xf = rfftfreq(n, 1 / sampling_rate)
         magnitudes = np.abs(yf)
 
-        # Find peaks in the positive frequency domain
-        peaks, _ = find_peaks(magnitudes[:n//2], height=np.max(magnitudes[:n//2]) * peak_height_ratio)
+        # rfft returns only non-negative frequencies, so no need to slice.
+        # Find peaks in the frequency domain
+        peaks, _ = find_peaks(magnitudes, height=np.max(magnitudes) * peak_height_ratio)
         dominant_freq = xf[peaks]
         peak_magnitudes = magnitudes[peaks]
 
