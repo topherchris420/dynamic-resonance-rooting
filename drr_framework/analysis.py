@@ -6,7 +6,6 @@ from .qbism_agent import QBistAgent
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal
-from scipy.fft import fft, fftfreq, rfft, rfftfreq
 import networkx as nx
 from typing import Dict, List, Optional, Union, Tuple
 import warnings
@@ -88,97 +87,50 @@ class DynamicResonanceRooting:
         return embedded
     
     def detect_resonances(
-        self, 
-        data: np.ndarray, 
+        self,
+        data: np.ndarray,
         method: str = 'fft',
         peak_height_ratio: float = 0.1
     ) -> Dict:
         """
         Identify dominant resonances in time series data.
-        
+
         Args:
             data (np.ndarray): Time series data (1D or multivariate)
             method (str): Method for spectral analysis ('fft' or 'wavelet')
             peak_height_ratio (float): Ratio of max power for peak detection
-            
+
         Returns:
             Dict: Dictionary containing resonance information
         """
         if data.ndim == 1:
-            # Single time series - perform embedding
             self.phase_space = self.time_delay_embedding(data)
         else:
-            # Multivariate data - use directly
             self.phase_space = data
-            
+
         resonances = {}
-        
+
         for dim in range(self.phase_space.shape[1]):
             series = self.phase_space[:, dim]
             key = f'dim_{dim}'
-            
-            if method == 'fft':
-                # FFT-based resonance detection
-                # Optimization: Use rfft for real-valued input (approx 2x faster)
-                fft_vals = rfft(series)
-                freqs = rfftfreq(len(series), 1 / self.sampling_rate)
-                power_spectrum = np.abs(fft_vals)**2
-                
-                # Only consider positive frequencies
-                # rfftfreq returns [0, ..., nyquist] (all non-negative)
-                # We filter out 0 (DC component)
-                pos_mask = freqs > 0
-                freqs_pos = freqs[pos_mask]
-                power_pos = power_spectrum[pos_mask]
-                
-                # Find peaks
-                if len(power_pos) > 0:
-                    peaks, properties = signal.find_peaks(
-                        power_pos, 
-                        height=np.max(power_pos) * peak_height_ratio
-                    )
-                    
-                    # For rfft, fft_vals has same indices as freqs (length N/2 + 1)
-                    # So pos_mask aligns correctly with fft_vals
-                    resonances[key] = {
-                        'frequencies': freqs_pos[peaks],
-                        'amplitudes': np.abs(fft_vals[pos_mask][peaks]),
-                        'power': power_pos[peaks],
-                        'dominant_freq': freqs_pos[peaks[np.argmax(power_pos[peaks])]] if len(peaks) > 0 else 0
-                    }
-                else:
-                    resonances[key] = {
-                        'frequencies': np.array([]),
-                        'amplitudes': np.array([]),
-                        'power': np.array([]),
-                        'dominant_freq': 0
-                    }
-                    
-            elif method == 'wavelet':
-                # Wavelet-based analysis (simplified)
-                try:
-                    from scipy.signal import cwt, morlet2
-                    scales = np.logspace(0, 3, 50)
-                    coefficients = cwt(series, morlet2, scales)
-                    frequencies = self.sampling_rate / scales
-                    
-                    # Average power across time for each frequency
-                    power_freq = np.mean(np.abs(coefficients)**2, axis=1)
-                    peaks, _ = signal.find_peaks(power_freq, height=np.max(power_freq) * peak_height_ratio)
-                    
-                    resonances[key] = {
-                        'frequencies': frequencies[peaks],
-                        'power': power_freq[peaks],
-                        'cwt_matrix': coefficients,
-                        'dominant_freq': frequencies[peaks[np.argmax(power_freq[peaks])]] if len(peaks) > 0 else 0
-                    }
-                except ImportError:
-                    print("Wavelet analysis requires scipy. Falling back to FFT.")
-                    return self.detect_resonances(data, method='fft', peak_height_ratio=peak_height_ratio)
-        
+
+            detector_results = self.resonance_detector.detect(
+                data=series,
+                method=method,
+                sampling_rate=self.sampling_rate,
+                peak_height_ratio=peak_height_ratio,
+            )
+
+            freqs = detector_results.get('dominant_freq', np.array([]))
+            resonances[key] = {
+                'frequencies': freqs,
+                'power': detector_results.get('peak_magnitude', np.array([])),
+                'dominant_freq': freqs[0] if len(freqs) > 0 else 0,
+            }
+
         self.resonances = resonances
         return resonances
-    
+
     def calculate_resonance_depths(self, window_size: int = 100) -> Dict[str, float]:
         """
         Calculate resonance depth for each dimension.

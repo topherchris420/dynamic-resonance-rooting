@@ -8,7 +8,12 @@ const MATERIALS = {
 onmessage = (e) => {
   const { nodes = [], edges = [], material = 'PLA', wallThickness = 1.8, infill = 35 } = e.data;
   const m = MATERIALS[material] || MATERIALS.PLA;
-  const n = nodes.length;
+  const flatNodes =
+    nodes instanceof Float32Array || nodes instanceof Float64Array
+      ? nodes
+      : Float32Array.from(nodes.flatMap((node) => [node.x, node.y, node.z]));
+  const n = Math.floor(flatNodes.length / 3);
+
   if (!n) return postMessage({ type: 'done', error: 'No mesh nodes available.' });
 
   const mass = new Float64Array(n);
@@ -18,23 +23,26 @@ onmessage = (e) => {
   const area = Math.max(0.8, wallThickness) * (0.5 + infill / 100) * 1e-6;
 
   for (let i = 0; i < n; i++) {
-    const z = nodes[i].z;
-    if (z < 0.01) fixed[i] = 1;
+    const i3 = i * 3;
+    if (flatNodes[i3 + 2] < 0.01) fixed[i] = 1;
   }
 
   const diagK = new Float64Array(n);
   const connectivity = Array.from({ length: n }, () => []);
   for (let eIdx = 0; eIdx < edges.length; eIdx++) {
-    const [a, b] = edges[eIdx];
-    const dx = nodes[a].x - nodes[b].x;
-    const dy = nodes[a].y - nodes[b].y;
-    const dz = nodes[a].z - nodes[b].z;
+    const a = edges[eIdx][0];
+    const b = edges[eIdx][1];
+    const a3 = a * 3;
+    const b3 = b * 3;
+    const dx = flatNodes[a3] - flatNodes[b3];
+    const dy = flatNodes[a3 + 1] - flatNodes[b3 + 1];
+    const dz = flatNodes[a3 + 2] - flatNodes[b3 + 2];
     const L = Math.max(1e-3, Math.hypot(dx, dy, dz));
     const k = (m.E * area) / L;
     diagK[a] += k;
     diagK[b] += k;
-    connectivity[a].push([b, k, L]);
-    connectivity[b].push([a, k, L]);
+    connectivity[a].push([b, k]);
+    connectivity[b].push([a, k]);
     const beamMass = m.density * area * L;
     mass[a] += beamMass * 0.5;
     mass[b] += beamMass * 0.5;
@@ -45,9 +53,16 @@ onmessage = (e) => {
   const multiply = (x, out) => {
     out.fill(0);
     for (let i = 0; i < n; i++) {
-      if (fixed[i]) { out[i] = x[i]; continue; }
+      if (fixed[i]) {
+        out[i] = x[i];
+        continue;
+      }
       let acc = diagK[i] * x[i];
-      for (const [j, k] of connectivity[i]) acc -= k * x[j];
+      const row = connectivity[i];
+      for (let j = 0; j < row.length; j++) {
+        const neighbor = row[j];
+        acc -= neighbor[1] * x[neighbor[0]];
+      }
       out[i] = acc;
     }
   };
@@ -78,15 +93,26 @@ onmessage = (e) => {
   let maxStress = 0;
   let maxDisp = 0;
   const stressNode = new Float64Array(n);
-  for (const [a, b] of edges) {
-    const L = Math.max(1e-3, Math.hypot(nodes[a].x - nodes[b].x, nodes[a].y - nodes[b].y, nodes[a].z - nodes[b].z));
-    const strain = Math.abs(disp[a] - disp[b]) / L;
+  for (let eIdx = 0; eIdx < edges.length; eIdx++) {
+    const a = edges[eIdx][0];
+    const bNode = edges[eIdx][1];
+    const a3 = a * 3;
+    const b3 = bNode * 3;
+    const dx = flatNodes[a3] - flatNodes[b3];
+    const dy = flatNodes[a3 + 1] - flatNodes[b3 + 1];
+    const dz = flatNodes[a3 + 2] - flatNodes[b3 + 2];
+    const L = Math.max(1e-3, Math.hypot(dx, dy, dz));
+    const strain = Math.abs(disp[a] - disp[bNode]) / L;
     const stress = m.E * strain;
     maxStress = Math.max(maxStress, stress);
     stressNode[a] = Math.max(stressNode[a], stress);
-    stressNode[b] = Math.max(stressNode[b], stress);
+    stressNode[bNode] = Math.max(stressNode[bNode], stress);
   }
-  for (const d of disp) maxDisp = Math.max(maxDisp, Math.abs(d));
+
+  for (let i = 0; i < n; i++) {
+    const absDisp = Math.abs(disp[i]);
+    if (absDisp > maxDisp) maxDisp = absDisp;
+  }
 
   const safetyFactor = m.yield / Math.max(1, maxStress);
   const vonMises = maxStress;
