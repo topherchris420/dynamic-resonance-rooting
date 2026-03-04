@@ -2,6 +2,10 @@ import numpy as np
 from scipy.fft import fft, rfft, rfftfreq
 from scipy.signal import find_peaks
 from sklearn.cluster import KMeans
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 # Handle pyinform import gracefully
 try:
@@ -9,7 +13,7 @@ try:
     PYINFORM_AVAILABLE = True
 except ImportError:
     PYINFORM_AVAILABLE = False
-    print("Warning: pyinform not available. Transfer entropy analysis will be limited.")
+    logger.warning("pyinform not available; transfer entropy analysis will use fallback mode")
 
 
 class MarkovChain:
@@ -154,9 +158,10 @@ class ResonanceDetector:
         """
         Placeholder for wavelet-based resonance detection.
         """
-        # In a real implementation, you would use a library like PyWavelets
-        print("Wavelet detection is not yet implemented.")
-        return {'dominant_freq': np.array([])}
+        raise NotImplementedError(
+            "Wavelet resonance detection is not implemented yet. "
+            "Use method='fft' or method='markov'."
+        )
 
     def _detect_with_markov(self, data: np.ndarray, n_clusters: int) -> dict:
         """
@@ -219,11 +224,16 @@ class RootingAnalyzer:
                         try:
                             te_matrix[i, j] = transfer_entropy(data_discrete[:, i], data_discrete[:, j], k=1)
                         except Exception as e:
-                            print(f"Warning: Transfer entropy calculation failed for pair ({i},{j}): {e}")
+                            logger.warning(
+                                "Transfer entropy calculation failed for pair (%s, %s): %s",
+                                i,
+                                j,
+                                e,
+                            )
                             te_matrix[i, j] = 0
         else:
             # Fallback to correlation-based analysis
-            print("Using correlation-based analysis instead of transfer entropy")
+            logger.info("Using correlation-based analysis instead of transfer entropy")
             corr_matrix = np.corrcoef(data.T)
             te_matrix = np.abs(corr_matrix)
             np.fill_diagonal(te_matrix, 0)

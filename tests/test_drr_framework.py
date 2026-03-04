@@ -42,6 +42,13 @@ def test_markov_detector_validates_cluster_configuration():
     with pytest.raises(ValueError, match="cannot exceed"):
         detector.detect(np.random.rand(3), method='markov', n_clusters=4)
 
+
+def test_wavelet_detector_raises_not_implemented():
+    detector = ResonanceDetector()
+
+    with pytest.raises(NotImplementedError, match="not implemented"):
+        detector.detect(np.random.rand(50), method='wavelet')
+
 def test_rooting_analyzer():
     """
     Tests the RootingAnalyzer module.
@@ -121,3 +128,14 @@ def test_real_time_drr_single_variable():
     
     assert result is not None
     assert len(result) == 1  # 1 variable
+
+
+def test_real_time_drr_rejects_invalid_configuration():
+    with pytest.raises(ValueError, match="window_size"):
+        RealTimeDRR(window_size=0)
+
+    with pytest.raises(ValueError, match="n_variables"):
+        RealTimeDRR(window_size=5, n_variables=0)
+
+    with pytest.raises(ValueError, match="threshold"):
+        RealTimeDRR(window_size=5, n_variables=1, threshold=1.5)
