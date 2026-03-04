@@ -1,6 +1,10 @@
 import numpy as np
 from collections import deque
 from .modules import ResonanceDetector, DepthCalculator, AnomalyDetector
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 class RealTimeDRR:
     """
@@ -16,6 +20,13 @@ class RealTimeDRR:
             n_variables (int): The number of variables in the time series.
             threshold (float): The anomaly detection threshold.
         """
+        if window_size <= 0:
+            raise ValueError("window_size must be a positive integer")
+        if n_variables <= 0:
+            raise ValueError("n_variables must be a positive integer")
+        if not 0 <= threshold <= 1:
+            raise ValueError("threshold must be between 0 and 1")
+
         self.window_size = window_size
         self.n_variables = n_variables
         self.data_window = deque(maxlen=window_size)
@@ -64,7 +75,7 @@ class RealTimeDRR:
                     })
                 except Exception as e:
                     # Handle errors gracefully
-                    print(f"Warning: Error processing variable {i}: {e}")
+                    logger.warning("Error processing variable %s: %s", i, e)
                     results.append({
                         'resonances': {'dominant_freq': np.array([])}, 
                         'depth': {'resonance_depth': 0.0}, 
