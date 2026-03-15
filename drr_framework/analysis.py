@@ -8,14 +8,12 @@ import matplotlib.pyplot as plt
 from scipy import signal
 import networkx as nx
 from typing import Dict, List, Optional, Union, Tuple
-import warnings
-from sklearn.preprocessing import StandardScaler
+import logging
 
-# Import your existing modules
 from .modules import ResonanceDetector, RootingAnalyzer, DepthCalculator
 from .benchmarks import BenchmarkSystems
 
-warnings.filterwarnings('ignore')
+logger = logging.getLogger(__name__)
 
 
 class DynamicResonanceRooting:
@@ -171,7 +169,7 @@ class DynamicResonanceRooting:
             Optional[nx.DiGraph]: Directed graph representing influence network
         """
         if self.phase_space is None or self.phase_space.shape[1] < 2:
-            print("Multivariate data required for influence network analysis")
+            logger.warning("Multivariate data required for influence network analysis")
             return None
             
         try:
@@ -198,7 +196,7 @@ class DynamicResonanceRooting:
             return G
             
         except Exception as e:
-            print(f"Error in influence network analysis: {e}")
+            logger.error("Error in influence network analysis: %s", e)
             return None
     
     def analyze_system(
@@ -222,12 +220,12 @@ class DynamicResonanceRooting:
         
         try:
             # Step 1: Detect resonances
-            print("Detecting resonances...")
+            logger.info("Detecting resonances...")
             resonances = self.detect_resonances(data)
             results['resonances'] = resonances
-            
+
             # Step 2: Calculate resonance depths
-            print("Calculating resonance depths...")
+            logger.info("Calculating resonance depths...")
             depths = self.calculate_resonance_depths(window_size)
             results['resonance_depths'] = depths
             results['agent_belief'] = self.belief_states
@@ -245,16 +243,16 @@ class DynamicResonanceRooting:
             
             # Step 3: Analyze influence network (if multivariate)
             if multivariate and data.ndim > 1:
-                print("Analyzing influence network...")
+                logger.info("Analyzing influence network...")
                 network = self.analyze_influence_network()
                 if network:
                     results['influence_network'] = network
-            
-            print("DRR analysis complete!")
+
+            logger.info("DRR analysis complete.")
             return results
-            
+
         except Exception as e:
-            print(f"Error in system analysis: {e}")
+            logger.error("Error in system analysis: %s", e)
             return {}
     
     def plot_results(self, results: Dict, data: np.ndarray, save_plots: bool = False):
@@ -267,7 +265,7 @@ class DynamicResonanceRooting:
             save_plots (bool): Whether to save plots to files
         """
         if not results:
-            print("No results to plot")
+            logger.warning("No results to plot")
             return
             
         # Determine number of subplots needed
@@ -295,8 +293,16 @@ class DynamicResonanceRooting:
         
         # Plot 2: Phase space (if embedded)
         if self.phase_space is not None and self.phase_space.shape[1] >= 2:
-            axes[0, 1].plot(self.phase_space[:, 0], self.phase_space[:, 1], 
-                           'r-', alpha=0.6, linewidth=0.3)
+            ps_x = self.phase_space[:, 0]
+            ps_y = self.phase_space[:, 1]
+            # Downsample for large datasets to keep plotting fast
+            max_plot_points = 10_000
+            if len(ps_x) > max_plot_points:
+                step = len(ps_x) // max_plot_points
+                ps_x = ps_x[::step]
+                ps_y = ps_y[::step]
+            axes[0, 1].plot(ps_x, ps_y,
+                           'r-', alpha=0.6, linewidth=0.3, rasterized=True)
             axes[0, 1].set_title('Phase Space Reconstruction')
             axes[0, 1].set_xlabel('X(t)')
             axes[0, 1].set_ylabel('X(t+τ)')
@@ -354,7 +360,7 @@ class DynamicResonanceRooting:
         if 'influence_network' in results and n_plots == 3:
             G = results['influence_network']
             if G.number_of_nodes() > 0:
-                pos = nx.spring_layout(G)
+                pos = nx.spring_layout(G, iterations=50)
                 nx.draw(G, pos, ax=axes[2, 0], with_labels=True, 
                        node_color='lightblue', node_size=500, 
                        edge_color='gray', arrows=True)
@@ -388,7 +394,7 @@ class DynamicResonanceRooting:
         
         if save_plots:
             plt.savefig('drr_analysis_results.png', dpi=300, bbox_inches='tight')
-            print("Plot saved as 'drr_analysis_results.png'")
+            logger.info("Plot saved as 'drr_analysis_results.png'")
         
         plt.show()
 

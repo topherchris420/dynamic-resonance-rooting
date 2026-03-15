@@ -41,11 +41,12 @@ class MarkovChain:
         Returns:
             np.ndarray: The transition matrix.
         """
+        # Vectorized transition counting using mapped indices
+        mapped = np.array([self.state_map[s] for s in self.states])
+        current_indices = mapped[:-1]
+        next_indices = mapped[1:]
         matrix = np.zeros((self.n_states, self.n_states))
-        for i in range(len(self.states) - 1):
-            current_state_idx = self.state_map[self.states[i]]
-            next_state_idx = self.state_map[self.states[i+1]]
-            matrix[current_state_idx, next_state_idx] += 1
+        np.add.at(matrix, (current_indices, next_indices), 1)
 
         # Normalize rows to get probabilities
         row_sums = matrix.sum(axis=1, keepdims=True)
@@ -273,14 +274,19 @@ class DepthCalculator:
 
         if not isinstance(data, np.ndarray):
             data = np.array(data)
-        
+
+        # Filter out non-finite values to avoid corrupted depth calculations
+        finite_mask = np.isfinite(data)
+        if not np.all(finite_mask):
+            logger.warning("DepthCalculator: %d non-finite values filtered from input",
+                           np.sum(~finite_mask))
+            data = data[finite_mask]
+
         if len(data) < window_size:
             return {'resonance_depth': 0.0}
-        
-        # We'll use a rolling standard deviation to capture changes in volatility.
+
+        # Use a rolling standard deviation to capture changes in volatility.
         try:
-            # Optimization: Use numpy directly instead of pandas rolling for the last value
-            # This avoids O(N) overhead of creating a Series and rolling object
             window_data = data[-window_size:]
 
             if len(window_data) < 2:
@@ -290,7 +296,7 @@ class DepthCalculator:
                 if np.isnan(rolling_std):
                     rolling_std = 0.0
         except Exception as e:
-            print(f"Warning: Error calculating rolling std: {e}")
+            logger.warning("Error calculating rolling std: %s", e)
             rolling_std = np.std(data) if len(data) > 0 else 0.0
         
         return {'resonance_depth': float(rolling_std)}
