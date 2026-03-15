@@ -1,5 +1,4 @@
 import numpy as np
-from collections import deque
 from .modules import ResonanceDetector, DepthCalculator, AnomalyDetector
 import logging
 
@@ -9,6 +8,9 @@ logger = logging.getLogger(__name__)
 class RealTimeDRR:
     """
     Performs real-time DRR analysis on streaming data.
+
+    Uses a pre-allocated numpy ring buffer instead of a deque to avoid
+    repeated np.array() conversions on every analysis call.
     """
 
     def __init__(self, window_size: int, n_variables: int = 1, threshold: float = 0.5):
@@ -29,7 +31,8 @@ class RealTimeDRR:
 
         self.window_size = window_size
         self.n_variables = n_variables
-        self.data_window = deque(maxlen=window_size)
+        self._buffer = np.empty((window_size, n_variables), dtype=np.float64)
+        self._count = 0  # total points inserted
         self.resonance_detector = ResonanceDetector()
         self.depth_calculator = DepthCalculator()
         self.anomaly_detector = AnomalyDetector(threshold)
@@ -48,51 +51,69 @@ class RealTimeDRR:
         if np.isscalar(data_point):
             if self.n_variables != 1:
                 raise ValueError(f"Expected {self.n_variables} variables, got scalar value")
-            data_point = np.array([data_point])
+            data_point = np.array([data_point], dtype=np.float64)
         else:
-            data_point = np.asarray(data_point)
+            data_point = np.asarray(data_point, dtype=np.float64)
             if data_point.shape != (self.n_variables,):
                 raise ValueError(f"data_point must have shape ({self.n_variables},), got {data_point.shape}")
 
-        self.data_window.append(data_point)
+        # Write into the ring buffer
+        idx = self._count % self.window_size
+        self._buffer[idx] = data_point
+        self._count += 1
 
-        if len(self.data_window) == self.window_size:
-            data_array = np.array(self.data_window)
+        if self._count >= self.window_size:
+            # Build the ordered view from the ring buffer
+            start = self._count % self.window_size
+            if start == 0:
+                data_array = self._buffer
+            else:
+                data_array = np.concatenate(
+                    (self._buffer[start:], self._buffer[:start]), axis=0
+                )
+
             results = []
-            
+
             for i in range(self.n_variables):
                 series = data_array[:, i]
-                
+
                 try:
                     resonances = self.resonance_detector.detect(series)
                     depth = self.depth_calculator.calculate(series, self.window_size)
                     anomaly = self.anomaly_detector.detect(depth['resonance_depth'])
-                    
+
                     results.append({
-                        'resonances': resonances, 
-                        'depth': depth, 
+                        'resonances': resonances,
+                        'depth': depth,
                         'anomaly': anomaly
                     })
                 except Exception as e:
-                    # Handle errors gracefully
                     logger.warning("Error processing variable %s: %s", i, e)
                     results.append({
-                        'resonances': {'dominant_freq': np.array([])}, 
-                        'depth': {'resonance_depth': 0.0}, 
+                        'resonances': {'dominant_freq': np.array([])},
+                        'depth': {'resonance_depth': 0.0},
                         'anomaly': False,
                         'error': str(e)
                     })
-            
+
             return results
         else:
             return None
 
     def reset(self):
         """Reset the data window"""
-        self.data_window.clear()
+        self._count = 0
 
     def get_window_data(self):
         """Get current window data as numpy array"""
-        if len(self.data_window) == 0:
+        if self._count == 0:
             return None
-        return np.array(self.data_window)
+        n = min(self._count, self.window_size)
+        if self._count <= self.window_size:
+            return self._buffer[:n].copy()
+        start = self._count % self.window_size
+        if start == 0:
+            return self._buffer.copy()
+        return np.concatenate(
+            (self._buffer[start:], self._buffer[:start]), axis=0
+        )
