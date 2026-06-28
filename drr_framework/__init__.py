@@ -15,8 +15,9 @@ from .realtime import RealTimeDRR
 
 from .analysis import DynamicResonanceRooting
 from .generative_design_suite import GenerativeDesignSuite
+from .validation import generate_coupled_oscillator, run_reproduction_experiment
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 __author__ = "Christopher Woodyard"
 __email__ = "ciao_chris@example.com"
 
@@ -29,4 +30,6 @@ __all__ = [
     'RealTimeDRR',
     'DynamicResonanceRooting',
     'GenerativeDesignSuite',
+    'generate_coupled_oscillator',
+    'run_reproduction_experiment',
 ]

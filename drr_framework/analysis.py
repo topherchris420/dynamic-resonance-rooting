@@ -55,6 +55,8 @@ class DynamicResonanceRooting:
         self.resonances = {}
         self.influence_network = None
         self.resonance_depths = {}
+        self.resonance_depth_details = {}
+        self.rooting_results = {}
         self.belief_states = {}
         
     def time_delay_embedding(self, data: np.ndarray) -> np.ndarray:
@@ -131,74 +133,89 @@ class DynamicResonanceRooting:
 
     def calculate_resonance_depths(self, window_size: int = 100) -> Dict[str, float]:
         """
-        Calculate resonance depth for each dimension.
-        
-        Args:
-            window_size (int): Window size for depth calculation
-            
-        Returns:
-            Dict[str, float]: Resonance depths for each dimension
+        Calculate normalized resonance depth for each dimension.
+
+        The public return value stays backward-compatible as ``{dimension: float}``.
+        Full component details are stored in ``self.resonance_depth_details`` and
+        included by ``analyze_system``.
         """
         if self.phase_space is None:
             raise ValueError("Must detect resonances first")
-            
+
         depths = {}
+        details = {}
         self.belief_states = {}
-        
+
         for dim in range(self.phase_space.shape[1]):
             key = f'dim_{dim}'
             series = self.phase_space[:, dim]
-            
-            # Calculate depth using rolling statistics
-            result = self.depth_calculator.calculate(series, window_size)
+            resonance_frequencies = self.resonances.get(key, {}).get('frequencies', np.array([]))
+
+            result = self.depth_calculator.calculate(
+                series,
+                window_size,
+                sampling_rate=self.sampling_rate,
+                resonance_frequencies=resonance_frequencies,
+            )
             resonance_depth = result['resonance_depth']
             depths[key] = resonance_depth
+            details[key] = result
 
-            # Update agent belief
             belief_state = self.agent.update_belief(resonance_depth)
             self.belief_states[key] = belief_state
-            
+
         self.resonance_depths = depths
+        self.resonance_depth_details = details
         return depths
-    
     def analyze_influence_network(self) -> Optional[nx.DiGraph]:
         """
-        Analyze causal relationships between system components.
-        
+        Analyze directed relationships between system components.
+
         Returns:
-            Optional[nx.DiGraph]: Directed graph representing influence network
+            Optional[nx.DiGraph]: Directed graph representing significant influence edges.
         """
         if self.phase_space is None or self.phase_space.shape[1] < 2:
             logger.warning("Multivariate data required for influence network analysis")
             return None
-            
+
         try:
-            # Use the rooting analyzer
-            rooting_results = self.rooting_analyzer.analyze(self.phase_space)
+            rooting_results = self.rooting_analyzer.analyze(
+                self.phase_space,
+                max_lag=max(1, self.tau),
+                n_surrogates=25,
+                random_state=0,
+            )
+            self.rooting_results = rooting_results
             te_matrix = rooting_results['transfer_entropy']
-            
-            # Create directed graph
+
             G = nx.DiGraph()
             n_dims = te_matrix.shape[0]
-            
-            # Add nodes
+
             for i in range(n_dims):
                 G.add_node(f'dim_{i}')
-            
-            # Add edges based on transfer entropy
-            threshold = np.mean(te_matrix) + np.std(te_matrix)
-            for i in range(n_dims):
-                for j in range(n_dims):
-                    if i != j and te_matrix[i, j] > threshold:
-                        G.add_edge(f'dim_{i}', f'dim_{j}', weight=te_matrix[i, j])
-            
+
+            if rooting_results.get('significant_edges'):
+                for edge in rooting_results['significant_edges']:
+                    G.add_edge(
+                        edge['source'],
+                        edge['target'],
+                        weight=edge['weight'],
+                        p_value=edge['p_value'],
+                        lag=edge['lag'],
+                    )
+            else:
+                threshold = rooting_results.get('edge_threshold', float(np.mean(te_matrix) + np.std(te_matrix)))
+                for i in range(n_dims):
+                    for j in range(n_dims):
+                        if i != j and te_matrix[i, j] > threshold:
+                            G.add_edge(f'dim_{i}', f'dim_{j}', weight=te_matrix[i, j])
+
             self.influence_network = G
             return G
-            
+
         except Exception as e:
             logger.error("Error in influence network analysis: %s", e)
             return None
-    
     def analyze_system(
         self, 
         data: np.ndarray, 
@@ -228,6 +245,7 @@ class DynamicResonanceRooting:
             logger.info("Calculating resonance depths...")
             depths = self.calculate_resonance_depths(window_size)
             results['resonance_depths'] = depths
+            results['resonance_depth_details'] = self.resonance_depth_details
             results['agent_belief'] = self.belief_states
 
             # Determine rooted status (epistemic rooting)
@@ -245,8 +263,9 @@ class DynamicResonanceRooting:
             if multivariate and data.ndim > 1:
                 logger.info("Analyzing influence network...")
                 network = self.analyze_influence_network()
-                if network:
+                if network is not None:
                     results['influence_network'] = network
+                    results['rooting_analysis'] = self.rooting_results
 
             logger.info("DRR analysis complete.")
             return results

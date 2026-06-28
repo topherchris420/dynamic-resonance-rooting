@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this framework in research, please cite the associated Dynamic Resonance Rooting paper and this software artifact."
+title: "Dynamic Resonance Rooting Framework"
+type: software
+authors:
+  - family-names: Woodyard
+    given-names: Christopher
+year: 2026
+license: MIT
+repository-code: "https://github.com/topherchris420/dynamic-resonance-rooting"
+abstract: "Reference implementation and reproducibility harness for Dynamic Resonance Rooting, a computational framework for resonance, rooting, and stability analysis in complex adaptive systems."
+keywords:
+  - complex adaptive systems
+  - resonance detection
+  - transfer entropy
+  - early warning signals
+  - reproducible research

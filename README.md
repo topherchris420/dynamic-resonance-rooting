@@ -3,87 +3,179 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Tests](https://github.com/topherchris420/dynamic-resonance-rooting/actions/workflows/python-app.yml/badge.svg)](https://github.com/topherchris420/dynamic-resonance-rooting/actions/workflows/python-app.yml)
 
-A computational framework for analyzing Complex Adaptive Systems, based on the research paper "Dynamic Resonance Rooting: A Computational Framework for Complex Adaptive Systems" by Christopher Woodyard.
+Reference implementation for the research paper **"Dynamic Resonance Rooting: A Computational Framework for Complex Adaptive Systems"** by Christopher Woodyard.
 
-# Dynamic Resonance Rooting (DRR) – Official Implementation
+DRR analyzes complex adaptive systems by detecting dominant oscillatory modes, estimating directed rooting structure, and computing a normalized Resonance Depth score for stability and persistence.
 
-**Dynamic Resonance Rooting (DRR)** is a computational framework designed to analyze complex adaptive systems (CAS) through the identification of dominant oscillatory patterns (resonances) and the underlying causal structures that drive system behavior.
+## What Is Implemented
 
-## Overview
-The DRR framework aims to provide:
-- **Real-time signal detection** from time-series data,
-- **Rooting analysis** to identify causal and hierarchical dependencies within the system,
-- **Resonance Depth (RD)** as an early-warning metric for system instability or critical transitions.
+- **Resonance detection** with FFT and Welch power spectral density methods.
+- **Composite Resonance Depth** with component-level output and confidence interval.
+- **Rooting analysis** with lag-aware directed scoring, surrogate p-values, and significant edge metadata.
+- **Synthetic validation harness** that regenerates benchmark JSON/CSV artifacts from a clean checkout.
+- **Benchmark systems** for Lorenz, Rossler, Heston, and FitzHugh-Nagumo style workflows.
+- **Real-time sliding-window analyzer** for streaming-style experiments.
 
-## Features:
-- **Signal Detection**: Using spectral analysis and phase-space reconstruction.
-- **Causal Modeling**: Maps the underlying causes of system behavior via transfer entropy.
-- **Resonance Depth**: A stability metric to detect critical transitions.
-- **Visualizations**: Real-time graphs, resonance depth evolution, and symbolic field representations.
-  
-## Key Benefits:
-- **Real-time System Monitoring**: Adaptable to various domains including finance, healthcare, and defense.
-- **Dynamic Forecasting**: Predictive analysis of system stability and risk.
-- **Scalable**: Can be implemented in both small-scale research projects and large, real-time operational systems.
+Wavelet detection and the acoustic metamaterial generative design suite are currently experimental/planned surfaces. The generative design suite documents architecture and configuration, but it is not yet a full audio-to-mesh fabrication pipeline.
 
-## Use Cases:
-- **Military & Defense**: Monitoring the resilience of complex defense systems and forecasting system failures.
-- **Healthcare**: Predicting and mitigating critical health events like cardiac arrhythmias or neurological disorders.
-- **Finance**: Detecting market crashes or systemic risk in economic systems.
-  
-## Installation:
+## Install
+
 ```bash
-# Clone the repository
-git clone topherchris420/dynamic-resonance-rooting.git
+git clone https://github.com/topherchris420/dynamic-resonance-rooting.git
 cd dynamic-resonance-rooting
-
-# Install required dependencies
 pip install -r requirements.txt
 ```
 
-## Generative Design Suite for Acoustic Metamaterials (Separate Workflow)
+For editable development:
 
-This repository now includes a **separate system-level workflow** focused on converting one audio recording into a fabrication-ready 3D structure:
-
-- **Module**: `drr_framework.generative_design_suite.GenerativeDesignSuite`
-- **Goal**: Bridge raw waveform data to manifold mesh geometry suitable for STL/OBJ export.
-
-### Core Engine Architecture
-1. **Audio Dissection (DSP)**
-   - Ingest waveform, denoise/normalize.
-   - Perform short-time FFT and extract magnitude, phase, and band-energy trajectories.
-   - Produce spectral tensors for geometry synthesis.
-
-2. **3D Resonance Field Mapping**
-   - Map frequency → X, time → Y, amplitude → Z.
-   - Inject phase coherence as local curvature and orientation cues.
-   - Convert point-cloud density to manifold mesh (marching cubes + repair).
-
-3. **Generative Metamaterial Exploration**
-   - Use spectral peaks as procedural growth seeds.
-   - Modulate lattice cell size and anisotropy from local spectral energy.
-   - Blend macro shell behavior with internal diffusion lattice topology.
-
-4. **Digital Twin + Export**
-   - Run structural checks (stress/deflection), modal targets, and acoustic response.
-   - Close the loop with geometry optimization until constraints pass.
-   - Export watertight geometry as `STL` or `OBJ`.
-
-### Recommended Python Stack
-- **DSP**: `librosa`, `numpy`, `scipy.signal`, `soundfile`
-- **Topology / Meshing**: `scikit-image`, `open3d`, `pyvista`
-- **Generative Geometry**: `trimesh`, `compas`, `blender bpy API`, `pygalmesh`
-- **Digital Twin**: `fenics`, `sfepy`, `pyelmer`, `openmdao`
-- **Fabrication Export**: `trimesh`, `meshio`, `numpy-stl`
-
-### Closed-Loop Logic Flow
-`audio_in -> FFT dissection -> spectral-to-resonance field map -> manifold mesh extraction -> metamaterial growth -> digital twin simulation -> optimization feedback -> STL/OBJ export -> physical print -> measurement-based recalibration`
-
-### Example
-```python
-from drr_framework import GenerativeDesignSuite
-
-suite = GenerativeDesignSuite()
-architecture = suite.architecture()
-print(architecture["closed_loop_flow"])
+```bash
+pip install -e .
 ```
+
+## Reproduce The Research Smoke Benchmark
+
+Run the deterministic validation harness:
+
+```bash
+python -m drr_framework.experiments --output-dir results/reproduction
+```
+
+This writes:
+
+- `results/reproduction/drr_reproduction_summary.json`
+- `results/reproduction/drr_reproduction_metrics.csv`
+
+Current benchmark truth:
+
+- Known dominant frequency: `12.5 Hz`
+- Known directed edge: `dim_0 -> dim_1`
+- Expected lag: `2` samples
+
+Verified local output after this upgrade:
+
+```text
+detected_frequency_hz: 12.5
+frequency_error_hz: 0.0
+expected_edge_detected: true
+resonance_depth: 0.9042969836929234
+rooting_method: lagged_correlation
+```
+
+## Run The Example Config
+
+The checked-in `config.yml` is self-contained and generates Lorenz data:
+
+```bash
+python scripts/run_analysis.py --config config.yml
+```
+
+## Resonance Depth Metric
+
+The current implementation computes a normalized composite score:
+
+```text
+RD = 0.35 * spectral_concentration
+   + 0.25 * temporal_persistence
+   + 0.25 * phase_coherence
+   + 0.15 * amplitude_stability
+```
+
+The calculator returns both the scalar score and the component details:
+
+```python
+from drr_framework.modules import DepthCalculator
+
+result = DepthCalculator().calculate(
+    data,
+    window_size=256,
+    sampling_rate=200.0,
+    resonance_frequencies=[12.5],
+)
+
+print(result["resonance_depth"])
+print(result["components"])
+print(result["confidence_interval"])
+```
+
+## Quick Start
+
+```python
+from drr_framework import DynamicResonanceRooting, BenchmarkSystems
+
+# Generate benchmark data
+t, data = BenchmarkSystems.generate_lorenz_data(duration=5, dt=0.01)
+
+# Analyze the multivariate system
+drr = DynamicResonanceRooting(embedding_dim=3, tau=1, sampling_rate=100.0)
+results = drr.analyze_system(data, multivariate=True, window_size=256)
+
+print(results["resonance_depths"])
+print(results["resonance_depth_details"])
+print(results.get("rooting_analysis", {}))
+```
+
+## Core APIs
+
+### ResonanceDetector
+
+```python
+from drr_framework.modules import ResonanceDetector
+
+result = ResonanceDetector().detect(
+    signal,
+    method="welch",
+    sampling_rate=200.0,
+    peak_height_ratio=0.2,
+)
+```
+
+Returns dominant frequencies, peak magnitudes, confidence estimates, noise floor, and the spectrum used by the detector.
+
+### RootingAnalyzer
+
+```python
+from drr_framework.modules import RootingAnalyzer
+
+result = RootingAnalyzer().analyze(
+    multivariate_data,
+    max_lag=4,
+    n_surrogates=25,
+    random_state=42,
+)
+```
+
+Returns a directed score matrix, effective lag matrix, p-values, edge threshold, and `significant_edges` records. Transfer entropy can be requested with `method="transfer_entropy"` when `pyinform` is installed; otherwise the analyzer uses the deterministic lagged-correlation fallback and reports that method explicitly.
+
+### Reproduction Harness
+
+```python
+from drr_framework import run_reproduction_experiment
+
+summary = run_reproduction_experiment(output_dir="results/reproduction")
+print(summary)
+```
+
+## Testing
+
+```bash
+pytest
+```
+
+Current local verification after this upgrade:
+
+```text
+23 passed
+```
+
+## Citation
+
+See `CITATION.cff`. If you use this code in research, cite both the associated DRR paper and this software artifact.
+
+```text
+Woodyard, C. (2026). Dynamic Resonance Rooting Framework. MIT licensed software.
+https://github.com/topherchris420/dynamic-resonance-rooting
+```
+
+## Notes For Reviewers
+
+This repository is a research implementation. It is designed for reproducible computational experiments and methodological review. Domain-specific clinical, financial, defense, or infrastructure use requires independent validation, calibration, and risk review.

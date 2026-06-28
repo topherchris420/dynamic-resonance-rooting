@@ -1,0 +1,14 @@
+metric,value
+benchmark,coupled_oscillator_known_frequency_and_direction
+sampling_rate_hz,200.0
+target_frequency_hz,12.5
+detected_frequency_hz,12.5
+frequency_error_hz,0.0
+resonance_depth,0.9042969836929234
+resonance_depth_components,"{""amplitude_stability"": 0.8511534526971434, ""phase_coherence"": 0.9884329033222183, ""spectral_concentration"": 0.9566158405427033, ""temporal_persistence"": 0.7788007830714049}"
+resonance_depth_confidence_interval,"[0.7004381985041039, 1.0]"
+rooting_method,lagged_correlation
+expected_edge,dim_0 -> dim_1
+expected_lag_samples,2
+expected_edge_detected,True
+significant_edges_count,2

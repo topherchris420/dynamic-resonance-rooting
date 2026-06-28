@@ -1,14 +1,24 @@
 # Configuration for DRR Analysis
 
+# The default configuration is intentionally self-contained so the repository
+# can be reproduced from a clean clone without downloading private data.
+system: 'lorenz'
+is_multivariate: true
+
+drr_parameters:
+  embedding_dim: 3
+  tau: 1
+  sampling_rate: 100.0
+
 # Data generation/loading parameters
 data:
-  source: 'file'
+  source: 'generate'
   file_path: 'data/uci_har_processed.csv'
-  sampling_rate: 50
-  duration: null
-  dt: 0.02
+  sampling_rate: 100.0
+  duration: 5
+  dt: 0.01
 
-# Datasets definition for loader
+# Datasets definition for optional loaders
 datasets:
   uci_har:
     path: data/uci_har_processed.csv
@@ -31,7 +41,8 @@ analysis:
     - resonance_detection
     - phase_space
     - spectral_analysis
-  window_size: 512
+    - rooting_analysis
+  window_size: 256
   overlap: 0.5
   frequency_range:
     - 0.1
@@ -39,6 +50,7 @@ analysis:
 
 # Resonance detection parameters
 resonance_detection:
+  method: 'welch'
   min_frequency: 0.1
   max_frequency: 25.0
   prominence_threshold: 0.1
@@ -52,14 +64,14 @@ phase_space:
 
 # Visualization settings
 visualization:
-  save_plots: True
+  save_plots: true
   plot_format: 'png'
   dpi: 300
   output_dir: 'results'
 
 # Output settings
 output:
-  save_results: True
+  save_results: true
   results_dir: 'results'
   export_format:
     - csv
