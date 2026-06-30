@@ -176,6 +176,18 @@ print(analysis["impulse_responses"][0])   # shock response path
 `DynamicResonanceRooting.analyze_system(...)` attaches this bundle under
 `results["state_space_analysis"]` by default when enough samples are available.
 
+## Audience Workflows
+
+DRR now has two explicit front doors:
+
+- **Physics Lab**: mode detection, coupling diagnostics, state-space stability,
+  and perturbation response. Run `python examples/physics_lab.py`.
+- **Policy Lab**: tabular observable loading, DSGE-style diagnostics, lagged
+  influence review, and caveated research reports. Run `python examples/policy_lab.py`.
+
+See `docs/audience-guide.md` and `docs/method-crosswalk.md` for vocabulary,
+review expectations, and domain-specific caveats.
+
 ## Testing
 
 ```bash
