@@ -238,6 +238,7 @@ def render_markdown_report(payload: Dict[str, Any], audience: Audience = "genera
     ]
 
     lines.extend(_supervisory_alignment_section(payload.get("metadata", {}), audience))
+    lines.extend(_validation_readiness_section(payload.get("metadata", {}), audience))
     lines.extend(_resonance_section(results))
     lines.extend(_rooting_section(results))
     lines.extend(_state_space_section(results))
@@ -329,6 +330,101 @@ def _supervisory_alignment_section(metadata: Dict[str, Any], audience: Audience)
         lines.extend(
             [
                 "### Reference Basis",
+                "",
+                "| Reference | URL |",
+                "| --- | --- |",
+            ]
+        )
+        for reference in references:
+            if not isinstance(reference, dict):
+                continue
+            lines.append(
+                f"| {_format_value(reference.get('label'))} | {_format_value(reference.get('url'))} |"
+            )
+        lines.append("")
+
+    return lines
+
+def _validation_readiness_section(metadata: Dict[str, Any], audience: Audience) -> list[str]:
+    if audience != "supervision":
+        return []
+    readiness = metadata.get("validation_readiness") if isinstance(metadata, dict) else None
+    if not isinstance(readiness, dict):
+        return []
+
+    model_card = readiness.get("model_card", {})
+    checklist = readiness.get("checklist", {})
+    references = readiness.get("reference_basis", [])
+    required = readiness.get("required_before_validated_use", [])
+    benchmark = readiness.get("benchmark_results", {})
+    shadow = readiness.get("shadow_mode_summary", {})
+
+    lines = [
+        "## Validation Readiness",
+        "",
+        "| Field | Value |",
+        "| --- | --- |",
+        f"| Status | {_format_value(readiness.get('status'))} |",
+        f"| Model | {_format_value(model_card.get('model_name'))} |",
+        f"| Version | {_format_value(model_card.get('version'))} |",
+        f"| Model-card status | {_format_value(model_card.get('validation_status'))} |",
+        f"| Intended use | {_format_value(model_card.get('intended_use'))} |",
+        f"| Prohibited uses | {_format_metadata_value(model_card.get('prohibited_uses', []))} |",
+        "",
+        "### SR 11-7 Readiness Checklist",
+        "",
+        "| Area | Evidence Needed |",
+        "| --- | --- |",
+    ]
+    for key, value in checklist.items():
+        lines.append(f"| {_title_key(key)} | {_format_value(value)} |")
+    lines.append("")
+
+    if benchmark:
+        lines.extend(
+            [
+                "### Outcomes Analysis Snapshot",
+                "",
+                "| Metric | Value |",
+                "| --- | --- |",
+            ]
+        )
+        for key, value in benchmark.items():
+            lines.append(f"| {_title_key(key)} | {_format_metadata_value(value)} |")
+        lines.append("")
+
+    if shadow:
+        lines.extend(
+            [
+                "### Shadow Mode Snapshot",
+                "",
+                "| Metric | Value |",
+                "| --- | --- |",
+            ]
+        )
+        for key, value in shadow.items():
+            lines.append(f"| {_title_key(key)} | {_format_metadata_value(value)} |")
+        lines.append("")
+    else:
+        lines.extend(
+            [
+                "### Shadow Mode Snapshot",
+                "",
+                "Shadow mode evidence is required before validated use.",
+                "",
+            ]
+        )
+
+    if required:
+        lines.extend(["### Required Before Validated Use", ""])
+        for item in required:
+            lines.append(f"- {_format_value(item)}")
+        lines.append("")
+
+    if references:
+        lines.extend(
+            [
+                "### Validation Reference Basis",
                 "",
                 "| Reference | URL |",
                 "| --- | --- |",

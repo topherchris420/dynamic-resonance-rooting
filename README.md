@@ -18,6 +18,7 @@ DRR analyzes complex adaptive systems by detecting dominant oscillatory modes, e
 - **DSGE-inspired state-space diagnostics** with transition/measurement matrices, Kalman filtering, likelihood summaries, stability checks, and impulse responses.
 - **Audience-specific workflow adapters** for physics labs, policy analysis, supervisory panels, SQL ingestion, caveated reports, and Tableau-ready CSV exports.
 - **Fed supervisory alignment pack** with institution presets, risk-domain tags, source-data lineage metadata, report checklists, and official-reference links.
+- **Validation-readiness pack** with model-risk cards, SR 11-7-style checklists, event backtests, shadow-mode review logs, and signal explainability summaries.
 
 Wavelet detection and the acoustic metamaterial generative design suite are currently experimental/planned surfaces. The generative design suite documents architecture and configuration, but it is not yet a full audio-to-mesh fabrication pipeline.
 
@@ -192,8 +193,12 @@ DRR now has three explicit front doors:
 
 Use `build_supervisory_alignment_metadata(...)` to attach institution segment, risk domain,
 MDRM/FFIEC/NIC lineage, review-owner, and diagnostic-boundary context to supervision reports.
+Use `build_validation_readiness_packet(...)` to attach model-risk card, outcomes,
+shadow-mode, and explainability evidence while keeping DRR labeled as a candidate,
+not validated supervisory methodology.
 
-See `docs/audience-guide.md` and `docs/method-crosswalk.md` for vocabulary,
+See `docs/audience-guide.md`, `docs/method-crosswalk.md`, and
+`docs/validation-readiness-guide.md` for vocabulary,
 review expectations, and domain-specific caveats.
 
 ## Testing
@@ -205,7 +210,7 @@ pytest
 Current local verification after this upgrade:
 
 ```text
-36 passed
+41 passed
 ```
 
 ## Citation

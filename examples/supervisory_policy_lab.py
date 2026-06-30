@@ -18,7 +18,13 @@ if str(ROOT) not in sys.path:
 from drr_framework import (
     DynamicResonanceRooting,
     SupervisoryPanelDataset,
+    append_shadow_review_record,
+    build_model_risk_card,
     build_supervisory_alignment_metadata,
+    build_validation_readiness_packet,
+    create_shadow_review_record,
+    explain_supervisory_signal,
+    run_event_backtest,
     write_analysis_report,
     write_tableau_artifacts,
 )
@@ -34,11 +40,7 @@ METRICS = [
 
 
 def synthetic_supervisory_panel(periods: int = 96, random_state: int = 730) -> pd.DataFrame:
-    """Create deterministic institution panel data for supervisory demos.
-
-    The data are synthetic and designed to show workflow mechanics: peer group
-    comparisons, lagged metric structure, and dashboard-ready exports.
-    """
+    """Create deterministic institution panel data for supervisory demos."""
 
     rng = np.random.default_rng(random_state)
     dates = pd.date_range("2002-01-01", periods=periods, freq="QS")
@@ -92,6 +94,86 @@ def analyze_dataset(dataset, *, window_size: int = 48):
     )
 
 
+def build_validation_artifacts(results, dataset, *, scope_label: str, lineage: dict, output_dir: Path) -> dict:
+    """Create synthetic validation-readiness artifacts for the demo workflow."""
+
+    scores = np.mean(np.abs(dataset.values), axis=1)
+    threshold = float(np.quantile(scores, 0.75))
+    events = np.zeros(len(scores), dtype=bool)
+    alert_indices = np.flatnonzero(scores >= threshold)
+    for index in alert_indices[:3]:
+        if index + 2 < len(events):
+            events[index + 2] = True
+
+    dates = dataset.dates or tuple(str(index) for index in range(len(scores)))
+    backtest_frame = pd.DataFrame(
+        {
+            "date": pd.to_datetime(dates),
+            "drr_score": scores,
+            "review_event": events,
+        }
+    )
+    backtest = run_event_backtest(
+        backtest_frame,
+        date_column="date",
+        score_column="drr_score",
+        event_column="review_event",
+        threshold=threshold,
+        lead_window=2,
+    )
+
+    validation_dir = output_dir / "validation"
+    shadow_record = create_shadow_review_record(
+        signal_id=f"{scope_label}-synthetic-shadow-signal",
+        reviewer="supervisory analytics demo owner",
+        disposition="needs_review",
+        rationale="Synthetic shadow-mode record showing how analyst feedback is captured without supervisory effect.",
+        analyst_action="review source-data lineage and peer-group fit",
+        metadata={"scope": scope_label},
+    )
+    append_shadow_review_record(validation_dir / "shadow_reviews.jsonl", shadow_record)
+
+    explanation = explain_supervisory_signal(
+        results,
+        variable_names=dataset.variable_names,
+        data_lineage=lineage,
+    )
+    model_card = build_model_risk_card(
+        model_name="DRR supervisory diagnostic",
+        version="0.3.0-candidate",
+        intended_use="Shadow-mode monitoring of synthetic LFBO supervisory metrics.",
+        prohibited_uses=[
+            "ratings",
+            "findings",
+            "MRAs",
+            "MRIAs",
+            "enforcement recommendations",
+            "policy decisions",
+        ],
+        owners=["supervisory analytics demo owner"],
+        data_lineage=lineage,
+        assumptions=["Synthetic quarterly metrics are comparable after differencing and standardization."],
+        limitations=["Synthetic example only; no independent supervisory validation has approved this methodology."],
+    )
+    packet = build_validation_readiness_packet(
+        model_card=model_card,
+        analysis_results=results,
+        benchmark_results=backtest,
+        shadow_mode_summary={
+            "records_reviewed": 1,
+            "useful_signals": 0,
+            "needs_review_signals": 1,
+            "mode": "Shadow mode",
+        },
+        explanations=explanation,
+    )
+    return {
+        "validation_readiness": packet["validation_readiness"],
+        "backtest": backtest,
+        "explanation": explanation,
+    }
+
+
 def main() -> None:
     panel = SupervisoryPanelDataset.from_frame(
         synthetic_supervisory_panel(),
@@ -121,6 +203,19 @@ def main() -> None:
     )
 
     institution_results = analyze_dataset(institution_dataset)
+    institution_lineage = {
+        "reporting_form": "synthetic FR Y-15-style panel",
+        "data_vintage": "synthetic 2002Q1-2025Q4",
+        "ffiec_source": "synthetic FFIEC-style supervisory panel",
+        "nic_identifier": "synthetic-fbo-atlas",
+    }
+    institution_validation = build_validation_artifacts(
+        institution_results,
+        institution_dataset,
+        scope_label=focus_institution,
+        lineage=institution_lineage,
+        output_dir=output_dir,
+    )
     institution_metadata = {
         **panel.metadata,
         **build_supervisory_alignment_metadata(
@@ -134,13 +229,14 @@ def main() -> None:
                 "operational_resilience",
                 "governance_controls",
             ],
-            data_vintage="synthetic 2002Q1-2025Q4",
-            reporting_form="synthetic FR Y-15-style panel",
+            data_vintage=institution_lineage["data_vintage"],
+            reporting_form=institution_lineage["reporting_form"],
             mdrm_codes=["synthetic_liquidity", "synthetic_capital", "synthetic_controls"],
-            ffiec_source="synthetic FFIEC-style supervisory panel",
-            nic_identifier="synthetic-fbo-atlas",
+            ffiec_source=institution_lineage["ffiec_source"],
+            nic_identifier=institution_lineage["nic_identifier"],
             review_owner="supervisory analytics demo owner",
         ),
+        **institution_validation,
         "analysis_scope": "institution",
         "metrics": panel.metric_columns,
         "note": "Synthetic example for supervisory workflow demonstration only.",
@@ -161,6 +257,18 @@ def main() -> None:
     )
 
     peer_results = analyze_dataset(peer_dataset)
+    peer_lineage = {
+        "reporting_form": "synthetic FR Y-15-style panel",
+        "data_vintage": "synthetic 2002Q1-2025Q4",
+        "ffiec_source": "synthetic FFIEC-style peer aggregation",
+    }
+    peer_validation = build_validation_artifacts(
+        peer_results,
+        peer_dataset,
+        scope_label=focus_peer_group,
+        lineage=peer_lineage,
+        output_dir=output_dir,
+    )
     peer_metadata = {
         **panel.metadata,
         **build_supervisory_alignment_metadata(
@@ -168,12 +276,13 @@ def main() -> None:
             institution_label=f"{focus_peer_group} peer-group aggregate",
             peer_group=focus_peer_group,
             risk_domains=["capital", "liquidity", "asset_quality", "governance_controls"],
-            data_vintage="synthetic 2002Q1-2025Q4",
-            reporting_form="synthetic FR Y-15-style panel",
+            data_vintage=peer_lineage["data_vintage"],
+            reporting_form=peer_lineage["reporting_form"],
             mdrm_codes=["synthetic_peer_capital", "synthetic_peer_liquidity"],
-            ffiec_source="synthetic FFIEC-style peer aggregation",
+            ffiec_source=peer_lineage["ffiec_source"],
             review_owner="supervisory analytics demo owner",
         ),
+        **peer_validation,
         "analysis_scope": "peer_group",
         "metrics": panel.metric_columns,
         "note": "Synthetic peer-group aggregate for workflow demonstration only.",
@@ -191,6 +300,7 @@ def main() -> None:
     print(f"Wrote institution report: {institution_paths['markdown']}")
     print(f"Wrote peer-group report: {peer_paths['markdown']}")
     print(f"Wrote Tableau CSV directory: {tableau_dir}")
+    print(f"Wrote validation shadow log: {output_dir / 'validation' / 'shadow_reviews.jsonl'}")
 
 
 if __name__ == "__main__":

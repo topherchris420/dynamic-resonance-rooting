@@ -96,8 +96,9 @@ Validation expectations:
 
 Use the Supervisory Analytics Lab when the system is an institution-level panel
 of financial, risk, governance, or controls observables. This workflow is built
-for analysts who need auditable diagnostics, peer-group comparisons, and exports
-that can move into SQL or Tableau review loops.
+for analysts who need auditable diagnostics, peer-group comparisons, exports
+that can move into SQL or Tableau review loops, and validation-ready evidence
+for model-risk review.
 
 Typical questions:
 
@@ -116,6 +117,11 @@ Primary APIs:
 - `write_analysis_report(..., audience="supervision")`
 - `write_tableau_artifacts`
 - `build_supervisory_alignment_metadata`
+- `build_model_risk_card`
+- `build_validation_readiness_packet`
+- `run_event_backtest`
+- `create_shadow_review_record` and `append_shadow_review_record`
+- `explain_supervisory_signal`
 
 Run:
 
@@ -131,10 +137,19 @@ Fed Supervisory Alignment Pack:
 - Report checklist: materiality, proportionality, timeliness, source-data lineage, peer-group fit, and diagnostic boundary.
 - Reference basis: Federal Reserve supervision and regulation, supervisory operating principles, the Supervision and Regulation Report, MDRM, NIC, and SR 11-7.
 
+Validation Readiness Pack:
+
+- Model-risk card with intended use, prohibited uses, owners, assumptions, limitations, data lineage, and validation status.
+- SR 11-7-style checklist covering conceptual soundness, implementation verification, outcomes analysis, ongoing monitoring, governance, and independent validation.
+- Event backtest helper for alert counts, detected events, missed events, false positives, precision, recall, and lead time.
+- Shadow-mode JSONL review log for analyst feedback that does not affect supervisory decisions.
+- Explainability summary for dominant modes, lead-lag edges, state-space stability, lineage, caveats, and analyst review questions.
+
 Expected outputs:
 
 - Institution-level and peer-group DRR reports with supervisory caveats.
 - Supervisory Alignment report section with segment preset, risk domains, source lineage, review checklist, and official-reference links.
+- Validation Readiness report section with model card, SR 11-7-style checklist, outcomes snapshot, shadow-mode snapshot, and validation-reference links.
 - Tidy panel CSV shaped for Tableau, with institution/date/metric/value fields.
 - Summary, resonance-map, rooting-edge, and state-space diagnostic CSV exports.
 - JSON artifacts suitable for reproducible review or handoff to model-risk staff.

@@ -51,6 +51,16 @@ from .state_space import (
 from .analysis import DynamicResonanceRooting
 from .generative_design_suite import GenerativeDesignSuite
 from .validation import generate_coupled_oscillator, run_reproduction_experiment
+from .validation_readiness import (
+    VALIDATION_READINESS_CHECKLIST,
+    VALIDATION_REFERENCE_BASIS,
+    append_shadow_review_record,
+    build_model_risk_card,
+    build_validation_readiness_packet,
+    create_shadow_review_record,
+    explain_supervisory_signal,
+    run_event_backtest,
+)
 
 __version__ = "0.2.0"
 __author__ = "Christopher Woodyard"
@@ -76,7 +86,8 @@ __all__ = [
     'FED_SUPERVISORY_REFERENCE_BASIS',
     'build_supervisory_alignment_metadata',
     'supervisory_profile_options',
-    'supervisory_risk_domain_options',    'Transition',
+    'supervisory_risk_domain_options',
+    'Transition',
     'Measurement',
     'StateSpaceSystem',
     'KalmanResult',
@@ -93,4 +104,12 @@ __all__ = [
     'GenerativeDesignSuite',
     'generate_coupled_oscillator',
     'run_reproduction_experiment',
+    'VALIDATION_READINESS_CHECKLIST',
+    'VALIDATION_REFERENCE_BASIS',
+    'append_shadow_review_record',
+    'build_model_risk_card',
+    'build_validation_readiness_packet',
+    'create_shadow_review_record',
+    'explain_supervisory_signal',
+    'run_event_backtest',
 ]
