@@ -15,6 +15,7 @@ DRR analyzes complex adaptive systems by detecting dominant oscillatory modes, e
 - **Synthetic validation harness** that regenerates benchmark JSON/CSV artifacts from a clean checkout.
 - **Benchmark systems** for Lorenz, Rossler, Heston, and FitzHugh-Nagumo style workflows.
 - **Real-time sliding-window analyzer** for streaming-style experiments.
+- **DSGE-inspired state-space diagnostics** with transition/measurement matrices, Kalman filtering, likelihood summaries, stability checks, and impulse responses.
 
 Wavelet detection and the acoustic metamaterial generative design suite are currently experimental/planned surfaces. The generative design suite documents architecture and configuration, but it is not yet a full audio-to-mesh fabrication pipeline.
 
@@ -154,6 +155,26 @@ from drr_framework import run_reproduction_experiment
 summary = run_reproduction_experiment(output_dir="results/reproduction")
 print(summary)
 ```
+
+### DSGE-Inspired State-Space Diagnostics
+
+DRR now includes a Python-native state-space layer inspired by the modeling
+discipline used in FRBNY's `DSGE.jl`: explicit transition equations,
+measurement equations, Kalman filtering, and impulse-response diagnostics. It
+does not require Julia and does not copy DSGE.jl internals.
+
+```python
+from drr_framework import analyze_resonance_state_space
+
+analysis = analyze_resonance_state_space(data, impulse_horizon=12)
+
+print(analysis["system"]["TTT"])          # transition matrix
+print(analysis["diagnostics"])            # stability, likelihood, innovations
+print(analysis["impulse_responses"][0])   # shock response path
+```
+
+`DynamicResonanceRooting.analyze_system(...)` attaches this bundle under
+`results["state_space_analysis"]` by default when enough samples are available.
 
 ## Testing
 

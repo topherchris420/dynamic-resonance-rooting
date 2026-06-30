@@ -12,6 +12,16 @@ License: MIT
 from .benchmarks import BenchmarkSystems
 from .modules import ResonanceDetector, RootingAnalyzer, DepthCalculator, AnomalyDetector
 from .realtime import RealTimeDRR
+from .state_space import (
+    KalmanResult,
+    Measurement,
+    StateSpaceSystem,
+    Transition,
+    analyze_resonance_state_space,
+    fit_resonance_state_space,
+    impulse_response,
+    kalman_filter,
+)
 
 from .analysis import DynamicResonanceRooting
 from .generative_design_suite import GenerativeDesignSuite
@@ -28,6 +38,14 @@ __all__ = [
     'DepthCalculator',
     'AnomalyDetector',
     'RealTimeDRR',
+    'Transition',
+    'Measurement',
+    'StateSpaceSystem',
+    'KalmanResult',
+    'fit_resonance_state_space',
+    'kalman_filter',
+    'impulse_response',
+    'analyze_resonance_state_space',
     'DynamicResonanceRooting',
     'GenerativeDesignSuite',
     'generate_coupled_oscillator',

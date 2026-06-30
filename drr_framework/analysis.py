@@ -11,6 +11,7 @@ from typing import Dict, List, Optional, Union, Tuple
 import logging
 
 from .modules import ResonanceDetector, RootingAnalyzer, DepthCalculator
+from .state_space import analyze_resonance_state_space
 from .benchmarks import BenchmarkSystems
 
 logger = logging.getLogger(__name__)
@@ -220,7 +221,9 @@ class DynamicResonanceRooting:
         self, 
         data: np.ndarray, 
         multivariate: bool = False,
-        window_size: int = 100
+        window_size: int = 100,
+        state_space: bool = True,
+        state_space_horizon: int = 12,
     ) -> Dict:
         """
         Perform complete DRR analysis on system data.
@@ -229,6 +232,8 @@ class DynamicResonanceRooting:
             data (np.ndarray): Input time series data
             multivariate (bool): Whether data is multivariate
             window_size (int): Window size for depth calculation
+            state_space (bool): Whether to attach DSGE-inspired state-space diagnostics
+            state_space_horizon (int): Horizon for impulse-response diagnostics
             
         Returns:
             Dict: Complete analysis results
@@ -267,6 +272,20 @@ class DynamicResonanceRooting:
                     results['influence_network'] = network
                     results['rooting_analysis'] = self.rooting_results
 
+            # Step 4: Fit DSGE-inspired state-space diagnostics
+            if state_space and self.phase_space is not None and self.phase_space.shape[0] >= 3:
+                logger.info("Fitting DSGE-inspired state-space diagnostics...")
+                state_names = [f'dim_{idx}' for idx in range(self.phase_space.shape[1])]
+                try:
+                    results['state_space_analysis'] = analyze_resonance_state_space(
+                        self.phase_space,
+                        impulse_horizon=state_space_horizon,
+                        state_names=state_names,
+                        observable_names=state_names,
+                    )
+                except Exception as exc:
+                    logger.warning("State-space diagnostics failed: %s", exc)
+                    results['state_space_analysis'] = {'error': str(exc)}
             logger.info("DRR analysis complete.")
             return results
 
@@ -324,7 +343,7 @@ class DynamicResonanceRooting:
                            'r-', alpha=0.6, linewidth=0.3, rasterized=True)
             axes[0, 1].set_title('Phase Space Reconstruction')
             axes[0, 1].set_xlabel('X(t)')
-            axes[0, 1].set_ylabel('X(t+τ)')
+            axes[0, 1].set_ylabel('X(t+Ï„)')
             axes[0, 1].grid(True, alpha=0.3)
         else:
             axes[0, 1].text(0.5, 0.5, 'Phase space\nnot available', 
