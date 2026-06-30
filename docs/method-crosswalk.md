@@ -37,6 +37,34 @@ Avoid:
 - "This edge means the source variable controls the target variable."
 - "The report is sufficient for operational decision-making."
 
+## Supervisory Analytics Language
+
+| DRR / Policy Term | Supervisory Analytics Reading |
+| --- | --- |
+| Policy observable | Institution metric or peer-group aggregate |
+| Data vintage | Reporting period, extract date, or supervisory data cut |
+| Rooting edge | Lead-lag monitoring signal for analyst review |
+| State-space stability | Stability of the fitted metric-transition diagnostic under the sample |
+| Impulse response | Scenario path through fitted monitoring metrics, not a stress-test result |
+| Tableau export | Tidy artifact for dashboards, review packets, and repeatable analyst workflows |
+| Supervisory alignment metadata | Segment, risk-domain, data-lineage, and checklist context for review packets |
+| Caveat | Boundary between diagnostic evidence and examination or policy judgment |
+
+Fed alignment pack mapping:
+
+| Pack Field | Supervisory Purpose |
+| --- | --- |
+| Institution preset | Keeps review context aligned to Fed supervision segments such as community bank, LFBO, large FBO, G-SIB, or FMU |
+| Risk domain | Maps metrics to review language such as capital, liquidity, asset quality, operational resilience, or governance and controls |
+| Data lineage | Records reporting form, MDRM code, FFIEC source, NIC identifier, data vintage, and review owner |
+| Checklist | Forces materiality, proportionality, timeliness, peer-group fit, and source-data checks into the report |
+| Reference basis | Links the output to official Fed supervision resources without implying Fed validation of DRR |
+
+Supervisory outputs should be written as diagnostics for review: they can help
+prioritize questions, compare institutions with peers, and identify places where
+metric movement deserves source-data review. They should not be written as
+ratings, findings, enforcement recommendations, MRAs, MRIAs, policy decisions,
+or causal claims.
 ## Reviewer Checklist
 
 - Are input transformations documented?

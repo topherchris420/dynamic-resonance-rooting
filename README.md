@@ -16,6 +16,8 @@ DRR analyzes complex adaptive systems by detecting dominant oscillatory modes, e
 - **Benchmark systems** for Lorenz, Rossler, Heston, and FitzHugh-Nagumo style workflows.
 - **Real-time sliding-window analyzer** for streaming-style experiments.
 - **DSGE-inspired state-space diagnostics** with transition/measurement matrices, Kalman filtering, likelihood summaries, stability checks, and impulse responses.
+- **Audience-specific workflow adapters** for physics labs, policy analysis, supervisory panels, SQL ingestion, caveated reports, and Tableau-ready CSV exports.
+- **Fed supervisory alignment pack** with institution presets, risk-domain tags, source-data lineage metadata, report checklists, and official-reference links.
 
 Wavelet detection and the acoustic metamaterial generative design suite are currently experimental/planned surfaces. The generative design suite documents architecture and configuration, but it is not yet a full audio-to-mesh fabrication pipeline.
 
@@ -178,12 +180,18 @@ print(analysis["impulse_responses"][0])   # shock response path
 
 ## Audience Workflows
 
-DRR now has two explicit front doors:
+DRR now has three explicit front doors:
 
 - **Physics Lab**: mode detection, coupling diagnostics, state-space stability,
   and perturbation response. Run `python examples/physics_lab.py`.
 - **Policy Lab**: tabular observable loading, DSGE-style diagnostics, lagged
   influence review, and caveated research reports. Run `python examples/policy_lab.py`.
+- **Supervisory Analytics Lab**: institution panel loading, SQL-friendly adapters,
+  peer-group diagnostics, supervisory caveats, and Tableau-ready CSV exports. Run
+  `python examples/supervisory_policy_lab.py`.
+
+Use `build_supervisory_alignment_metadata(...)` to attach institution segment, risk domain,
+MDRM/FFIEC/NIC lineage, review-owner, and diagnostic-boundary context to supervision reports.
 
 See `docs/audience-guide.md` and `docs/method-crosswalk.md` for vocabulary,
 review expectations, and domain-specific caveats.
@@ -197,7 +205,7 @@ pytest
 Current local verification after this upgrade:
 
 ```text
-23 passed
+36 passed
 ```
 
 ## Citation

@@ -10,15 +10,33 @@ License: MIT
 
 # Only import modules that actually exist in your current structure
 from .benchmarks import BenchmarkSystems
-from .datasets import PolicyResonanceDataset, load_policy_dataset
+from .datasets import (
+    PolicyResonanceDataset,
+    SupervisoryPanelDataset,
+    load_policy_dataset,
+    load_policy_dataset_from_sql,
+    load_supervisory_panel,
+    load_supervisory_panel_from_sql,
+)
 from .modules import ResonanceDetector, RootingAnalyzer, DepthCalculator, AnomalyDetector
 from .reporting import (
     render_markdown_report,
     serialize_analysis_results,
     summarize_analysis_results,
     write_analysis_report,
+    write_tableau_artifacts,
 )
 from .realtime import RealTimeDRR
+from .supervision import (
+    FED_SUPERVISORY_REFERENCE_BASIS,
+    SUPERVISORY_INSTITUTION_PROFILES,
+    SUPERVISORY_RISK_DOMAINS,
+    SupervisoryInstitutionProfile,
+    SupervisoryRiskDomain,
+    build_supervisory_alignment_metadata,
+    supervisory_profile_options,
+    supervisory_risk_domain_options,
+)
 from .state_space import (
     KalmanResult,
     Measurement,
@@ -41,13 +59,24 @@ __email__ = "ciao_chris@example.com"
 __all__ = [
     'BenchmarkSystems', 
     'PolicyResonanceDataset',
+    'SupervisoryPanelDataset',
     'load_policy_dataset',
+    'load_policy_dataset_from_sql',
+    'load_supervisory_panel',
+    'load_supervisory_panel_from_sql',
     'ResonanceDetector',
     'RootingAnalyzer',
     'DepthCalculator',
     'AnomalyDetector',
     'RealTimeDRR',
-    'Transition',
+    'SupervisoryInstitutionProfile',
+    'SupervisoryRiskDomain',
+    'SUPERVISORY_INSTITUTION_PROFILES',
+    'SUPERVISORY_RISK_DOMAINS',
+    'FED_SUPERVISORY_REFERENCE_BASIS',
+    'build_supervisory_alignment_metadata',
+    'supervisory_profile_options',
+    'supervisory_risk_domain_options',    'Transition',
     'Measurement',
     'StateSpaceSystem',
     'KalmanResult',
@@ -59,6 +88,7 @@ __all__ = [
     'summarize_analysis_results',
     'render_markdown_report',
     'write_analysis_report',
+    'write_tableau_artifacts',
     'DynamicResonanceRooting',
     'GenerativeDesignSuite',
     'generate_coupled_oscillator',

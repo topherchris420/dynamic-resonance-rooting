@@ -9,11 +9,12 @@ from typing import Any, Dict, Iterable, Literal, Optional
 
 import networkx as nx
 import numpy as np
+import pandas as pd
 
 from .state_space import KalmanResult, Measurement, StateSpaceSystem, Transition
 
 
-Audience = Literal["general", "physics", "policy"]
+Audience = Literal["general", "physics", "policy", "supervision"]
 
 
 def serialize_analysis_results(value: Any) -> Any:
@@ -109,6 +110,86 @@ def write_analysis_report(
     return {"json": json_path, "markdown": markdown_path}
 
 
+def write_tableau_artifacts(
+    results: Dict[str, Any],
+    output_dir: str | Path,
+    *,
+    stem: str = "drr",
+    metadata: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Path]:
+    """Write tidy CSV files for Tableau or other dashboard tools."""
+
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+    serializable = serialize_analysis_results(results)
+    metadata = serialize_analysis_results(metadata or {})
+    flat_metadata = _flat_metadata(metadata)
+    metadata_columns = list(flat_metadata.keys())
+
+    paths = {
+        "summary": output_path / f"{stem}_summary.csv",
+        "resonance_map": output_path / f"{stem}_resonance_map.csv",
+        "rooting_edges": output_path / f"{stem}_rooting_edges.csv",
+        "state_space_diagnostics": output_path / f"{stem}_state_space_diagnostics.csv",
+    }
+
+    summary = summarize_analysis_results(results, audience="supervision")
+    summary_rows = [
+        {"metric": key, "value": value, **flat_metadata}
+        for key, value in summary.items()
+        if not isinstance(value, (dict, list))
+    ]
+    pd.DataFrame(summary_rows, columns=["metric", "value", *metadata_columns]).to_csv(
+        paths["summary"], index=False
+    )
+
+    resonance_rows = []
+    for dimension, details in serializable.get("resonances", {}).items():
+        frequencies = details.get("frequencies", []) or []
+        resonance_rows.append(
+            {
+                "dimension": dimension,
+                "dominant_frequency": details.get("dominant_freq", 0.0),
+                "detected_frequency_count": len(frequencies),
+                "detected_frequencies": ";".join(str(value) for value in frequencies[:10]),
+                **flat_metadata,
+            }
+        )
+    pd.DataFrame(
+        resonance_rows,
+        columns=[
+            "dimension",
+            "dominant_frequency",
+            "detected_frequency_count",
+            "detected_frequencies",
+            *metadata_columns,
+        ],
+    ).to_csv(paths["resonance_map"], index=False)
+
+    edges = serializable.get("rooting_analysis", {}).get("significant_edges", [])
+    edge_rows = [dict(edge, **flat_metadata) for edge in edges]
+    edge_columns = ["source", "target", "weight", "lag", "p_value"]
+    for row in edge_rows:
+        for key in row.keys():
+            if key not in edge_columns and key not in metadata_columns:
+                edge_columns.append(key)
+    pd.DataFrame(edge_rows, columns=[*edge_columns, *metadata_columns]).to_csv(
+        paths["rooting_edges"], index=False
+    )
+
+    diagnostics = serializable.get("state_space_analysis", {}).get("diagnostics", {})
+    diagnostic_rows = [
+        {"diagnostic": key, "value": value, **flat_metadata}
+        for key, value in diagnostics.items()
+        if not isinstance(value, (dict, list))
+    ]
+    pd.DataFrame(
+        diagnostic_rows,
+        columns=["diagnostic", "value", *metadata_columns],
+    ).to_csv(paths["state_space_diagnostics"], index=False)
+
+    return paths
+
 def summarize_analysis_results(results: Dict[str, Any], audience: Audience = "general") -> Dict[str, Any]:
     depths = results.get("resonance_depths", {})
     depth_values = [float(value) for value in depths.values()] if depths else []
@@ -156,6 +237,7 @@ def render_markdown_report(payload: Dict[str, Any], audience: Audience = "genera
         "",
     ]
 
+    lines.extend(_supervisory_alignment_section(payload.get("metadata", {}), audience))
     lines.extend(_resonance_section(results))
     lines.extend(_rooting_section(results))
     lines.extend(_state_space_section(results))
@@ -169,6 +251,98 @@ def render_markdown_report(payload: Dict[str, Any], audience: Audience = "genera
     )
     return "\n".join(lines)
 
+
+def _supervisory_alignment_section(metadata: Dict[str, Any], audience: Audience) -> list[str]:
+    if audience != "supervision":
+        return []
+    alignment = metadata.get("supervisory_alignment") if isinstance(metadata, dict) else None
+    if not isinstance(alignment, dict):
+        return []
+
+    profile = alignment.get("institution_profile", {})
+    data_lineage = alignment.get("data_lineage", {})
+    risk_domains = alignment.get("risk_domains", [])
+    checklist = alignment.get("checklist", {})
+    references = alignment.get("reference_basis", [])
+
+    lines = [
+        "## Supervisory Alignment",
+        "",
+        "| Field | Value |",
+        "| --- | --- |",
+        f"| Institution | {_format_value(alignment.get('institution_label'))} |",
+        f"| Segment preset | {_format_value(profile.get('label'))} |",
+        f"| Peer group | {_format_value(alignment.get('peer_group'))} |",
+        f"| Rating framework context | {_format_sequence(profile.get('rating_frameworks', []))} |",
+        f"| Review owner | {_format_value(alignment.get('review_owner'))} |",
+        f"| Scope | {_format_value(alignment.get('supervisory_scope'))} |",
+        f"| Validation status | {_format_value(alignment.get('validation_status'))} |",
+        "",
+    ]
+
+    if data_lineage:
+        lines.extend(
+            [
+                "### Data Lineage",
+                "",
+                "| Field | Value |",
+                "| --- | --- |",
+            ]
+        )
+        for key, value in data_lineage.items():
+            lines.append(f"| {_title_key(key)} | {_format_metadata_value(value)} |")
+        lines.append("")
+
+    if risk_domains:
+        lines.extend(
+            [
+                "### Risk Domains",
+                "",
+                "| Domain | Rating Context | Typical Metrics |",
+                "| --- | --- | --- |",
+            ]
+        )
+        for domain in risk_domains:
+            if not isinstance(domain, dict):
+                continue
+            lines.append(
+                f"| {_format_value(domain.get('label'))} | "
+                f"{_format_sequence(domain.get('rating_alignment', []))} | "
+                f"{_format_sequence(domain.get('typical_metrics', []))} |"
+            )
+        lines.append("")
+
+    if checklist:
+        lines.extend(
+            [
+                "### Review Checklist",
+                "",
+                "| Principle | Analyst Check |",
+                "| --- | --- |",
+            ]
+        )
+        for key, value in checklist.items():
+            lines.append(f"| {_title_key(key)} | {_format_value(value)} |")
+        lines.append("")
+
+    if references:
+        lines.extend(
+            [
+                "### Reference Basis",
+                "",
+                "| Reference | URL |",
+                "| --- | --- |",
+            ]
+        )
+        for reference in references:
+            if not isinstance(reference, dict):
+                continue
+            lines.append(
+                f"| {_format_value(reference.get('label'))} | {_format_value(reference.get('url'))} |"
+            )
+        lines.append("")
+
+    return lines
 
 def _resonance_section(results: Dict[str, Any]) -> list[str]:
     resonances = results.get("resonances", {})
@@ -264,6 +438,13 @@ def _headline(audience: Audience, depth_values: Iterable[float], diagnostics: Di
             f"{stability} fitted transition system. Treat this as a diagnostic for lagged "
             "structure, shock propagation, and scenario design, not as a policy recommendation."
         )
+    if audience == "supervision":
+        stability = "stable" if stable else "not yet classified as stable"
+        return (
+            f"The supervisory metric set has mean resonance depth {_format_float(mean_depth)} "
+            f"with a {stability} fitted transition system. Review lead-lag edges, peer-group "
+            "comparisons, and Tableau exports as monitoring evidence, not as a supervisory rating."
+        )
     return (
         f"DRR detected mean resonance depth {_format_float(mean_depth)}. Review the directed "
         "rooting and state-space sections for system structure and uncertainty diagnostics."
@@ -275,6 +456,8 @@ def _recommended_next_step(audience: Audience) -> str:
         return "Run the same workflow across controlled perturbation amplitudes and compare impulse-response decay rates."
     if audience == "policy":
         return "Repeat the analysis across vintages or regimes, then compare whether directed lags and shock responses remain stable."
+    if audience == "supervision":
+        return "Run rolling-window institution and peer-group comparisons, then review stable lead-lag signals with source-data owners."
     return "Validate the result on a held-out period or synthetic benchmark with known coupling."
 
 
@@ -283,6 +466,8 @@ def _audience_caveat(audience: Audience) -> str:
         return "This report is a computational diagnostic; physical interpretation requires domain calibration and experimental controls."
     if audience == "policy":
         return "This report is a research diagnostic; it is not a forecast, causal policy claim, or recommendation."
+    if audience == "supervision":
+        return "This report is a supervisory analytics diagnostic; it is not an examination finding, rating, enforcement recommendation, or policy decision."
     return "This report is a diagnostic summary and should be validated against domain-specific assumptions."
 
 
@@ -291,7 +476,28 @@ def _default_title(audience: Audience) -> str:
         return "DRR Physics Lab Report"
     if audience == "policy":
         return "DRR Policy Lab Report"
+    if audience == "supervision":
+        return "DRR Supervisory Analytics Report"
     return "DRR Analysis Report"
+
+
+def _title_key(key: Any) -> str:
+    return str(key).replace("_", " ").title()
+
+
+def _format_metadata_value(value: Any) -> str:
+    if isinstance(value, (list, tuple, set)):
+        return ", ".join(str(item) for item in value)
+    return _format_value(value)
+
+def _flat_metadata(metadata: Dict[str, Any]) -> Dict[str, Any]:
+    flat = {}
+    for key, value in metadata.items():
+        if isinstance(value, (dict, list, tuple, set)):
+            flat[f"meta_{key}"] = json.dumps(serialize_analysis_results(value), sort_keys=True)
+        else:
+            flat[f"meta_{key}"] = value
+    return flat
 
 
 def _format_sequence(values: Any, max_items: int = 5) -> str:
