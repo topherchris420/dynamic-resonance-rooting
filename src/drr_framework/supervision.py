@@ -52,7 +52,12 @@ SUPERVISORY_INSTITUTION_PROFILES: Mapping[str, SupervisoryInstitutionProfile] = 
         label="Community bank",
         description="Smaller banking organization supervised with emphasis on local business model and risk profile.",
         rating_frameworks=("CAMELS",),
-        review_focus=("local credit conditions", "capital adequacy", "liquidity", "management controls"),
+        review_focus=(
+            "local credit conditions",
+            "capital adequacy",
+            "liquidity",
+            "management controls",
+        ),
     ),
     "regional_or_foreign_bank_under_100b": SupervisoryInstitutionProfile(
         key="regional_or_foreign_bank_under_100b",
@@ -66,21 +71,36 @@ SUPERVISORY_INSTITUTION_PROFILES: Mapping[str, SupervisoryInstitutionProfile] = 
         label="Large bank or large FBO",
         description="Large domestic banking organization or large foreign banking organization.",
         rating_frameworks=("LFI",),
-        review_focus=("capital planning", "liquidity risk", "governance and controls", "recovery readiness"),
+        review_focus=(
+            "capital planning",
+            "liquidity risk",
+            "governance and controls",
+            "recovery readiness",
+        ),
     ),
     "g_sib": SupervisoryInstitutionProfile(
         key="g_sib",
         label="Global systemically important bank",
         description="Systemically important banking organization with heightened monitoring expectations.",
         rating_frameworks=("LFI", "G-SIB surcharge"),
-        review_focus=("resolvability", "interconnectedness", "market and counterparty risk", "liquidity resilience"),
+        review_focus=(
+            "resolvability",
+            "interconnectedness",
+            "market and counterparty risk",
+            "liquidity resilience",
+        ),
     ),
     "financial_market_utility": SupervisoryInstitutionProfile(
         key="financial_market_utility",
         label="Financial market utility",
         description="Designated financial market utility or critical financial market infrastructure.",
         rating_frameworks=("Regulation HH", "PFMI"),
-        review_focus=("operational resilience", "settlement risk", "participant risk", "recovery planning"),
+        review_focus=(
+            "operational resilience",
+            "settlement risk",
+            "participant risk",
+            "recovery planning",
+        ),
     ),
 }
 
@@ -125,7 +145,11 @@ SUPERVISORY_RISK_DOMAINS: Mapping[str, SupervisoryRiskDomain] = {
         key="operational_resilience",
         label="Operational and cyber resilience",
         description="Technology, cyber, third-party, and operational continuity monitoring signals.",
-        typical_metrics=("incident count", "critical-service outage", "cyber control exception rate"),
+        typical_metrics=(
+            "incident count",
+            "critical-service outage",
+            "cyber control exception rate",
+        ),
         rating_alignment=("management", "LFI governance and controls"),
     ),
     "governance_controls": SupervisoryRiskDomain(
@@ -235,7 +259,9 @@ def build_supervisory_alignment_metadata(
         "risk_domains": [SUPERVISORY_RISK_DOMAINS[domain].to_dict() for domain in risk_domains],
         "data_lineage": data_lineage,
         "checklist": checklist,
-        "reference_basis": [dict(reference) for reference in (reference_basis or FED_SUPERVISORY_REFERENCE_BASIS)],
+        "reference_basis": [
+            dict(reference) for reference in (reference_basis or FED_SUPERVISORY_REFERENCE_BASIS)
+        ],
     }
 
     metadata: Dict[str, Any] = {"supervisory_alignment": _drop_empty(alignment)}

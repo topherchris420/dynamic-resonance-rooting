@@ -92,7 +92,9 @@ class Transition:
     def __post_init__(self) -> None:
         n_states = np.asarray(self.TTT).shape[0]
         object.__setattr__(self, "TTT", _as_square(self.TTT, n_states, "TTT"))
-        object.__setattr__(self, "RRR", _as_matrix(self.RRR, n_states, np.asarray(self.RRR).shape[1], "RRR"))
+        object.__setattr__(
+            self, "RRR", _as_matrix(self.RRR, n_states, np.asarray(self.RRR).shape[1], "RRR")
+        )
         object.__setattr__(self, "CCC", _as_vector(self.CCC, n_states, "CCC"))
 
 
@@ -197,7 +199,7 @@ class KalmanResult:
         return float(np.sum(self.log_likelihood))
 
     def summary(self) -> Dict[str, float | list[float]]:
-        rmse = np.sqrt(np.nanmean(self.innovations ** 2, axis=0))
+        rmse = np.sqrt(np.nanmean(self.innovations**2, axis=0))
         rmse = np.where(np.isfinite(rmse), rmse, 0.0)
         return {
             "total_log_likelihood": self.total_log_likelihood,
@@ -358,8 +360,16 @@ def kalman_filter(
         predicted_covariance=predicted_covariance,
         filtered_state=filtered_state,
         filtered_covariance=filtered_covariance,
-        initial_state=np.asarray(initial_state, dtype=float).copy() if initial_state is not None else np.zeros(n_states),
-        initial_covariance=np.asarray(initial_covariance, dtype=float).copy() if initial_covariance is not None else np.eye(n_states),
+        initial_state=(
+            np.asarray(initial_state, dtype=float).copy()
+            if initial_state is not None
+            else np.zeros(n_states)
+        ),
+        initial_covariance=(
+            np.asarray(initial_covariance, dtype=float).copy()
+            if initial_covariance is not None
+            else np.eye(n_states)
+        ),
         final_state=filtered_state[-1].copy(),
         final_covariance=filtered_covariance[-1].copy(),
         innovations=innovations,
@@ -371,7 +381,7 @@ def impulse_response(
     horizon: int = 20,
     shock_index: int = 0,
     shock_size: float = 1.0,
-) -> Dict[str, np.ndarray]:
+) -> Dict[str, object]:
     """Compute state and observable impulse responses for one structural shock."""
     if horizon < 0:
         raise ValueError("horizon must be non-negative")
@@ -417,7 +427,7 @@ def analyze_resonance_state_space(
         impulse_response(system, horizon=impulse_horizon, shock_index=index)
         for index in range(system.n_shocks)
     ]
-    diagnostics = system.diagnostics()
+    diagnostics: Dict[str, object] = dict(system.diagnostics())
     diagnostics.update(kalman.summary())
 
     return {

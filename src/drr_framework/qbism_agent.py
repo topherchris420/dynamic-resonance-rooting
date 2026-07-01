@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class QBistAgent:
     """
     QBist Agent for Dynamic Resonance Rooting.
@@ -13,11 +14,11 @@ class QBistAgent:
             prior (float): Initial belief that a signal is meaningfully rooted.
             learning_rate (float): Controls belief update strength.
         """
-        self.belief = np.clip(prior, 0.01, 0.99)
+        self.belief: float = float(np.clip(prior, 0.01, 0.99))
         self.learning_rate = learning_rate
-        self.history = []
+        self.history: list[float] = []
 
-    def update_belief(self, resonance_depth: float):
+    def update_belief(self, resonance_depth: float) -> float:
         """
         Update belief based on experienced resonance depth.
         This is NOT an objective truth update, but belief revision.
@@ -25,7 +26,7 @@ class QBistAgent:
         likelihood = self._likelihood(resonance_depth)
         posterior = self.belief + self.learning_rate * (likelihood - self.belief)
 
-        self.belief = np.clip(posterior, 0.01, 0.99)
+        self.belief = float(np.clip(posterior, 0.01, 0.99))
         self.history.append(self.belief)
 
         return self.belief
@@ -37,5 +38,5 @@ class QBistAgent:
         """
         return 1 / (1 + np.exp(-resonance_depth))
 
-    def reset(self):
+    def reset(self) -> None:
         self.history = []

@@ -150,7 +150,9 @@ def test_supervision_report_and_tableau_exports_are_caveated_and_stable(tmp_path
         audience="supervision",
         metadata=metadata,
     )
-    tableau_paths = write_tableau_artifacts(results, tmp_path / "tableau", stem="supervision", metadata=metadata)
+    tableau_paths = write_tableau_artifacts(
+        results, tmp_path / "tableau", stem="supervision", metadata=metadata
+    )
 
     payload = json.loads(report_paths["json"].read_text(encoding="utf-8"))
     markdown = report_paths["markdown"].read_text(encoding="utf-8")

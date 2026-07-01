@@ -12,8 +12,9 @@ import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+SRC = ROOT / "src"
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
 
 from drr_framework import (
     DynamicResonanceRooting,
@@ -60,9 +61,19 @@ def synthetic_supervisory_panel(periods: int = 96, random_state: int = 730) -> p
         shifted_cycle = np.sin(np.linspace(phase_shift, 10 * np.pi + phase_shift, periods))
         local_noise = rng.normal(scale=0.035, size=(periods, len(METRICS)))
         funding_spread = 58 + 18 * stress + 7 * np.roll(shifted_cycle, 1) + local_noise[:, 0]
-        asset_growth = 2.4 + 0.95 * np.roll(credit_cycle, 2) - 0.015 * funding_spread + local_noise[:, 1]
-        liquidity_ratio = 118 + 4.5 * balance_shift - 8.5 * stress - 1.2 * asset_growth + local_noise[:, 2]
-        capital_ratio = 12.5 + 1.2 * balance_shift - 0.55 * np.roll(stress, 2) - 0.06 * asset_growth + local_noise[:, 3]
+        asset_growth = (
+            2.4 + 0.95 * np.roll(credit_cycle, 2) - 0.015 * funding_spread + local_noise[:, 1]
+        )
+        liquidity_ratio = (
+            118 + 4.5 * balance_shift - 8.5 * stress - 1.2 * asset_growth + local_noise[:, 2]
+        )
+        capital_ratio = (
+            12.5
+            + 1.2 * balance_shift
+            - 0.55 * np.roll(stress, 2)
+            - 0.06 * asset_growth
+            + local_noise[:, 3]
+        )
         controls_risk_proxy = 0.42 + 0.18 * stress + 0.05 * np.roll(funding_spread, 1) / 100
         controls_risk_proxy += local_noise[:, 4]
 
@@ -94,7 +105,9 @@ def analyze_dataset(dataset, *, window_size: int = 48):
     )
 
 
-def build_validation_artifacts(results, dataset, *, scope_label: str, lineage: dict, output_dir: Path) -> dict:
+def build_validation_artifacts(
+    results, dataset, *, scope_label: str, lineage: dict, output_dir: Path
+) -> dict:
     """Create synthetic validation-readiness artifacts for the demo workflow."""
 
     scores = np.mean(np.abs(dataset.values), axis=1)
@@ -152,8 +165,12 @@ def build_validation_artifacts(results, dataset, *, scope_label: str, lineage: d
         ],
         owners=["supervisory analytics demo owner"],
         data_lineage=lineage,
-        assumptions=["Synthetic quarterly metrics are comparable after differencing and standardization."],
-        limitations=["Synthetic example only; no independent supervisory validation has approved this methodology."],
+        assumptions=[
+            "Synthetic quarterly metrics are comparable after differencing and standardization."
+        ],
+        limitations=[
+            "Synthetic example only; no independent supervisory validation has approved this methodology."
+        ],
     )
     packet = build_validation_readiness_packet(
         model_card=model_card,
@@ -295,7 +312,9 @@ def main() -> None:
         title="DRR Supervisory Diagnostic: LFBO Peer Group",
         metadata=peer_metadata,
     )
-    write_tableau_artifacts(peer_results, tableau_dir, stem="lfbo_peer_group", metadata=peer_metadata)
+    write_tableau_artifacts(
+        peer_results, tableau_dir, stem="lfbo_peer_group", metadata=peer_metadata
+    )
 
     print(f"Wrote institution report: {institution_paths['markdown']}")
     print(f"Wrote peer-group report: {peer_paths['markdown']}")

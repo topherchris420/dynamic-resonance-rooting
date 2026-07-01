@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, cast
 
 import numpy as np
 from scipy.fft import rfft, rfftfreq
@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 try:
     from pyinform import transfer_entropy
+
     PYINFORM_AVAILABLE = True
 except ImportError:
     PYINFORM_AVAILABLE = False
@@ -78,28 +79,36 @@ class ResonanceDetector:
     def detect(
         self,
         data: np.ndarray,
-        method: str = 'fft',
+        method: str = "fft",
         sampling_rate: float = 100,
         n_clusters: int = 4,
         peak_height_ratio: float = 0.1,
     ) -> dict:
+        """Detect dominant resonance structure in one time series.
+
+        Supported methods are ``fft``, ``welch``, and ``markov``. ``wavelet`` is
+        reserved as an explicit not-yet-implemented research surface.
+        """
+
         data = np.asarray(data, dtype=float)
         if data.size == 0:
             raise ValueError("data must not be empty")
         if not np.all(np.isfinite(data)):
             raise ValueError("data contains non-finite values")
 
-        if method == 'fft':
+        if method == "fft":
             return self._detect_with_fft(data, sampling_rate, peak_height_ratio)
-        if method == 'welch':
+        if method == "welch":
             return self._detect_with_welch(data, sampling_rate, peak_height_ratio)
-        if method == 'wavelet':
+        if method == "wavelet":
             return self._detect_with_wavelet(data)
-        if method == 'markov':
+        if method == "markov":
             return self._detect_with_markov(data, n_clusters)
         raise ValueError(f"Unknown resonance detection method: {method}")
 
-    def _detect_with_fft(self, data: np.ndarray, sampling_rate: float, peak_height_ratio: float) -> dict:
+    def _detect_with_fft(
+        self, data: np.ndarray, sampling_rate: float, peak_height_ratio: float
+    ) -> dict:
         if sampling_rate <= 0:
             raise ValueError("sampling_rate must be positive")
         if not 0 < peak_height_ratio <= 1:
@@ -125,16 +134,18 @@ class ResonanceDetector:
         noise_floor = float(np.median(positive_magnitudes)) if positive_magnitudes.size else 0.0
 
         return {
-            'method': 'fft',
-            'dominant_freq': dominant_freq,
-            'peak_magnitude': peak_magnitudes,
-            'confidence': _peak_confidence(peak_magnitudes, noise_floor),
-            'noise_floor': noise_floor,
-            'frequency_axis': xf,
-            'spectrum': magnitudes,
+            "method": "fft",
+            "dominant_freq": dominant_freq,
+            "peak_magnitude": peak_magnitudes,
+            "confidence": _peak_confidence(peak_magnitudes, noise_floor),
+            "noise_floor": noise_floor,
+            "frequency_axis": xf,
+            "spectrum": magnitudes,
         }
 
-    def _detect_with_welch(self, data: np.ndarray, sampling_rate: float, peak_height_ratio: float) -> dict:
+    def _detect_with_welch(
+        self, data: np.ndarray, sampling_rate: float, peak_height_ratio: float
+    ) -> dict:
         if sampling_rate <= 0:
             raise ValueError("sampling_rate must be positive")
         if not 0 < peak_height_ratio <= 1:
@@ -150,7 +161,7 @@ class ResonanceDetector:
             fs=sampling_rate,
             nperseg=nperseg,
             noverlap=nperseg // 2,
-            scaling='density',
+            scaling="density",
         )
         max_power = float(np.max(psd)) if psd.size else 0.0
         peaks, _ = find_peaks(psd, height=max_power * peak_height_ratio)
@@ -167,13 +178,13 @@ class ResonanceDetector:
         noise_floor = float(np.median(positive_psd)) if positive_psd.size else 0.0
 
         return {
-            'method': 'welch',
-            'dominant_freq': dominant_freq,
-            'peak_magnitude': peak_power,
-            'confidence': _peak_confidence(peak_power, noise_floor),
-            'noise_floor': noise_floor,
-            'frequency_axis': freqs,
-            'spectrum': psd,
+            "method": "welch",
+            "dominant_freq": dominant_freq,
+            "peak_magnitude": peak_power,
+            "confidence": _peak_confidence(peak_power, noise_floor),
+            "noise_floor": noise_floor,
+            "frequency_axis": freqs,
+            "spectrum": psd,
         }
 
     def _detect_with_wavelet(self, data: np.ndarray) -> dict:
@@ -198,11 +209,11 @@ class ResonanceDetector:
         resonant_states = np.where(np.diag(mc.transition_matrix) > 0.9)[0]
 
         return {
-            'method': 'markov',
-            'transition_matrix': mc.transition_matrix,
-            'stationary_distribution': mc.stationary_distribution,
-            'resonant_states': resonant_states,
-            'clusters': states,
+            "method": "markov",
+            "transition_matrix": mc.transition_matrix,
+            "stationary_distribution": mc.stationary_distribution,
+            "resonant_states": resonant_states,
+            "clusters": states,
         }
 
 
@@ -216,8 +227,15 @@ class RootingAnalyzer:
         n_surrogates: int = 0,
         random_state: Optional[int] = None,
         alpha: float = 0.05,
-        method: str = 'lagged_correlation',
+        method: str = "lagged_correlation",
     ) -> dict:
+        """Estimate directed lead-lag rooting scores among variables.
+
+        The default path uses deterministic lagged correlation. If ``method`` is
+        ``transfer_entropy`` and ``pyinform`` is available, the analyzer uses that
+        backend and otherwise reports the fallback method explicitly.
+        """
+
         if data.ndim != 2 or data.shape[1] < 2:
             raise ValueError("Data must be a multivariate time series with at least two variables.")
         if max_lag < 1:
@@ -231,14 +249,14 @@ class RootingAnalyzer:
         if not np.all(np.isfinite(data)):
             raise ValueError("data contains non-finite values")
 
-        if method == 'transfer_entropy' and PYINFORM_AVAILABLE:
+        if method == "transfer_entropy" and PYINFORM_AVAILABLE:
             scores, effective_lag = self._transfer_entropy_scores(data, max_lag)
-            method_used = 'transfer_entropy'
+            method_used = "transfer_entropy"
         else:
-            if method == 'transfer_entropy' and not PYINFORM_AVAILABLE:
+            if method == "transfer_entropy" and not PYINFORM_AVAILABLE:
                 logger.info("pyinform unavailable; using lagged correlation rooting")
             scores, effective_lag = self._lagged_correlation_scores(data, max_lag)
-            method_used = 'lagged_correlation'
+            method_used = "lagged_correlation"
 
         p_values = self._surrogate_p_values(
             data=data,
@@ -249,20 +267,24 @@ class RootingAnalyzer:
             method_used=method_used,
         )
         edge_threshold = float(np.mean(scores) + np.std(scores))
-        significant_edges = self._significant_edges(scores, p_values, effective_lag, alpha, edge_threshold)
+        significant_edges = self._significant_edges(
+            scores, p_values, effective_lag, alpha, edge_threshold
+        )
 
         return {
-            'method': method_used,
-            'transfer_entropy': scores,
-            'effective_lag': effective_lag,
-            'p_values': p_values,
-            'alpha': alpha,
-            'edge_threshold': edge_threshold,
-            'significant_edges': significant_edges,
-            'correction': 'uncorrected_surrogate_p_value',
+            "method": method_used,
+            "transfer_entropy": scores,
+            "effective_lag": effective_lag,
+            "p_values": p_values,
+            "alpha": alpha,
+            "edge_threshold": edge_threshold,
+            "significant_edges": significant_edges,
+            "correction": "uncorrected_surrogate_p_value",
         }
 
-    def _lagged_correlation_scores(self, data: np.ndarray, max_lag: int) -> Tuple[np.ndarray, np.ndarray]:
+    def _lagged_correlation_scores(
+        self, data: np.ndarray, max_lag: int
+    ) -> Tuple[np.ndarray, np.ndarray]:
         n_variables = data.shape[1]
         scores = np.zeros((n_variables, n_variables), dtype=float)
         effective_lag = np.zeros((n_variables, n_variables), dtype=int)
@@ -287,7 +309,9 @@ class RootingAnalyzer:
                 effective_lag[source, target] = best_lag
         return scores, effective_lag
 
-    def _transfer_entropy_scores(self, data: np.ndarray, max_lag: int) -> Tuple[np.ndarray, np.ndarray]:
+    def _transfer_entropy_scores(
+        self, data: np.ndarray, max_lag: int
+    ) -> Tuple[np.ndarray, np.ndarray]:
         n_variables = data.shape[1]
         scores = np.zeros((n_variables, n_variables), dtype=float)
         effective_lag = np.ones((n_variables, n_variables), dtype=int)
@@ -305,7 +329,9 @@ class RootingAnalyzer:
                         shifted_target = data_discrete[lag:, target]
                         score = float(transfer_entropy(shifted_source, shifted_target, k=1))
                     except Exception as exc:
-                        logger.warning("Transfer entropy failed for pair (%s, %s): %s", source, target, exc)
+                        logger.warning(
+                            "Transfer entropy failed for pair (%s, %s): %s", source, target, exc
+                        )
                         score = 0.0
                     if score > best_score:
                         best_score = score
@@ -338,7 +364,7 @@ class RootingAnalyzer:
             surrogate = data.copy()
             for source in range(n_variables):
                 surrogate[:, source] = rng.permutation(surrogate[:, source])
-            if method_used == 'transfer_entropy' and PYINFORM_AVAILABLE:
+            if method_used == "transfer_entropy" and PYINFORM_AVAILABLE:
                 surrogate_scores, _ = self._transfer_entropy_scores(surrogate, max_lag)
             else:
                 surrogate_scores, _ = self._lagged_correlation_scores(surrogate, max_lag)
@@ -355,8 +381,8 @@ class RootingAnalyzer:
         effective_lag: np.ndarray,
         alpha: float,
         edge_threshold: float,
-    ) -> List[Dict[str, float]]:
-        edges = []
+    ) -> List[Dict[str, object]]:
+        edges: List[Dict[str, object]] = []
         n_variables = scores.shape[0]
         for source in range(n_variables):
             for target in range(n_variables):
@@ -365,14 +391,16 @@ class RootingAnalyzer:
                 score = float(scores[source, target])
                 p_value = float(p_values[source, target])
                 if score > edge_threshold and p_value <= alpha:
-                    edges.append({
-                        'source': f'dim_{source}',
-                        'target': f'dim_{target}',
-                        'weight': score,
-                        'p_value': p_value,
-                        'lag': int(effective_lag[source, target]),
-                    })
-        edges.sort(key=lambda edge: edge['weight'], reverse=True)
+                    edges.append(
+                        {
+                            "source": f"dim_{source}",
+                            "target": f"dim_{target}",
+                            "weight": score,
+                            "p_value": p_value,
+                            "lag": int(effective_lag[source, target]),
+                        }
+                    )
+        edges.sort(key=lambda edge: float(cast(float, edge["weight"])), reverse=True)
         return edges
 
     def _discretize_data(self, data: np.ndarray, n_bins: int = 10) -> np.ndarray:
@@ -395,6 +423,12 @@ class DepthCalculator:
         sampling_rate: float = 1.0,
         resonance_frequencies: Optional[np.ndarray] = None,
     ) -> dict:
+        """Compute the composite normalized Resonance Depth metric.
+
+        The return payload includes the scalar depth, component scores, a compact
+        confidence interval, and the target frequency used for scoring.
+        """
+
         if window_size <= 0:
             raise ValueError("window_size must be a positive integer")
         if sampling_rate <= 0:
@@ -403,7 +437,9 @@ class DepthCalculator:
         data = np.asarray(data, dtype=float)
         finite_mask = np.isfinite(data)
         if not np.all(finite_mask):
-            logger.warning("DepthCalculator: %d non-finite values filtered from input", np.sum(~finite_mask))
+            logger.warning(
+                "DepthCalculator: %d non-finite values filtered from input", np.sum(~finite_mask)
+            )
             data = data[finite_mask]
 
         if len(data) < window_size:
@@ -411,18 +447,24 @@ class DepthCalculator:
 
         window_data = data[-window_size:]
         rolling_std = float(np.std(window_data, ddof=1)) if len(window_data) > 1 else 0.0
-        target_frequency = self._select_target_frequency(window_data, sampling_rate, resonance_frequencies)
+        target_frequency = self._select_target_frequency(
+            window_data, sampling_rate, resonance_frequencies
+        )
 
-        spectral_concentration = self._spectral_concentration(window_data, sampling_rate, target_frequency)
-        temporal_persistence = self._temporal_persistence(data, window_size, sampling_rate, target_frequency)
+        spectral_concentration = self._spectral_concentration(
+            window_data, sampling_rate, target_frequency
+        )
+        temporal_persistence = self._temporal_persistence(
+            data, window_size, sampling_rate, target_frequency
+        )
         phase_coherence = self._phase_coherence(window_data, sampling_rate, target_frequency)
         amplitude_stability = self._amplitude_stability(window_data)
 
         components = {
-            'spectral_concentration': spectral_concentration,
-            'temporal_persistence': temporal_persistence,
-            'phase_coherence': phase_coherence,
-            'amplitude_stability': amplitude_stability,
+            "spectral_concentration": spectral_concentration,
+            "temporal_persistence": temporal_persistence,
+            "phase_coherence": phase_coherence,
+            "amplitude_stability": amplitude_stability,
         }
         resonance_depth = _clip01(
             0.35 * spectral_concentration
@@ -433,27 +475,27 @@ class DepthCalculator:
         confidence_interval = self._confidence_interval(resonance_depth, len(window_data))
 
         return {
-            'method': 'drr_composite_v1',
-            'resonance_depth': resonance_depth,
-            'components': components,
-            'confidence_interval': confidence_interval,
-            'target_frequency_hz': target_frequency,
-            'legacy_rolling_std': rolling_std,
+            "method": "drr_composite_v1",
+            "resonance_depth": resonance_depth,
+            "components": components,
+            "confidence_interval": confidence_interval,
+            "target_frequency_hz": target_frequency,
+            "legacy_rolling_std": rolling_std,
         }
 
     def _empty_result(self) -> dict:
         return {
-            'method': 'drr_composite_v1',
-            'resonance_depth': 0.0,
-            'components': {
-                'spectral_concentration': 0.0,
-                'temporal_persistence': 0.0,
-                'phase_coherence': 0.0,
-                'amplitude_stability': 0.0,
+            "method": "drr_composite_v1",
+            "resonance_depth": 0.0,
+            "components": {
+                "spectral_concentration": 0.0,
+                "temporal_persistence": 0.0,
+                "phase_coherence": 0.0,
+                "amplitude_stability": 0.0,
             },
-            'confidence_interval': (0.0, 0.0),
-            'target_frequency_hz': 0.0,
-            'legacy_rolling_std': 0.0,
+            "confidence_interval": (0.0, 0.0),
+            "target_frequency_hz": 0.0,
+            "legacy_rolling_std": 0.0,
         }
 
     def _select_target_frequency(
@@ -479,7 +521,9 @@ class DepthCalculator:
         positive_psd = psd[positive]
         return float(positive_freqs[np.argmax(positive_psd)])
 
-    def _spectral_concentration(self, data: np.ndarray, sampling_rate: float, target_frequency: float) -> float:
+    def _spectral_concentration(
+        self, data: np.ndarray, sampling_rate: float, target_frequency: float
+    ) -> float:
         nperseg = min(256, len(data))
         if nperseg < 8:
             return 0.0
@@ -497,7 +541,9 @@ class DepthCalculator:
         resonant_power = float(np.sum(psd[band]))
         return _clip01(resonant_power / total_power)
 
-    def _temporal_persistence(self, data: np.ndarray, window_size: int, sampling_rate: float, target_frequency: float) -> float:
+    def _temporal_persistence(
+        self, data: np.ndarray, window_size: int, sampling_rate: float, target_frequency: float
+    ) -> float:
         if target_frequency <= 0:
             return 0.0
 
@@ -508,16 +554,18 @@ class DepthCalculator:
         scores = []
         tolerance = max(sampling_rate / max(segment_size, 1), 0.5)
         for start in range(0, len(data) - segment_size + 1, segment_size):
-            segment = data[start:start + segment_size]
+            segment = data[start : start + segment_size]
             freq = self._select_target_frequency(segment, sampling_rate, None)
             if freq <= 0:
                 continue
-            scores.append(np.exp(-((freq - target_frequency) / tolerance) ** 2))
+            scores.append(np.exp(-(((freq - target_frequency) / tolerance) ** 2)))
         if not scores:
             return 0.0
         return _clip01(float(np.mean(scores)))
 
-    def _phase_coherence(self, data: np.ndarray, sampling_rate: float, target_frequency: float) -> float:
+    def _phase_coherence(
+        self, data: np.ndarray, sampling_rate: float, target_frequency: float
+    ) -> float:
         if target_frequency <= 0 or len(data) < 4:
             return 0.0
         analytic = hilbert(data - np.mean(data))
@@ -538,7 +586,9 @@ class DepthCalculator:
 
     def _confidence_interval(self, resonance_depth: float, n_samples: int) -> Tuple[float, float]:
         effective_n = max(4, n_samples // 32)
-        half_width = 1.96 * np.sqrt(max(resonance_depth * (1.0 - resonance_depth), 0.0) / effective_n)
+        half_width = 1.96 * np.sqrt(
+            max(resonance_depth * (1.0 - resonance_depth), 0.0) / effective_n
+        )
         half_width = float(np.clip(half_width, 0.02, 0.25))
         return (_clip01(resonance_depth - half_width), _clip01(resonance_depth + half_width))
 
@@ -552,5 +602,11 @@ class AnomalyDetector:
     def detect(self, resonance_depth: float) -> bool:
         return resonance_depth > self.threshold
 
-    def reset_history(self):
-        pass
+    def reset_history(self) -> None:
+        """Reset detector history.
+
+        The current threshold detector is stateless, so this method is a stable
+        compatibility hook for future streaming anomaly detectors.
+        """
+
+        return None

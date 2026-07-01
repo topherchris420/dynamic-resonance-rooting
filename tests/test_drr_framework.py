@@ -1,8 +1,14 @@
 import numpy as np
 import pytest
-from drr_framework.modules import ResonanceDetector, RootingAnalyzer, DepthCalculator, AnomalyDetector
+from drr_framework.modules import (
+    ResonanceDetector,
+    RootingAnalyzer,
+    DepthCalculator,
+    AnomalyDetector,
+)
 from drr_framework.benchmarks import BenchmarkSystems
 from drr_framework.realtime import RealTimeDRR
+
 
 def test_resonance_detector():
     """
@@ -11,10 +17,10 @@ def test_resonance_detector():
     data = np.sin(np.linspace(0, 100, 1000))
     detector = ResonanceDetector()
     result = detector.detect(data, sampling_rate=100)
-    assert 'dominant_freq' in result
-    assert 'peak_magnitude' in result
-    assert isinstance(result['dominant_freq'], np.ndarray)
-    assert isinstance(result['peak_magnitude'], np.ndarray)
+    assert "dominant_freq" in result
+    assert "peak_magnitude" in result
+    assert isinstance(result["dominant_freq"], np.ndarray)
+    assert isinstance(result["peak_magnitude"], np.ndarray)
 
 
 def test_resonance_detector_validates_inputs():
@@ -37,17 +43,18 @@ def test_markov_detector_validates_cluster_configuration():
     detector = ResonanceDetector()
 
     with pytest.raises(ValueError, match="greater than 1"):
-        detector.detect(np.random.rand(10), method='markov', n_clusters=1)
+        detector.detect(np.random.rand(10), method="markov", n_clusters=1)
 
     with pytest.raises(ValueError, match="cannot exceed"):
-        detector.detect(np.random.rand(3), method='markov', n_clusters=4)
+        detector.detect(np.random.rand(3), method="markov", n_clusters=4)
 
 
 def test_wavelet_detector_raises_not_implemented():
     detector = ResonanceDetector()
 
     with pytest.raises(NotImplementedError, match="not implemented"):
-        detector.detect(np.random.rand(50), method='wavelet')
+        detector.detect(np.random.rand(50), method="wavelet")
+
 
 def test_rooting_analyzer():
     """
@@ -56,8 +63,9 @@ def test_rooting_analyzer():
     data = np.random.rand(100, 2)
     analyzer = RootingAnalyzer()
     result = analyzer.analyze(data)
-    assert 'transfer_entropy' in result
-    assert result['transfer_entropy'].shape == (2, 2)
+    assert "transfer_entropy" in result
+    assert result["transfer_entropy"].shape == (2, 2)
+
 
 def test_depth_calculator():
     """
@@ -66,14 +74,15 @@ def test_depth_calculator():
     data = np.random.rand(100)
     calculator = DepthCalculator()
     result = calculator.calculate(data, window_size=10)
-    assert 'resonance_depth' in result
-    assert isinstance(result['resonance_depth'], float)
+    assert "resonance_depth" in result
+    assert isinstance(result["resonance_depth"], float)
 
 
 def test_depth_calculator_rejects_non_positive_window():
     calculator = DepthCalculator()
     with pytest.raises(ValueError, match="positive"):
         calculator.calculate(np.random.rand(100), window_size=0)
+
 
 def test_anomaly_detector():
     """
@@ -82,6 +91,7 @@ def test_anomaly_detector():
     detector = AnomalyDetector(threshold=0.5)
     assert detector.detect(0.6) is True
     assert detector.detect(0.4) is False
+
 
 def test_benchmark_systems():
     """
@@ -97,35 +107,37 @@ def test_benchmark_systems():
     assert len(t) == 100
     assert data.shape == (100, 3)
 
+
 def test_real_time_drr():
     """
     Tests the RealTimeDRR module.
     """
     rt_drr = RealTimeDRR(window_size=10, n_variables=2, threshold=0.5)
-    
+
     # Feed it 10 data points to fill the window
     result = None
     for i in range(10):
         result = rt_drr.process_data_point(np.random.rand(2))
-    
+
     # Should have a result after 10 points
     assert result is not None
     assert len(result) == 2  # 2 variables
-    assert 'resonances' in result[0]
-    assert 'depth' in result[0]
-    assert 'anomaly' in result[0]
+    assert "resonances" in result[0]
+    assert "depth" in result[0]
+    assert "anomaly" in result[0]
+
 
 def test_real_time_drr_single_variable():
     """
     Test RealTimeDRR with single variable (scalar input).
     """
     rt_drr = RealTimeDRR(window_size=5, n_variables=1, threshold=0.5)
-    
+
     # Feed scalar values
     result = None
     for i in range(5):
         result = rt_drr.process_data_point(np.random.rand())
-    
+
     assert result is not None
     assert len(result) == 1  # 1 variable
 

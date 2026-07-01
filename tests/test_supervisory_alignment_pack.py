@@ -52,7 +52,10 @@ def test_alignment_metadata_captures_supervisory_context_and_lineage():
         "liquidity",
         "operational_resilience",
     ]
-    assert alignment["checklist"]["materiality"] == "Review metric magnitude and trend before escalation."
+    assert (
+        alignment["checklist"]["materiality"]
+        == "Review metric magnitude and trend before escalation."
+    )
     assert alignment["checklist"]["diagnostic_boundary"].startswith("DRR output is not")
     assert any(
         reference["url"] == "https://www.federalreserve.gov/supervisionreg.htm"

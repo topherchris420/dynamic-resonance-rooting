@@ -58,7 +58,10 @@ def test_model_risk_card_and_packet_make_drr_validation_ready_not_validated():
 
     assert model_card["validation_status"] == "candidate; not validated supervisory methodology"
     assert "ratings" in model_card["prohibited_uses"]
-    assert packet["validation_readiness"]["status"] == "validation-ready candidate; not validated methodology"
+    assert (
+        packet["validation_readiness"]["status"]
+        == "validation-ready candidate; not validated methodology"
+    )
     assert packet["validation_readiness"]["sr_11_7_sections"] == [
         "intended_use",
         "conceptual_soundness",
@@ -67,8 +70,14 @@ def test_model_risk_card_and_packet_make_drr_validation_ready_not_validated():
         "ongoing_monitoring",
         "governance_and_change_control",
     ]
-    assert packet["validation_readiness"]["checklist"]["independent_validation"] == "Required before validated use"
-    assert any("srletters/sr1107" in item["url"] for item in packet["validation_readiness"]["reference_basis"])
+    assert (
+        packet["validation_readiness"]["checklist"]["independent_validation"]
+        == "Required before validated use"
+    )
+    assert any(
+        "srletters/sr1107" in item["url"]
+        for item in packet["validation_readiness"]["reference_basis"]
+    )
 
 
 def test_event_backtest_measures_alert_quality_and_lead_time():
@@ -142,7 +151,9 @@ def test_supervision_report_renders_validation_readiness_packet(tmp_path):
         intended_use="Shadow-mode monitoring.",
         prohibited_uses=["ratings", "findings"],
     )
-    packet = build_validation_readiness_packet(model_card=model_card, analysis_results=_minimal_results())
+    packet = build_validation_readiness_packet(
+        model_card=model_card, analysis_results=_minimal_results()
+    )
     paths = write_analysis_report(
         _minimal_results(),
         tmp_path,

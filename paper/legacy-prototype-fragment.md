@@ -1,3 +1,8 @@
+# Legacy Prototype Fragment
+
+This file preserves the original root-level prototype fragment for research provenance. It is incomplete and is not imported by the package or used as executable code. Use `src/drr_framework/` for the maintained implementation.
+
+```python
 # Dynamic Resonance Rooting (DRR) Framework
 # Author: Christopher Woodyard (2025)
 
@@ -134,3 +139,4 @@ class DynamicResonanceRooting:
                 
                 resonances[key] = {
                     'frequencies
+```

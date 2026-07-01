@@ -3,15 +3,17 @@ import yaml
 import numpy as np
 import pandas as pd
 import sys
-import os
-from typing import Dict, Any
+from pathlib import Path
+from typing import Any, Dict
 
-# Add the project root to the Python path
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(project_root)
+# Add src/ for checkout-based execution before editable installation.
+project_src = Path(__file__).resolve().parents[1] / "src"
+if str(project_src) not in sys.path:
+    sys.path.insert(0, str(project_src))
 
 from drr_framework.analysis import DynamicResonanceRooting
 from drr_framework.benchmarks import BenchmarkSystems
+
 
 def load_data(config: Dict[str, Any]) -> np.ndarray:
     """
@@ -23,26 +25,30 @@ def load_data(config: Dict[str, Any]) -> np.ndarray:
     Returns:
         np.ndarray: The loaded or generated data.
     """
-    data_config = config['data']
-    if data_config['source'] == 'generate':
-        system = config['system']
+    data_config = config["data"]
+    if data_config["source"] == "generate":
+        system = config["system"]
         print(f"Generating data for the {system} system...")
-        if system == 'lorenz':
+        if system == "lorenz":
             _, data = BenchmarkSystems.generate_lorenz_data(
-                duration=data_config['duration'], dt=data_config['dt']
+                duration=data_config["duration"], dt=data_config["dt"]
             )
-        elif system == 'rossler':
+        elif system == "rossler":
             _, data = BenchmarkSystems.generate_rossler_data(
-                duration=data_config['duration'], dt=data_config['dt']
+                duration=data_config["duration"], dt=data_config["dt"]
             )
-        else: # physio
-            t = np.linspace(0, data_config['duration'], int(data_config['duration'] * config['drr_parameters']['sampling_rate']))
-            data = (np.sin(2 * np.pi * 1.2 * t) + 0.5 * np.sin(2 * np.pi * 0.25 * t))
+        else:  # physio
+            t = np.linspace(
+                0,
+                data_config["duration"],
+                int(data_config["duration"] * config["drr_parameters"]["sampling_rate"]),
+            )
+            data = np.sin(2 * np.pi * 1.2 * t) + 0.5 * np.sin(2 * np.pi * 0.25 * t)
         return data
-    elif data_config['source'] == 'file':
+    elif data_config["source"] == "file":
         try:
             print(f"Loading data from {data_config['file_path']}...")
-            return pd.read_csv(data_config['file_path']).values
+            return pd.read_csv(data_config["file_path"]).values
         except FileNotFoundError:
             print(f"Error: The file {data_config['file_path']} was not found.")
             sys.exit(1)
@@ -59,15 +65,15 @@ def main():
     """
     parser = argparse.ArgumentParser(description="Run Dynamic Resonance Rooting (DRR) analysis.")
     parser.add_argument(
-        '--config',
+        "--config",
         type=str,
-        default='config.yml',
-        help='Path to the configuration file (default: config.yml).'
+        default="config.yml",
+        help="Path to the configuration file (default: config.yml).",
     )
     args = parser.parse_args()
 
     try:
-        with open(args.config, 'r') as f:
+        with open(args.config, "r") as f:
             config = yaml.safe_load(f)
     except FileNotFoundError:
         print(f"Error: The config file {args.config} was not found.")
@@ -76,34 +82,34 @@ def main():
         print(f"Error parsing the YAML config file: {e}")
         sys.exit(1)
 
-
     print(f"--- Starting DRR analysis for the {config['system'].capitalize()} system ---")
 
     # 1. Load data
     data = load_data(config)
-    
+
     # 2. Initialize the DRR framework
-    drr_analyzer = DynamicResonanceRooting(**config['drr_parameters'])
+    drr_analyzer = DynamicResonanceRooting(**config["drr_parameters"])
 
     # 3. Run the analysis
-    results = drr_analyzer.analyze_system(data, multivariate=config['is_multivariate'])
+    results = drr_analyzer.analyze_system(data, multivariate=config["is_multivariate"])
 
     # 4. Print the results
     print("\n--- Analysis Complete ---")
     print("Resonance Depths:")
-    if results and 'resonance_depths' in results:
-        for key, depth in results['resonance_depths'].items():
+    if results and "resonance_depths" in results:
+        for key, depth in results["resonance_depths"].items():
             print(f"  - {key}: {depth:.6f}")
     else:
         print("  - No resonance depths found.")
 
     print("\nDominant Frequencies:")
-    if results and 'resonances' in results:
-        for key, resonance_data in results['resonances'].items():
-            freq = resonance_data.get('dominant_freq', 'N/A')
+    if results and "resonances" in results:
+        for key, resonance_data in results["resonances"].items():
+            freq = resonance_data.get("dominant_freq", "N/A")
             print(f"  - {key}: {freq} Hz")
     else:
         print("  - No dominant frequencies found.")
+
 
 if __name__ == "__main__":
     main()

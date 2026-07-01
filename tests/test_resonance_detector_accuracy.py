@@ -1,7 +1,7 @@
-
 import pytest
 import numpy as np
 from drr_framework.modules import ResonanceDetector
+
 
 def test_resonance_detector_accuracy():
     """
@@ -17,11 +17,12 @@ def test_resonance_detector_accuracy():
     detector = ResonanceDetector()
     result = detector.detect(data, sampling_rate=sampling_rate)
 
-    dominant_freqs = result['dominant_freq']
+    dominant_freqs = result["dominant_freq"]
     assert len(dominant_freqs) > 0
     # The dominant frequency should be close to 15.0
     # FFT frequency resolution is fs/N = 100/200 = 0.5 Hz
     assert np.isclose(dominant_freqs[0], target_freq, atol=0.5)
+
 
 if __name__ == "__main__":
     test_resonance_detector_accuracy()

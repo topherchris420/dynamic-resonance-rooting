@@ -103,7 +103,7 @@ class GenerativeDesignSuite:
             ],
         }
 
-    def architecture(self) -> Dict[str, Dict]:
+    def architecture(self) -> Dict[str, object]:
         """High-level architecture for an end-to-end closed loop."""
         return {
             "mission": (

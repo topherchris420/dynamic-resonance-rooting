@@ -132,7 +132,9 @@ def run_event_backtest(
     prepared[date_column] = pd.to_datetime(prepared[date_column], errors="raise")
     prepared[score_column] = pd.to_numeric(prepared[score_column], errors="coerce")
     prepared[event_column] = prepared[event_column].astype(bool)
-    prepared = prepared.dropna(subset=[score_column]).sort_values(date_column).reset_index(drop=True)
+    prepared = (
+        prepared.dropna(subset=[score_column]).sort_values(date_column).reset_index(drop=True)
+    )
 
     alert_indices = [int(index) for index in prepared.index[prepared[score_column] >= threshold]]
     event_indices = [int(index) for index in prepared.index[prepared[event_column]]]
@@ -174,8 +176,12 @@ def run_event_backtest(
         "precision": float(precision),
         "recall": float(recall),
         "mean_lead_time_periods": float(np.mean(lead_times)) if lead_times else None,
-        "alert_dates": [prepared.loc[index, date_column].strftime("%Y-%m-%d") for index in alert_indices],
-        "event_dates": [prepared.loc[index, date_column].strftime("%Y-%m-%d") for index in event_indices],
+        "alert_dates": [
+            prepared.loc[index, date_column].strftime("%Y-%m-%d") for index in alert_indices
+        ],
+        "event_dates": [
+            prepared.loc[index, date_column].strftime("%Y-%m-%d") for index in event_indices
+        ],
     }
 
 
@@ -235,7 +241,9 @@ def explain_supervisory_signal(
     diagnostics = state_space.get("diagnostics", {}) if isinstance(state_space, Mapping) else {}
 
     dominant_modes = []
-    for dimension, depth in sorted(depths.items(), key=lambda item: float(item[1]), reverse=True)[:max_items]:
+    for dimension, depth in sorted(depths.items(), key=lambda item: float(item[1]), reverse=True)[
+        :max_items
+    ]:
         resonance = resonances.get(dimension, {}) if isinstance(resonances, Mapping) else {}
         dominant_modes.append(
             {
@@ -247,7 +255,9 @@ def explain_supervisory_signal(
         )
 
     top_edges = []
-    for edge in rooting.get("significant_edges", [])[:max_items] if isinstance(rooting, Mapping) else []:
+    for edge in (
+        rooting.get("significant_edges", [])[:max_items] if isinstance(rooting, Mapping) else []
+    ):
         source = edge.get("source")
         target = edge.get("target")
         top_edges.append(
@@ -286,14 +296,18 @@ def explain_supervisory_signal(
 
 def _analysis_summary(results: Mapping[str, Any]) -> Dict[str, Any]:
     depths = results.get("resonance_depths", {}) if isinstance(results, Mapping) else {}
-    depth_values = [float(value) for value in depths.values()] if isinstance(depths, Mapping) else []
+    depth_values = (
+        [float(value) for value in depths.values()] if isinstance(depths, Mapping) else []
+    )
     rooting = results.get("rooting_analysis", {}) if isinstance(results, Mapping) else {}
     edges = rooting.get("significant_edges", []) if isinstance(rooting, Mapping) else []
     return {
         "mean_resonance_depth": float(np.mean(depth_values)) if depth_values else 0.0,
         "max_resonance_depth": float(np.max(depth_values)) if depth_values else 0.0,
         "significant_relationships": len(edges),
-        "is_rooted": bool(results.get("is_rooted", False)) if isinstance(results, Mapping) else False,
+        "is_rooted": (
+            bool(results.get("is_rooted", False)) if isinstance(results, Mapping) else False
+        ),
     }
 
 

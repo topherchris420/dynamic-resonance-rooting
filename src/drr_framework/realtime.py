@@ -1,9 +1,12 @@
+from typing import Any, Dict, List, Optional
+
 import numpy as np
 from .modules import ResonanceDetector, DepthCalculator, AnomalyDetector
 import logging
 
 
 logger = logging.getLogger(__name__)
+
 
 class RealTimeDRR:
     """
@@ -37,7 +40,7 @@ class RealTimeDRR:
         self.depth_calculator = DepthCalculator()
         self.anomaly_detector = AnomalyDetector(threshold)
 
-    def process_data_point(self, data_point: np.ndarray) -> dict:
+    def process_data_point(self, data_point: np.ndarray) -> Optional[List[Dict[str, Any]]]:
         """
         Processes a single data point.
 
@@ -55,7 +58,9 @@ class RealTimeDRR:
         else:
             data_point = np.asarray(data_point, dtype=np.float64)
             if data_point.shape != (self.n_variables,):
-                raise ValueError(f"data_point must have shape ({self.n_variables},), got {data_point.shape}")
+                raise ValueError(
+                    f"data_point must have shape ({self.n_variables},), got {data_point.shape}"
+                )
 
         # Write into the ring buffer
         idx = self._count % self.window_size
@@ -65,12 +70,11 @@ class RealTimeDRR:
         if self._count >= self.window_size:
             # Build the ordered view from the ring buffer
             start = self._count % self.window_size
+            data_array: np.ndarray
             if start == 0:
                 data_array = self._buffer
             else:
-                data_array = np.concatenate(
-                    (self._buffer[start:], self._buffer[:start]), axis=0
-                )
+                data_array = np.concatenate((self._buffer[start:], self._buffer[:start]), axis=0)
 
             results = []
 
@@ -80,31 +84,29 @@ class RealTimeDRR:
                 try:
                     resonances = self.resonance_detector.detect(series)
                     depth = self.depth_calculator.calculate(series, self.window_size)
-                    anomaly = self.anomaly_detector.detect(depth['resonance_depth'])
+                    anomaly = self.anomaly_detector.detect(depth["resonance_depth"])
 
-                    results.append({
-                        'resonances': resonances,
-                        'depth': depth,
-                        'anomaly': anomaly
-                    })
+                    results.append({"resonances": resonances, "depth": depth, "anomaly": anomaly})
                 except Exception as e:
                     logger.warning("Error processing variable %s: %s", i, e)
-                    results.append({
-                        'resonances': {'dominant_freq': np.array([])},
-                        'depth': {'resonance_depth': 0.0},
-                        'anomaly': False,
-                        'error': str(e)
-                    })
+                    results.append(
+                        {
+                            "resonances": {"dominant_freq": np.array([])},
+                            "depth": {"resonance_depth": 0.0},
+                            "anomaly": False,
+                            "error": str(e),
+                        }
+                    )
 
             return results
         else:
             return None
 
-    def reset(self):
+    def reset(self) -> None:
         """Reset the data window"""
         self._count = 0
 
-    def get_window_data(self):
+    def get_window_data(self) -> Optional[np.ndarray]:
         """Get current window data as numpy array"""
         if self._count == 0:
             return None
@@ -114,6 +116,4 @@ class RealTimeDRR:
         start = self._count % self.window_size
         if start == 0:
             return self._buffer.copy()
-        return np.concatenate(
-            (self._buffer[start:], self._buffer[:start]), axis=0
-        )
+        return np.concatenate((self._buffer[start:], self._buffer[:start]), axis=0)

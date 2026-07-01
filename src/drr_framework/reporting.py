@@ -122,8 +122,10 @@ def write_tableau_artifacts(
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
     serializable = serialize_analysis_results(results)
-    metadata = serialize_analysis_results(metadata or {})
-    flat_metadata = _flat_metadata(metadata)
+    serialized_metadata = serialize_analysis_results(metadata or {})
+    flat_metadata = _flat_metadata(
+        serialized_metadata if isinstance(serialized_metadata, dict) else {}
+    )
     metadata_columns = list(flat_metadata.keys())
 
     paths = {
@@ -190,7 +192,10 @@ def write_tableau_artifacts(
 
     return paths
 
-def summarize_analysis_results(results: Dict[str, Any], audience: Audience = "general") -> Dict[str, Any]:
+
+def summarize_analysis_results(
+    results: Dict[str, Any], audience: Audience = "general"
+) -> Dict[str, Any]:
     depths = results.get("resonance_depths", {})
     depth_values = [float(value) for value in depths.values()] if depths else []
     rooting = results.get("rooting_analysis", {})
@@ -345,6 +350,7 @@ def _supervisory_alignment_section(metadata: Dict[str, Any], audience: Audience)
 
     return lines
 
+
 def _validation_readiness_section(metadata: Dict[str, Any], audience: Audience) -> list[str]:
     if audience != "supervision":
         return []
@@ -440,6 +446,7 @@ def _validation_readiness_section(metadata: Dict[str, Any], audience: Audience) 
 
     return lines
 
+
 def _resonance_section(results: Dict[str, Any]) -> list[str]:
     resonances = results.get("resonances", {})
     if not resonances:
@@ -515,7 +522,9 @@ def _state_space_section(results: Dict[str, Any]) -> list[str]:
     return lines
 
 
-def _headline(audience: Audience, depth_values: Iterable[float], diagnostics: Dict[str, Any]) -> str:
+def _headline(
+    audience: Audience, depth_values: Iterable[float], diagnostics: Dict[str, Any]
+) -> str:
     values = list(depth_values)
     mean_depth = float(np.mean(values)) if values else 0.0
     stable = diagnostics.get("is_stable")
@@ -585,6 +594,7 @@ def _format_metadata_value(value: Any) -> str:
     if isinstance(value, (list, tuple, set)):
         return ", ".join(str(item) for item in value)
     return _format_value(value)
+
 
 def _flat_metadata(metadata: Dict[str, Any]) -> Dict[str, Any]:
     flat = {}

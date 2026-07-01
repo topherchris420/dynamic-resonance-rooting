@@ -124,7 +124,9 @@ def run_reproduction_experiment(
             json.dumps(summary, indent=2, sort_keys=True),
             encoding="utf-8",
         )
-        with (output_path / "drr_reproduction_metrics.csv").open("w", newline="", encoding="utf-8") as f:
+        with (output_path / "drr_reproduction_metrics.csv").open(
+            "w", newline="", encoding="utf-8"
+        ) as f:
             writer = csv.DictWriter(f, fieldnames=["metric", "value"])
             writer.writeheader()
             for key, value in summary.items():

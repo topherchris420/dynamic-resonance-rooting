@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="420" viewBox="0 0 1400 420" role="img" aria-labelledby="title desc">
+  <title id="title">Dynamic Resonance Rooting research banner</title>
+  <desc id="desc">A dark research banner with resonance waves, rooted nodes, and phase transition markers.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#07111f"/>
+      <stop offset="52%" stop-color="#10251f"/>
+      <stop offset="100%" stop-color="#1e2633"/>
+    </linearGradient>
+    <linearGradient id="line" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#67e8f9"/>
+      <stop offset="48%" stop-color="#a7f3d0"/>
+      <stop offset="100%" stop-color="#f8d36b"/>
+    </linearGradient>
+    <filter id="soft">
+      <feGaussianBlur stdDeviation="3"/>
+    </filter>
+  </defs>
+  <rect width="1400" height="420" fill="url(#bg)"/>
+  <g opacity="0.24">
+    <path d="M0 298 C160 210 250 382 420 252 C590 122 705 305 870 186 C1040 62 1190 196 1400 104" fill="none" stroke="#67e8f9" stroke-width="3"/>
+    <path d="M0 236 C150 148 265 330 428 202 C600 67 727 246 902 134 C1078 20 1230 142 1400 66" fill="none" stroke="#a7f3d0" stroke-width="2"/>
+    <path d="M0 340 C180 250 300 408 492 290 C656 188 785 356 960 240 C1138 122 1245 278 1400 188" fill="none" stroke="#f8d36b" stroke-width="2"/>
+  </g>
+  <g opacity="0.9">
+    <line x1="925" y1="105" x2="1085" y2="170" stroke="#a7f3d0" stroke-width="2"/>
+    <line x1="1085" y1="170" x2="1216" y2="112" stroke="#a7f3d0" stroke-width="2"/>
+    <line x1="1085" y1="170" x2="1162" y2="274" stroke="#f8d36b" stroke-width="2"/>
+    <line x1="925" y1="105" x2="1010" y2="286" stroke="#67e8f9" stroke-width="2"/>
+    <circle cx="925" cy="105" r="14" fill="#67e8f9"/>
+    <circle cx="1085" cy="170" r="18" fill="#a7f3d0"/>
+    <circle cx="1216" cy="112" r="12" fill="#f8d36b"/>
+    <circle cx="1162" cy="274" r="13" fill="#f8d36b"/>
+    <circle cx="1010" cy="286" r="11" fill="#67e8f9"/>
+  </g>
+  <g opacity="0.28" filter="url(#soft)">
+    <rect x="790" y="64" width="8" height="290" fill="#f8d36b"/>
+    <rect x="794" y="64" width="140" height="290" fill="#f8d36b" opacity="0.13"/>
+  </g>
+  <g font-family="Inter, Segoe UI, Arial, sans-serif" fill="#f8fafc">
+    <text x="80" y="148" font-size="58" font-weight="700">Dynamic Resonance Rooting</text>
+    <text x="82" y="202" font-size="24" fill="#cbd5e1">Resonance detection, rooting analysis, and stability diagnostics for complex adaptive systems</text>
+    <text x="82" y="258" font-size="19" fill="#a7f3d0">Research framework | reproducible examples | reviewer-ready artifacts</text>
+  </g>
+</svg>

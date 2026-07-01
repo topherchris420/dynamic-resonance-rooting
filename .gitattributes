@@ -1,0 +1,13 @@
+* text=auto
+
+*.py text eol=lf
+*.md text eol=lf
+*.rst text eol=lf
+*.toml text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+*.csv text eol=lf
+*.svg text eol=lf
+*.sh text eol=lf
+*.ipynb text eol=lf
