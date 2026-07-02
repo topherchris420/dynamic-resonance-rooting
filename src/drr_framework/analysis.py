@@ -6,7 +6,7 @@ Author: Christopher Woodyard (2025)
 from .qbism_agent import QBistAgent
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy import signal
+from ._spectral import welch as signal_welch
 import networkx as nx
 from typing import Dict, Optional
 import logging
@@ -369,7 +369,7 @@ class DynamicResonanceRooting:
             if "frequencies" in resonance_data and len(resonance_data["frequencies"]) > 0:
                 # Plot power spectrum
                 series = self.phase_space[:, 0] if self.phase_space is not None else data.flatten()
-                freqs, psd = signal.welch(
+                freqs, psd = signal_welch(
                     series, fs=self.sampling_rate, nperseg=min(256, len(series) // 4)
                 )
 

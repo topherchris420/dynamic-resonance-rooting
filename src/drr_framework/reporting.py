@@ -7,7 +7,6 @@ from dataclasses import is_dataclass
 from pathlib import Path
 from typing import Any, Dict, Iterable, Literal, Optional
 
-import networkx as nx
 import numpy as np
 import pandas as pd
 
@@ -58,6 +57,8 @@ def serialize_analysis_results(value: Any) -> Any:
             "innovations": serialize_analysis_results(value.innovations),
             "summary": serialize_analysis_results(value.summary()),
         }
+    # Lazy import for networkx - only needed for graph serialization
+    import networkx as nx
     if isinstance(value, nx.Graph):
         return {
             "nodes": list(value.nodes(data=True)),

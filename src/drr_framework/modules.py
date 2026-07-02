@@ -2,12 +2,18 @@ import logging
 from typing import Dict, List, Optional, Tuple, cast
 
 import numpy as np
-from scipy.fft import rfft, rfftfreq
-from scipy.signal import find_peaks, hilbert, welch
-from sklearn.cluster import KMeans
-
+from ._spectral import rfft, rfftfreq, find_peaks, hilbert, welch
 
 logger = logging.getLogger(__name__)
+
+try:
+    from sklearn.cluster import KMeans
+
+    SKLEARN_AVAILABLE = True
+except ImportError:
+    SKLEARN_AVAILABLE = False
+    KMeans = None
+    logger.info("sklearn not available; clustering will use fallback mode")
 
 try:
     from pyinform import transfer_entropy
@@ -194,6 +200,11 @@ class ResonanceDetector:
         )
 
     def _detect_with_markov(self, data: np.ndarray, n_clusters: int) -> dict:
+        if not SKLEARN_AVAILABLE:
+            raise ImportError(
+                "sklearn is required for markov resonance detection. "
+                "Install it with: pip install scikit-learn"
+            )
         if n_clusters <= 1:
             raise ValueError("n_clusters must be greater than 1")
 
