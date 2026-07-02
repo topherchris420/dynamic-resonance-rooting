@@ -59,6 +59,7 @@ def serialize_analysis_results(value: Any) -> Any:
         }
     # Lazy import for networkx - only needed for graph serialization
     import networkx as nx
+
     if isinstance(value, nx.Graph):
         return {
             "nodes": list(value.nodes(data=True)),
