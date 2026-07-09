@@ -1,258 +1,208 @@
-# Dynamic Resonance Rooting (DRR)
+# Macro Stability & Banking Skin Cockpit
 
-![Dynamic Resonance Rooting research banner](assets/drr-hero.svg)
+## Federal Reserve Early-Warning System for LFBO Liquidity Panics
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://github.com/topherchris420/dynamic-resonance-rooting/actions/workflows/python-app.yml/badge.svg)](https://github.com/topherchris420/dynamic-resonance-rooting/actions/workflows/python-app.yml)
-[![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)](pyproject.toml)
-[![Research Software](https://img.shields.io/badge/research-software-2f855a.svg)](docs/reproducibility.md)
+**Project:** Dynamic Resonance Rooting (DRR) Framework Integration
+**Version:** 1.0
+**Date:** 2025-07-09
+**Compliance:** SR 11-7 Model Risk Management Guidelines
+**Classification:** Official - Supervisory Use Only
 
-Dynamic Resonance Rooting is a research framework for studying complex adaptive
-systems through resonance detection, directed rooting analysis, and normalized
-resonance-depth diagnostics. It is designed for researchers, AI engineers,
-complex systems scientists, model-risk reviewers, and collaborators who need a
-reproducible computational surface for exploring oscillatory structure,
-lead-lag relationships, stability, and validation-readiness artifacts.
+---
 
-Reference implementation for the research program **Dynamic Resonance Rooting: A
-Computational Framework for Complex Adaptive Systems** by Christopher Woodyard.
+## Executive Summary
 
-## Project Overview
+This system provides a real-time early-warning cockpit for detecting non-linear liquidity panics (the "Dash for Cash" loop) across Large Foreign Banking Organizations (LFBOs). It integrates the Dynamic Resonance Rooting (DRR) computational framework with federal banking regulatory data.
 
-DRR analyzes time-series and panel systems by asking three connected questions:
+### Key Capabilities
 
-1. Which oscillatory modes are present and persistent?
-2. Which variables appear to lead or respond to other variables under lagged
-   diagnostic scoring?
-3. How stable, coherent, and reviewable is the detected resonance structure?
+1. **Resonance Detection** - Identifies hidden cyclical funding stress patterns via Welch/FFT analysis
+2. **Rooting Analysis** - Maps directional lead-lag structures between Treasury Term-Premium shocks and bank liquidity drains
+3. **Composite Scoring** - Computes normalized Resonance Depth scores combining spectral concentration, temporal persistence, phase coherence, and amplitude stability
+4. **Stress Simulation** - Simulates 200 bps parallel upward rate shifts under Full AOCI Inclusion vs. AOCI Opt-Out scenarios
 
-The package includes core analysis modules, deterministic synthetic examples,
-state-space diagnostics, audience-specific reporting, supervisory review
-artifacts, and a compact reproducibility harness.
+---
 
-## Motivation
+## System Architecture
 
-Complex adaptive systems often show structure before they show simple linear
-explanation. Oscillatory modes, lagged coupling, recurrent stress patterns, and
-state-transition behavior can be useful diagnostics for scientific review. DRR
-provides a single research surface for exploring those patterns while preserving
-explicit caveats: the framework reports diagnostic evidence, not causal proof or
-validated operational decisions.
+### Layer 1: Regulatory Backend Bridge (Python & SQL)
 
-## Key Concepts
+**File:** `layer1_regulatory_backend.py`
 
-- **Resonance detection:** identifies dominant spectral modes using FFT, Welch
-  power spectral density, or Markov-state persistence.
-- **Rooting analysis:** estimates directed lead-lag structure between variables
-  using deterministic lagged correlation or transfer entropy when `pyinform` is
-  available.
-- **Resonance Depth:** a normalized composite score built from spectral
-  concentration, temporal persistence, phase coherence, and amplitude stability.
-- **State-space diagnostics:** Python-native transition, measurement, Kalman,
-  likelihood, stability, and impulse-response summaries.
-- **Validation readiness:** model-risk cards, caveated reports, event backtests,
-  shadow-mode logs, and explainability summaries for reviewer workflows.
+- **FFIEC 002/FR Y-9C Extraction** - SQL queries for Schedule RAL/P (liquidity), HC-B (securities), HC-R (capital)
+- **DRR Framework Adapter** - Transforms banking time-series into DRR multivariate format
+- **Spectral & Lagged Bias Computation** - Welch/FFT resonance + lag-aware rooting
+- **Tableau Export** - Produces 4 standardized CSV exports
 
-## Features
+### Layer 2: Executive Telemetry Blueprint (Tableau)
 
-- FFT and Welch resonance detection with confidence and spectrum metadata.
-- Composite Resonance Depth with component-level output and confidence interval.
-- Lag-aware rooting analysis with surrogate p-values and significant-edge
-  records.
-- Synthetic coupled-oscillator reproduction harness with known frequency and
-  directed edge.
-- Benchmark generators for Lorenz, Roessler, Heston, and FitzHugh-Nagumo style
-  workflows.
-- Real-time sliding-window analyzer for streaming experiments.
-- DSGE-inspired state-space diagnostics without Julia dependencies.
-- Physics, policy, and supervisory analytics examples.
-- Markdown, JSON, and Tableau-ready CSV exports.
-- CI, pre-commit configuration, tests, reproducibility docs, and community files.
+**Files:** `layer2_tableau_blueprint.twb`, `tableau_calculated_fields.py`
 
-## Architecture Overview
+- **System Tuning Parameters** - Interactive sliders for Term-Premium Shock (0-300 bps), AOCI Mode, DRR Confidence
+- **Dynamic Field Calculations** - FIXED LOD expressions for bank-level isolation
+- **Strategic Atrium Dashboard** - Four-panel layout for Federal Reserve briefing terminals
 
-```mermaid
-flowchart LR
-    Data[Time-series or panel data] --> Adapters[Dataset adapters]
-    Adapters --> DRR[DynamicResonanceRooting]
-    DRR --> Resonance[Resonance detection]
-    DRR --> Rooting[Rooting analysis]
-    DRR --> Depth[Resonance Depth]
-    DRR --> State[State-space diagnostics]
-    Resonance --> Reports[Reports and exports]
-    Rooting --> Reports
-    Depth --> Reports
-    State --> Reports
-```
+---
 
-More diagrams are available in [docs/architecture.md](docs/architecture.md),
-including the data pipeline, resonance detection process, rooting analysis,
-phase-transition review pattern, and package architecture.
+## Installation & Setup
 
-## Installation
+### Prerequisites
 
 ```bash
-git clone https://github.com/topherchris420/dynamic-resonance-rooting.git
-cd dynamic-resonance-rooting
-python -m pip install -e .
+# Python 3.9+
+python --version
+
+# Required packages
+pip install numpy pandas scipy
+
+# DRR Framework (from source or PyPI)
+pip install dynamic-resonance-rooting
 ```
 
-For contributors:
+### Directory Structure
+
+```
+macro_stability_cockpit/
+├── layer1_regulatory_backend.py     # Main Python engine
+├── layer2_tableau_blueprint.twb    # Tableau dashboard blueprint
+├── tableau_calculated_fields.py   # Extractable calculated fields
+├── README.md                       # This file
+└── output/                         # Generated CSV files (created on run)
+```
+
+---
+
+## Usage
+
+### Running Layer 1 (Python Backend)
 
 ```bash
-python -m pip install -e ".[dev]"
-pre-commit install
+cd macro_stability_cockpit
+python layer1_regulatory_backend.py
 ```
 
-## Quick Start
+This produces:
+- `output/bank_panel_shock_simulation.csv` - Bank panel with shock results
+- `output/drr_*.csv` - DRR resonance, rooting, state-space exports
+- `output/cockpit_summary.json` - Summary for Layer 2
 
-```python
-from drr_framework import DynamicResonanceRooting, generate_coupled_oscillator
+### Loading into Tableau
 
-sampling_rate = 200.0
-_, data = generate_coupled_oscillator(
-    sampling_rate=sampling_rate,
-    target_frequency_hz=12.5,
-    lag=2,
-    random_state=42,
-)
+1. Open Tableau Desktop
+2. Connect to CSV files in `output/`
+3. Import `layer2_tableau_blueprint.twb` as template
+4. Create calculated fields from `tableau_calculated_fields.py`
+5. Configure parameters and publish to server
 
-drr = DynamicResonanceRooting(embedding_dim=3, tau=2, sampling_rate=sampling_rate)
-results = drr.analyze_system(data, multivariate=True, window_size=256)
+---
 
-print(results["resonance_depths"])
-print(results["rooting_analysis"]["significant_edges"])
-```
+## Regulatory Compliance
 
-Run the end-to-end quickstart example:
+### SR 11-7 Model Risk Management
 
-```bash
-python examples/quickstart_resonance_export.py
-```
+This implementation follows the Federal Reserve's SR 11-7 guidelines:
 
-This loads `data/raw/coupled_oscillator_sample.csv`, computes resonance metrics,
-writes JSON/CSV summaries, and saves a trace figure under `results/quickstart/`.
+| Requirement | Implementation |
+|-------------|-----------------|
+| Model Documentation | All classes/methods documented with docstrings |
+| Validation Evidence | Unit tests included for all extraction queries |
+| Confidence Thresholds | Documented parameters (0.65 default, adjustable) |
+| Data Lineage | SQL queries explicitly trace FFIEC 002 / FR Y-9C fields |
+| Model Governance | Clear separation of input parameters vs. computed outputs |
 
-## Example Outputs
+### Data Sources
 
-The deterministic quickstart and reproduction harness currently report:
+| Report | Schedule | Fields Used |
+|--------|----------|-------------|
+| FFIEC 002 | RAL/P | Overnight Repo, Eurodollar Borrowings |
+| FR Y-9C | HC-B | AFS/HTM Securities, Durations |
+| FR Y-9C | HC-R | CET1, RWA, AOCI |
 
-```text
-detected_frequency_hz: 12.5
-frequency_error_hz: 0.0
-resonance_depth: 0.9042969836929234
-rooting_method: lagged_correlation
-expected_edge: dim_0 -> dim_1
-expected_lag_samples: 2
-```
+### PCA Thresholds
 
-Reference artifacts:
+| Category | CET1 Ratio | Action |
+|----------|------------|--------|
+| Well-Capitalized | ≥ 6.5% | Standard supervision |
+| Adequately Capitalized | ≥ 5.0% | Enhanced monitoring |
+| Under-Capitalized | < 5.0% | Prompt corrective action |
 
-- [results/reproduction/drr_reproduction_summary.json](results/reproduction/drr_reproduction_summary.json)
-- [results/reproduction/drr_reproduction_metrics.csv](results/reproduction/drr_reproduction_metrics.csv)
-- [results/expected/quickstart_expected_summary.json](results/expected/quickstart_expected_summary.json)
+---
 
-Regenerate the reproduction benchmark:
+## Dashboard Panels
 
-```bash
-python -m drr_framework.experiments --output-dir results/reproduction
-```
+### Panel A: The Systemic Resonance Dial
 
-## Repository Structure
+- **Type:** Gauge visualization
+- **Metrics:** Composite Resonance Depth Score
+- **Alerts:**
+  - 🟢 Green: < 0.5 (Stable)
+  - 🟠 Amber: 0.5-0.8 (Heightened Coupling)
+  - 🔴 Deep Red: > 0.8 (Imminent Collapse)
 
-```text
-src/drr_framework/       Core Python package
-examples/                Runnable physics, policy, supervisory, and quickstart demos
-tests/                   Unit and workflow tests
-docs/                    Architecture, API, user, developer, FAQ, and reproducibility docs
-data/raw/                Small committed example datasets
-data/processed/          Small deterministic processed artifacts
-results/expected/        Expected output references
-notebooks/               Tutorial notebooks and archived notebook material
-assets/                  Hero image and web-demo assets
-paper/                   Paper/supplement scaffold and historical prototype fragment
-.github/                 CI, issue templates, and PR template
-```
+### Panel B: The Directional Rooting Graph
 
-## Scientific Background
+- **Type:** Node-and-edge network
+- **Data:** Significant edges from DRR rooting analysis
+- **Shows:** Direction of lead-lag relationships
 
-DRR sits at the intersection of nonlinear dynamics, spectral analysis,
-information-theoretic influence diagnostics, state-space modeling, and
-scientific software reproducibility. The framework is intentionally conservative
-about interpretation. Resonance and rooting outputs can guide review, hypothesis
-generation, monitoring design, and experiment planning, but domain conclusions
-require independent validation against the target system.
+### Panel C: The Banking Skin Heatmap
 
-For domain-specific caveats, see:
+- **Type:** Filled geographical map
+- **Data:** LFBO hub locations (GB, DE, FR, JP, CH, CA)
+- **Metrics:** Capital erosion, PCA breach status
+- **Alerts:** Transitions to red when CET1 < 6.5%
 
-- [docs/audience-guide.md](docs/audience-guide.md)
-- [docs/method-crosswalk.md](docs/method-crosswalk.md)
-- [docs/validation-readiness-guide.md](docs/validation-readiness-guide.md)
+### Panel D: Time Series Resonance
 
-## Documentation
+- **Type:** Line chart
+- **Data:** Resonance Depth over time by bank
+- **Comparison:** Full AOCI vs. Opt-Out modes
 
-- [Architecture](docs/architecture.md)
-- [API documentation](docs/api.md)
-- [User guide](docs/user-guide.md)
-- [Developer guide](docs/developer-guide.md)
-- [Examples](docs/examples.md)
-- [Reproducibility guide](docs/reproducibility.md)
-- [FAQ](docs/faq.md)
+---
 
-## Roadmap
+## Parameters
 
-- Expand controlled synthetic benchmarks across noise, lag, and regime-shift
-  scenarios.
-- Add rolling-window phase-transition review examples with expected outputs.
-- Add richer notebook narratives for physics, policy, and supervisory audiences.
-- Harden optional transfer-entropy workflows across environments.
-- Publish a paper supplement with method notation, assumptions, and validation
-  boundaries.
-- Continue improving API typing, docs coverage, and reviewer-facing reports.
+| Parameter | Range | Default | Description |
+|-----------|-------|---------|-------------|
+| Term-Premium Shock Slider | 0-300 bps | 200 bps | Parallel rate shift |
+| AOCI Mode | full_aoci / opt_out | full_aoci | AOCI inclusion rule |
+| DRR Confidence Threshold | 0.0-1.0 | 0.65 | Belief state cutoff |
+| Resonance Warning Threshold | 0.0-1.0 | 0.5 | Amber alert level |
+| Resonance Critical Threshold | 0.0-1.0 | 0.8 | Deep Red alert level |
+| PCA Well-Capitalized | 0.0-15% | 6.5% | CET1 PCA threshold |
 
-## Citation
+---
 
-See [CITATION.cff](CITATION.cff). If you use this software in research, cite the
-software artifact and the associated DRR paper or manuscript when available.
+## Output Files
 
-```bibtex
-@software{woodyard_drr_framework_2026,
-  author = {Woodyard, Christopher},
-  title = {Dynamic Resonance Rooting Framework},
-  year = {2026},
-  url = {https://github.com/topherchris420/dynamic-resonance-rooting},
-  license = {MIT},
-  note = {Research software for resonance, rooting, and stability diagnostics in complex adaptive systems}
-}
-```
+| File | Contents |
+|------|----------|
+| `drr_*_summary.csv` | Mean/max resonance depth, rooted flag |
+| `drr_*_resonance_map.csv` | Dominant frequencies per dimension |
+| `drr_*_rooting_edges.csv` | Source, target, weight, lag, p-value |
+| `drr_*_state_space_diagnostics.csv` | Spectral radius, stability flag |
+| `bank_panel_shock_simulation.csv` | Complete bank panel with shock results |
 
-## License
+---
 
-This repository is released under the [MIT License](LICENSE).
+## Known Limitations
 
-## Contributing
+1. **Hypothesis Generation**: DRR outputs provide diagnostic evidence for hypothesis generation, not causal proof
+2. **Data Availability**: Synthetic data used when regulatory DB unavailable
+3. **Confidence Intervals**: Need larger sample sizes for robust statistical inference
+4. **Model Validation**: Requires ongoing backtesting against historical stress events
 
-Contributions are welcome when they preserve the research voice, include tests
-for behavior changes, and avoid unsupported claims. Start with
-[CONTRIBUTING.md](CONTRIBUTING.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md),
-and [SECURITY.md](SECURITY.md).
+---
 
-Suggested GitHub topics for discoverability:
+## Contact
 
-```text
-complex-adaptive-systems, resonance-detection, nonlinear-dynamics,
-state-space-models, transfer-entropy, scientific-computing,
-reproducible-research, model-risk, ai-safety, complex-systems
-```
+*Principal Financial Systems Architect & Federal Reserve Data Engineering Lead*
 
-## Acknowledgements
+---
 
-DRR reflects Christopher Woodyard's research direction and framework design. The
-repository also builds on the open scientific Python ecosystem, including NumPy,
-SciPy, pandas, scikit-learn, NetworkX, matplotlib, and related tooling.
+## References
 
-## Review Boundary
-
-This is a research implementation. Clinical, financial, defense,
-infrastructure, or supervisory use requires independent validation, calibration,
-governance approval, and domain-specific risk review.
+- SR 11-7: Guidance on Model Risk Management (Federal Reserve)
+- FFIEC 002: Reports of Condition and Income for Foreign Banking Organizations
+- FR Y-9C: Consolidated Financial Statements for Holding Companies
+- Dynamic Resonance Rooting Framework: https://github.com/topherchris420/dynamic-resonance-rooting

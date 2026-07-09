@@ -1,0 +1,399 @@
+{
+  "workbook": {
+    "name": "Macro Stability & Banking Skin Cockpit",
+    "description": "Federal Reserve Early-Warning System for LFBO Liquidity Panics - SR 11-7 Compliant",
+    "author": "Principal Financial Systems Architect",
+    "created_date": "2025-07-09"
+  },
+
+  "parameters": {
+
+    "Term-Premium Shock Slider": {
+      "data_type": "float",
+      "current_value": 200,
+      "minimum": 0,
+      "maximum": 300,
+      "step": 10,
+      "description": "Parallel upward rate shift in basis points (0-300 bps)"
+    },
+
+    "AOCI Mode Toggle": {
+      "data_type": "string",
+      "current_value": "full_aoci",
+      "allowable_values": ["full_aoci", "opt_out"],
+      "description": "AOCI inclusion mode: Full Inclusion vs. Opt-Out per Fed rule"
+    },
+
+    "DRR Confidence Threshold": {
+      "data_type": "float",
+      "current_value": 0.65,
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "step": 0.05,
+      "description": "Confidence threshold for belief state (SR 11-7 documented confidence)"
+    },
+
+    "Resonance Warning Threshold": {
+      "data_type": "float",
+      "current_value": 0.5,
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "step": 0.05,
+      "description": "Threshold for Amber warning (heightened coupling)"
+    },
+
+    "Resonance Critical Threshold": {
+      "data_type": "float",
+      "current_value": 0.8,
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "step": 0.05,
+      "description": "Threshold for Deep Red alert (imminent liquidity collapse)"
+    },
+
+    "PCA Well-Capitalized Threshold": {
+      "data_type": "float",
+      "current_value": 0.065,
+      "minimum": 0.0,
+      "maximum": 0.15,
+      "step": 0.001,
+      "description": "6.5% PCA threshold for well-capitalized status"
+    }
+  },
+
+  "calculated_fields": {
+
+    "Post-Shock CET1 Ratio": {
+      "formula": "SUM([POST_SHOCK_CET1]) / SUM([HC_R_RWA])",
+      "description": "CET1 ratio after rate shock simulation",
+      "aggregation": "SUM",
+      "num_format": "0.00%"
+    },
+
+    "Resonance Depth Score": {
+      "formula": "MAX([resonance_depth])",
+      "description": "Composite Resonance Depth from DRR framework",
+      "aggregation": "MAX",
+      "num_format": "0.00"
+    },
+
+    "Resonance Status": {
+      "formula": "IF [Resonance Depth Score] >= [Resonance Critical Threshold] THEN 'DEEP RED' " +
+                 "ELSE IF [Resonance Depth Score] >= [Resonance Warning Threshold] THEN 'AMBER' " +
+                 "ELSE 'GREEN' END",
+      "description": "Traffic light status for resonance alert",
+      "color_mapping": {
+        "DEEP RED": "#8B0000",
+        "AMBER": "#FFB300",
+        "GREEN": "#2E7D32"
+      }
+    },
+
+    "PCA Breach Flag": {
+      "formula": "IF [Post-Shock CET1 Ratio] < [PCA Well-Capitalized Threshold] THEN 1 ELSE 0 END",
+      "description": "Flag for PCA well-capitalized threshold breach",
+      "aggregation": "MAX",
+      "num_format": "0"
+    },
+
+    "CET1 Ratio vs Resonance Coupling": {
+      "formula": "{FIXED [rssd_id]: MAX([Post-Shock CET1 Ratio])}",
+      "description": "LOD expression isolating bank's post-shock CET1 against Resonance Depth",
+      "lod_type": "FIXED",
+      "num_format": "0.00%"
+    },
+
+    "Liquidity Stress Index": {
+      "formula": "([RAL_OVERNIGHT_REPO] + [RAL_EURUSD_BORR]) / [HC_R_CET1]",
+      "description": "Ratio of short-term liabilities to CET1 capital",
+      "num_format": "0.00"
+    },
+
+    "Duration Beta": {
+      "formula": "([HC_B_AFS_DURATION] * [HC_B_AFS_SECURITIES] + [HC_B_HTM_DURATION] * [HC_B_HTM_SECURITIES]) / " +
+                 "([HC_B_AFS_SECURITIES] + [HC_B_HTM_SECURITIES])",
+      "description": "Weighted average duration of securities portfolio",
+      "num_format": "0.00 years"
+    },
+
+    "Rate Shock Impact (bps)": {
+      "formula": "[Term-Premium Shock Slider] * [Duration Beta] * 100",
+      "description": "Estimated impact in basis points on securities portfolio",
+      "num_format": "0 bps"
+    },
+
+    "Is Significant Root": {
+      "formula": "IF [p_value] <= (1 - [DRR Confidence Threshold]) THEN 'SIGNIFICANT' ELSE 'NOT SIGNIFICANT' END",
+      "description": "Filter for statistically significant rooting edges",
+      "color_mapping": {
+        "SIGNIFICANT": "#1976D2",
+        "NOT SIGNIFICANT": "#BDBDBD"
+      }
+    },
+
+    "Lead-Lag Direction": {
+      "formula": "IF [lag] > 0 THEN 'SHOCK LEADS → BANK DRAINS' " +
+                 "ELSE IF [lag] < 0 THEN 'BANK DRAINS → SHOCK LAGS' " +
+                 "ELSE 'SIMULTANEOUS' END",
+      "description": "Direction of lead-lag relationship",
+      "num_format": "String"
+    },
+
+    "Bank Capital Tier": {
+      "formula": "IF [CET1 Ratio vs Resonance Coupling] >= 0.09 THEN 'TIER 1' " +
+                 "ELSE IF [CET1 Ratio vs Resonance Coupling] >= 0.065 THEN 'WELL CAPITALIZED' " +
+                 "ELSE IF [CET1 Ratio vs Resonance Coupling] >= 0.05 THEN 'ADEQUATELY CAPITALIZED' " +
+                 "ELSE 'UNDER CAPITALIZED' END",
+      "description": "PCA capital classification",
+      "color_mapping": {
+        "TIER 1": "#2E7D32",
+        "WELL CAPITALIZED": "#4CAF50",
+        "ADEQUATELY CAPITALIZED": "#FFB300",
+        "UNDER CAPITALIZED": "#D32F2F"
+      }
+    }
+  },
+
+  "dashboard_layout": {
+    "title": "Macro Stability & Banking Skin Cockpit",
+    "subtitle": "LFBO Early-Warning System | Dynamic Resonance Rooting (DRR) Framework | SR 11-7 Compliant",
+    "version": "1.0",
+
+    "panels": {
+
+      "Panel_A_Systemic_Resonance_Dial": {
+        "type": "GAUGE",
+        "title": "The Systemic Resonance Dial",
+        "description": "Composite Resonance Depth Score - flashes Amber at >0.5, Deep Red at >0.8",
+        "position": {"x": 0, "y": 0, "width": 400, "height": 400},
+
+        "visualization": {
+          "type": "Gauge",
+          "field": "Resonance Depth Score",
+          "ranges": [
+            {"start": 0, "end": 0.5, "color": "#2E7D32", "label": "STABLE"},
+            {"start": 0.5, "end": 0.8, "color": "#FFB300", "label": "HEIGHTENED COUPLING"},
+            {"start": 0.8, "end": 1.0, "color": "#8B0000", "label": "IMMINENT COLLAPSE"}
+          ],
+          "target": 0.65,
+          "show_indicator": true
+        },
+
+        "conditional_formatting": {
+          "field": "Resonance Depth Score",
+          "rules": [
+            {"condition": ">= 0.8", "color": "#8B0000", "icon": " exclamation triangle"},
+            {"condition": ">= 0.5 AND < 0.8", "color": "#FFB300", "icon": "exclamation"},
+            {"condition": "< 0.5", "color": "#2E7D32", "icon": "check"}
+          ]
+        },
+
+        "parameters_bound": ["Term-Premium Shock Slider", "DRR Confidence Threshold"]
+      },
+
+      "Panel_B_Directional_Rooting_Graph": {
+        "type": "NETWORK_GRAPH",
+        "title": "The Directional Rooting Graph",
+        "description": "Node-and-edge network showing significant_edges from DRR rooting analysis",
+        "position": {"x": 400, "y": 0, "width": 600, "height": 400},
+
+        "visualization": {
+          "type": "Marking Edges (Node-and-Edge)",
+          "source_field": "source",
+          "target_field": "target",
+          "weight_field": "weight",
+          "edge_labels": ["lag", "p_value"],
+
+          "node_style": {
+            "TREASURY_TERM_PREMIUM": {"shape": "circle", "color": "#1565C0", "size": 15},
+            "REPO_STRESS": {"shape": "diamond", "color": "#C62828", "size": 12},
+            "LIQUIDITY_DRAIN": {"shape": "square", "color": "#FF6F00", "size": 12},
+            "CET1_EROSION": {"shape": "triangle", "color": "#6A1B9A", "size": 12}
+          },
+
+          "edge_style": {
+            "default": {"color": "#90A4AE", "width": 1},
+            "significant": {"color": "#D32F2F", "width": 3, "style": "solid"},
+            "direction_arrows": true
+          }
+        },
+
+        "filters": ["Is Significant Root", "Lead-Lag Direction"],
+        "tooltip_fields": ["weight", "lag", "p_value", "resonance_depth"]
+      },
+
+      "Panel_C_Banking_Skin_Heatmap": {
+        "type": "FILLED_MAP",
+        "title": "The Banking Skin Heatmap",
+        "description": "Geographical map of LFBO hubs tracking capital erosion",
+        "position": {"x": 0, "y": 400, "width": 500, "height": 400},
+
+        "visualization": {
+          "type": "Symbol Map (Filled)",
+          "geographic_role": "Country/Region",
+          "field": "hub_country",
+
+          "symbol_mapping": {
+            "GB": {"lat": 51.5074, "lon": -0.1278, "name": "London Hub"},
+            "DE": {"lat": 52.5200, "lon": 13.4050, "name": "Frankfurt Hub"},
+            "FR": {"lat": 48.8566, "lon": 2.3522, "name": "Paris Hub"},
+            "JP": {"lat": 35.6762, "lon": 139.6503, "name": "Tokyo Hub"},
+            "CH": {"lat": 47.3769, "lon": 8.5417, "name": "Zurich Hub"},
+            "CA": {"lat": 43.6532, "lon": -79.3832, "name": "Toronto Hub"}
+          },
+
+          "color_field": "Bank Capital Tier",
+          "size_field": "HC_R_CET1",
+
+          "conditional_formatting": {
+            "field": "PCA Breach Flag",
+            "rules": [
+              {"condition": "= 1", "color": "#D32F2F", "label": "PCA BREACH"},
+              {"condition": "= 0", "color": "#2E7D32", "label": "WELL CAPITALIZED"}
+            ]
+          }
+        },
+
+        "filters": ["AOCI Mode Toggle", "Term-Premium Shock Slider"],
+        "tooltip_fields": ["legal_name", "rssd_id", "CET1 Ratio vs Resonance Coupling", "PCA Breach Flag"]
+      },
+
+      "Panel_D_Time_Series_Resonance": {
+        "type": "LINE_CHART",
+        "title": "Resonance Depth Over Time",
+        "description": "Temporal evolution of Resonance Depth by bank",
+        "position": {"x": 500, "y": 400, "width": 500, "height": 400},
+
+        "visualization": {
+          "type": "Line Chart",
+          "x_axis": "report_date",
+          "y_axis": "Resonance Depth Score",
+          "color_by": "rssd_id",
+          "line_style": "smooth"
+        },
+
+        "filters": ["AOCI Mode Toggle", "DRR Confidence Threshold"]
+      },
+
+      "Panel_E_Shock_Comparison": {
+        "type": "BAR_CHART",
+        "title": "AOCI Mode Comparison",
+        "description": "Post-shock CET1 ratio: Full AOCI Inclusion vs. Opt-Out",
+        "position": {"x": 1000, "y": 0, "width": 300, "height": 400},
+
+        "visualization": {
+          "type": "Side-by-Side Bar",
+          "x_axis": "rssd_id",
+          "y_axis": "Post-Shock CET1 Ratio",
+          "color_by": "AOCI Mode Toggle",
+          "reference_line": {
+            "value": 0.065,
+            "label": "PCA Threshold (6.5%)",
+            "color": "#D32F2F"
+          }
+        },
+
+        "filters": ["Term-Premium Shock Slider"]
+      },
+
+      "Panel_F_Summary_KPIs": {
+        "type": "KPI_TABLE",
+        "title": "Executive Summary",
+        "description": "Key risk indicators for Federal Reserve briefing",
+        "position": {"x": 1000, "y": 400, "width": 300, "height": 400},
+
+        "kpis": [
+          {
+            "name": "Max Resonance Depth",
+            "formula": "MAX([Resonance Depth Score])",
+            "format": "0.00",
+            "target": 0.65
+          },
+          {
+            "name": "Banks Above Threshold",
+            "formula": "COUNTD(IF [Resonance Depth Score] >= 0.5 THEN [rssd_id] END)",
+            "format": "#,##0"
+          },
+          {
+            "name": "PCA Breaches",
+            "formula": "SUM([PCA Breach Flag])",
+            "format": "#,##0",
+            "target": 0
+          },
+          {
+            "name": "Avg Post-Shock CET1",
+            "formula": "AVG([CET1 Ratio vs Resonance Coupling])",
+            "format": "0.00%"
+          }
+        ]
+      }
+    },
+
+    "filters_pane": {
+      "position": {"x": 0, "y": 800},
+      "fields": [
+        "rssd_id",
+        "hub_country",
+        "report_date",
+        "AOCI Mode Toggle",
+        "Term-Premium Shock Slider",
+        "DRR Confidence Threshold"
+      ]
+    },
+
+    "parameter_controls": {
+      "position": {"x": 1300, "y": 0},
+      "layout": "vertical",
+      "parameters": [
+        "Term-Premium Shock Slider",
+        "AOCI Mode Toggle",
+        "DRR Confidence Threshold"
+      ]
+    }
+  },
+
+  "data_connections": {
+
+    "primary_datasource": {
+      "type": "CSV",
+      "path": "./tableau_output/bank_panel_shock_simulation.csv",
+      "description": "Bank panel with shock simulation results from Layer 1"
+    },
+
+    "resonance_summary": {
+      "type": "CSV",
+      "path": "./tableau_output/drr_full_aoci_200bps_summary.csv",
+      "description": "DRR resonance summary metrics"
+    },
+
+    "resonance_map": {
+      "type": "CSV",
+      "path": "./tableau_output/drr_full_aoci_200bps_resonance_map.csv",
+      "description": "Frequency detection results"
+    },
+
+    "rooting_edges": {
+      "type": "CSV",
+      "path": "./tableau_output/drr_full_aoci_200bps_rooting_edges.csv",
+      "description": "Significant lead-lag relationships"
+    },
+
+    "state_space_diagnostics": {
+      "type": "CSV",
+      "path": "./tableau_output/drr_full_aoci_200bps_state_space_diagnostics.csv",
+      "description": "System stability diagnostics"
+    }
+  },
+
+  "publish_settings": {
+    "server": "federal-reserve.tableau.gov",
+    "project": "Macro Stability Monitoring",
+    "description": "LFBO Early-Warning Dashboard - SR 11-7 Compliant",
+    "refresh_schedule": "15min",
+    "permissions": {
+      "FED_RESERVE_ANALYST": ["View", "Filter", "Export"],
+      "FED_RESERVE_MANAGER": ["View", "Filter", "Export", "Edit"],
+      "SUPERVISORY_EXAMINER": ["View", "Export"]
+    }
+  }
+}
