@@ -1,7 +1,6 @@
 # Dynamic Resonance Rooting (DRR) Framework
 
 [![CI](https://github.com/topherchris420/dynamic-resonance-rooting/actions/workflows/python-app.yml/badge.svg)](https://github.com/topherchris420/dynamic-resonance-rooting/actions/workflows/python-app.yml)
-[![License](https://img.shields.io/github/license/topherchris420/dynamic-resonance-rooting)](https://github.com/topherchris420/dynamic-resonance-rooting/blob/main/LICENSE)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 > 📦 **PyPI publishing coming soon!** Install from source for now (see below).
