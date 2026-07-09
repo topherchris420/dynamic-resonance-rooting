@@ -1,0 +1,59 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+---
+
+## [4.2.0] - 2026-07-09
+
+### Added
+- **Macro Stability & Banking Skin Cockpit**: FFIEC 002 / FR Y-9C SQL extraction with Tableau dashboard integration
+- **DSGE-style State-Space Diagnostics**: Python-native state-space representation, Kalman filtering, likelihood diagnostics
+- **Audience-Aware Workflows**: Physics lab, policy lab, and supervisory review workflows with audience-specific JSON/Markdown reporting
+- **Fed-Aligned Supervisory Presets**: SR 11-7 style readiness packets and model-risk cards for regulatory compliance
+- **Deterministic Validation Harness**: For research reproducibility
+- **Package and Citation Files**: setup.py, CITATION.cff
+- **NumPy Fallback**: Compatibility layer for scipy-free runtime environments
+- **Research-Grade Outputs**: JSON/Markdown export for reviewer navigation
+
+### Changed
+- Package layout optimized for reviewer navigation
+- Black configuration updated for extend-exclude string regex
+- Ruff linter exclusions for Tableau files
+- Formatter CI focused on maintained sources
+
+### Fixed
+- PyPI badge links corrected
+- Black extend-exclude configuration corrected
+
+---
+
+## [2.0] - 2026-03-15
+
+### Added
+- Core resonance detection via FFT and Welch PSD
+- Causal rooting analysis with transfer entropy and lagged correlation
+- Resonance depth composite scoring
+- State-space diagnostics
+- Phase-transition detection
+- Benchmark generators (Lorenz, Rössler, Heston, FitzHugh-Nagumo)
+- Multi-format exports (JSON, CSV, Markdown, Plots)
+
+### Changed
+- Initial release structure
+
+---
+
+## [1.0.0] - 2025-08-03
+
+### Added
+- Initial proof-of-concept release
+
+---
+
+[4.2.0]: https://github.com/topherchris420/dynamic-resonance-rooting/releases/tag/v4.2.0
+[2.0]: https://github.com/topherchris420/dynamic-resonance-rooting/releases/tag/v2.0
+[1.0.0]: https://github.com/topherchris420/dynamic-resonance-rooting/releases/tag/v1.0.0

@@ -1,7 +1,13 @@
 # Dynamic Resonance Rooting (DRR) Framework
 
+[![PyPI Version](https://img.shields.io/pypi/v/drr-framework?style=flat)](https://pypi.org/project/drr-framework/)
+[![Python Versions](https://img.shields.io/pypi/pyversions/drr-framework?style=flat)](https://pypi.org/project/drr-framework/)
+[![License](https://img.shields.io/pypi/l/drr-framework?style=flat)](https://pypi.org/project/drr-framework/)
+[![CI](https://github.com/topherchris420/dynamic-resonance-rooting/actions/workflows/python-app.yml/badge.svg)](https://github.com/topherchris420/dynamic-resonance-rooting/actions/workflows/python-app.yml)
+
 A research framework for studying complex adaptive systems through resonance detection, causal rooting analysis, and stability diagnostics.
- 
+
+**Version:** 4.2.0  
 **License:** MIT  
 **Author:** Christopher Woodyard
 
@@ -214,7 +220,7 @@ If you use DRR in your research, please cite:
   title = {Dynamic Resonance Rooting (DRR) Framework},
   url = {https://github.com/topherchris420/dynamic-resonance-rooting},
   version = {4.2.0},
-  year = {2025}
+  year = {2026}
 }
 ```
 
