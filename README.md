@@ -213,7 +213,7 @@ If you use DRR in your research, please cite:
   author = {Christopher Woodyard},
   title = {Dynamic Resonance Rooting (DRR) Framework},
   url = {https://github.com/topherchris420/dynamic-resonance-rooting},
-  version = {0.2.0},
+  version = {4.2.0},
   year = {2025}
 }
 ```
