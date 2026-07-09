@@ -3,8 +3,6 @@
 [![CI](https://github.com/topherchris420/dynamic-resonance-rooting/actions/workflows/python-app.yml/badge.svg)](https://github.com/topherchris420/dynamic-resonance-rooting/actions/workflows/python-app.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-> 📦 **PyPI publishing coming soon!** Install from source for now (see below).
-
 A research framework for studying complex adaptive systems through resonance detection, causal rooting analysis, and stability diagnostics.
 
 **Version:** 4.2.0  
@@ -57,18 +55,18 @@ DRR combines spectral analysis (FFT, Welch PSD), causal rooting (transfer entrop
 
 ## Installation
 
-### From Source (Recommended)
+### From PyPI
+
+```bash
+pip install drr-framework
+```
+
+### From Source
 
 ```bash
 git clone https://github.com/topherchris420/dynamic-resonance-rooting.git
 cd dynamic-resonance-rooting
 python -m pip install -e .
-```
-
-### From PyPI (Coming Soon)
-
-```bash
-pip install drr-framework
 ```
 
 For development tools:
