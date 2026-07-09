@@ -67,7 +67,7 @@ testpaths = ["tests"]
 
 [tool.black]
 line-length = 100
-extend-exclude = "notebooks"
+extend-exclude = ["notebooks", "tableau_calculated_fields.py", "layer2_tableau_blueprint.twb", "layer1_regulatory_backend.py"]
 target-version = ["py38"]
 
 [tool.ruff]
