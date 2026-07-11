@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 from drr_framework.modules import (
+    MarkovChain,
     ResonanceDetector,
     RootingAnalyzer,
     DepthCalculator,
@@ -65,6 +66,58 @@ def test_rooting_analyzer():
     result = analyzer.analyze(data)
     assert "transfer_entropy" in result
     assert result["transfer_entropy"].shape == (2, 2)
+
+
+def test_lagged_correlation_matches_naive_reference():
+    """
+    The vectorized lagged-correlation scores must match a per-pair
+    corrcoef reference, including constant (zero-variance) columns.
+    """
+    rng = np.random.default_rng(7)
+    data = rng.normal(size=(120, 4))
+    data[:, 2] = data[:, 2] * 0 + 3.0  # constant column
+    data[5:, 3] = 0.8 * data[:-5, 0] + 0.1 * rng.normal(size=115)  # lagged driver
+    max_lag = 6
+
+    analyzer = RootingAnalyzer()
+    scores, lags = analyzer._lagged_correlation_scores(data, max_lag)
+
+    eps = np.finfo(float).eps
+    n_variables = data.shape[1]
+    for source in range(n_variables):
+        for target in range(n_variables):
+            if source == target:
+                continue
+            best_score, best_lag = 0.0, 1
+            for lag in range(1, max_lag + 1):
+                x = data[:-lag, source]
+                y = data[lag:, target]
+                if np.std(x) <= eps or np.std(y) <= eps:
+                    score = 0.0
+                else:
+                    score = abs(float(np.corrcoef(x, y)[0, 1]))
+                if score > best_score:
+                    best_score, best_lag = score, lag
+            assert np.isclose(scores[source, target], best_score, atol=1e-10)
+            assert lags[source, target] == best_lag
+
+    # The injected lag-5 dependency should be recovered.
+    assert lags[0, 3] == 5
+    assert scores[0, 3] > 0.9
+
+
+def test_markov_chain_stationary_distribution_reducible_chain():
+    """
+    A transition matrix with eigenvalue 1 of multiplicity > 1 (two absorbing
+    states) must still yield a valid distribution of shape (n_states,).
+    """
+    mc = MarkovChain(np.array([0, 1, 0, 1]))
+    mc.transition_matrix = np.eye(2)  # reducible: both states absorbing
+    distribution = mc._calculate_stationary_distribution()
+
+    assert distribution.shape == (2,)
+    assert np.isclose(distribution.sum(), 1.0)
+    assert np.all(distribution >= 0)
 
 
 def test_depth_calculator():
@@ -151,3 +204,45 @@ def test_real_time_drr_rejects_invalid_configuration():
 
     with pytest.raises(ValueError, match="threshold"):
         RealTimeDRR(window_size=5, n_variables=1, threshold=1.5)
+
+
+def test_drr_framework_rejects_invalid_configuration():
+    from drr_framework.analysis import DynamicResonanceRooting
+
+    with pytest.raises(ValueError, match="embedding_dim"):
+        DynamicResonanceRooting(embedding_dim=0)
+
+    with pytest.raises(ValueError, match="tau"):
+        DynamicResonanceRooting(tau=0)
+
+    with pytest.raises(ValueError, match="sampling_rate"):
+        DynamicResonanceRooting(sampling_rate=0)
+
+
+def test_analyze_system_is_deterministic_across_repeated_calls():
+    """
+    Re-analyzing the same data on the same instance must not carry belief
+    state over from the previous run.
+    """
+    from drr_framework.analysis import DynamicResonanceRooting
+
+    t = np.linspace(0, 10, 1000, endpoint=False)
+    data = np.column_stack([np.sin(2 * np.pi * 5 * t), np.cos(2 * np.pi * 5 * t)])
+
+    drr = DynamicResonanceRooting(embedding_dim=3, tau=2, sampling_rate=100.0)
+    first = drr.analyze_system(data, multivariate=True, window_size=128)
+    second = drr.analyze_system(data, multivariate=True, window_size=128)
+
+    assert first["agent_belief"] == second["agent_belief"]
+    assert first["is_rooted"] == second["is_rooted"]
+
+
+def test_analyze_system_propagates_errors():
+    """
+    Invalid input must raise instead of silently returning an empty dict.
+    """
+    from drr_framework.analysis import DynamicResonanceRooting
+
+    drr = DynamicResonanceRooting(embedding_dim=3, tau=2)
+    with pytest.raises(ValueError, match="too short"):
+        drr.analyze_system(np.array([1.0, 2.0]))

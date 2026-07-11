@@ -67,9 +67,12 @@ class MarkovChain:
             one_eigenvalue_idx = np.isclose(eigenvalues, 1)
 
             if np.any(one_eigenvalue_idx):
-                stationary_vector = eigenvectors[:, one_eigenvalue_idx].flatten().real
+                # Eigenvalue 1 can have multiplicity > 1 (e.g. reducible chains);
+                # use a single eigenvector so the distribution keeps shape (n_states,).
+                first_idx = int(np.argmax(one_eigenvalue_idx))
+                stationary_vector = eigenvectors[:, first_idx].real
                 if np.sum(stationary_vector) < 0:
-                    stationary_vector *= -1
+                    stationary_vector = -stationary_vector
                 stationary_vector = np.maximum(stationary_vector, 0)
                 total = stationary_vector.sum()
                 if total > 0:
@@ -296,28 +299,30 @@ class RootingAnalyzer:
     def _lagged_correlation_scores(
         self, data: np.ndarray, max_lag: int
     ) -> Tuple[np.ndarray, np.ndarray]:
-        n_variables = data.shape[1]
+        n_samples, n_variables = data.shape
         scores = np.zeros((n_variables, n_variables), dtype=float)
-        effective_lag = np.zeros((n_variables, n_variables), dtype=int)
+        effective_lag = np.ones((n_variables, n_variables), dtype=int)
+        np.fill_diagonal(effective_lag, 0)
 
-        for source in range(n_variables):
-            for target in range(n_variables):
-                if source == target:
-                    continue
-                best_score = 0.0
-                best_lag = 1
-                for lag in range(1, max_lag + 1):
-                    x = data[:-lag, source]
-                    y = data[lag:, target]
-                    if np.std(x) <= _EPS or np.std(y) <= _EPS:
-                        score = 0.0
-                    else:
-                        score = abs(float(np.corrcoef(x, y)[0, 1]))
-                    if score > best_score:
-                        best_score = score
-                        best_lag = lag
-                scores[source, target] = best_score
-                effective_lag[source, target] = best_lag
+        # One standardized cross-correlation matrix per lag instead of a
+        # corrcoef call per (source, target, lag) triple.
+        for lag in range(1, max_lag + 1):
+            n_pairs = n_samples - lag
+            if n_pairs < 2:
+                break
+            x = data[:-lag]
+            y = data[lag:]
+            x_std = np.std(x, axis=0)
+            y_std = np.std(y, axis=0)
+            x_z = (x - np.mean(x, axis=0)) / np.where(x_std > _EPS, x_std, 1.0)
+            y_z = (y - np.mean(y, axis=0)) / np.where(y_std > _EPS, y_std, 1.0)
+            corr = np.abs(x_z.T @ y_z) / n_pairs
+            corr[x_std <= _EPS, :] = 0.0
+            corr[:, y_std <= _EPS] = 0.0
+            np.fill_diagonal(corr, 0.0)
+            improved = corr > scores
+            scores[improved] = corr[improved]
+            effective_lag[improved] = lag
         return scores, effective_lag
 
     def _transfer_entropy_scores(

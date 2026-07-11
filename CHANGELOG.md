@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Changed
+- Vectorized lagged-correlation rooting scores (one cross-correlation matrix per
+  lag instead of a `corrcoef` call per variable pair), speeding up
+  `RootingAnalyzer.analyze` and its surrogate testing by ~6x on typical panels
+- Recalibrated the QBist agent likelihood: the logistic is now centered at a
+  resonance depth of 0.5 (depth 0 → 0.1, depth 1 → 0.9), so shallow resonances
+  lower the belief instead of leaving it stuck at or above the prior
+- `analyze_system` now raises on failure (with a logged traceback) instead of
+  silently returning an empty dict
+- `calculate_resonance_depths` resets the QBist agent to its prior on each
+  call, so repeated analyses on one instance produce identical belief states
+- `DynamicResonanceRooting` validates `embedding_dim`, `tau`, and
+  `sampling_rate` at construction
+
+### Fixed
+- `MarkovChain` stationary distribution had the wrong length when eigenvalue 1
+  had multiplicity greater than one (e.g. reducible chains); a single
+  eigenvector is now selected
+- `QBistAgent.reset()` now restores the prior belief instead of only clearing
+  the history
+- `RealTimeDRR.reset()` also resets the anomaly detector history
+
+---
+
 ## [4.2.0] - 2026-07-09
 
 ### Added
