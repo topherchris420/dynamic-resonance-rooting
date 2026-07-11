@@ -48,7 +48,8 @@ class RealTimeDRR:
             data_point: The new data point, shape (n_variables,) or scalar.
 
         Returns:
-            dict: A dictionary of analysis results, including any detected anomalies.
+            A list with one result dict per variable (resonances, depth, anomaly
+            flag) once the window is full, otherwise ``None``.
         """
         # Handle scalar input for single variable case
         if np.isscalar(data_point):
@@ -103,8 +104,9 @@ class RealTimeDRR:
             return None
 
     def reset(self) -> None:
-        """Reset the data window"""
+        """Reset the data window and detector history."""
         self._count = 0
+        self.anomaly_detector.reset_history()
 
     def get_window_data(self) -> Optional[np.ndarray]:
         """Get current window data as numpy array"""

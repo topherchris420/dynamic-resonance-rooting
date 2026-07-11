@@ -37,6 +37,13 @@ class DynamicResonanceRooting:
             tau (int): Time delay for time-delay embedding
             sampling_rate (float): Sampling rate of input data in Hz
         """
+        if embedding_dim < 1:
+            raise ValueError("embedding_dim must be at least 1")
+        if tau < 1:
+            raise ValueError("tau must be at least 1")
+        if sampling_rate <= 0:
+            raise ValueError("sampling_rate must be positive")
+
         self.embedding_dim = embedding_dim
         self.tau = tau
         self.sampling_rate = sampling_rate
@@ -93,7 +100,7 @@ class DynamicResonanceRooting:
 
         Args:
             data (np.ndarray): Time series data (1D or multivariate)
-            method (str): Method for spectral analysis ('fft' or 'wavelet')
+            method (str): Method for spectral analysis ('fft', 'welch', or 'markov')
             peak_height_ratio (float): Ratio of max power for peak detection
 
         Returns:
@@ -138,12 +145,16 @@ class DynamicResonanceRooting:
         The public return value stays backward-compatible as ``{dimension: float}``.
         Full component details are stored in ``self.resonance_depth_details`` and
         included by ``analyze_system``.
+
+        The QBist agent is reset to its prior on every call, so repeated
+        analyses on the same instance produce identical belief states.
         """
         if self.phase_space is None:
             raise ValueError("Must detect resonances first")
 
         depths = {}
         details = {}
+        self.agent.reset()
         self.belief_states = {}
 
         for dim in range(self.phase_space.shape[1]):
@@ -259,15 +270,8 @@ class DynamicResonanceRooting:
             results["resonance_depth_details"] = self.resonance_depth_details
             results["agent_belief"] = self.belief_states
 
-            # Determine rooted status (epistemic rooting)
-            # Use the mean belief if multivariate, or check if any dimension is rooted?
-            # User instructions: "rooted = belief_state > 0.65"
-            # We'll calculate a system-wide belief or check if all/any are rooted.
-            # Assuming system rootedness based on the final belief state of the agent
-            # (which accumulates across dimensions in the current implementation,
-            # but wait, the agent accumulates history, but self.belief is the CURRENT belief).
-            # If we iterate dimensions, the final belief reflects all dimensions.
-
+            # Epistemic rooting: the agent accumulates evidence across all
+            # dimensions, so its final belief reflects the whole system.
             results["is_rooted"] = self.agent.belief > 0.65
 
             # Step 3: Analyze influence network (if multivariate)
@@ -295,9 +299,9 @@ class DynamicResonanceRooting:
             logger.info("DRR analysis complete.")
             return results
 
-        except Exception as e:
-            logger.error("Error in system analysis: %s", e)
-            return {}
+        except Exception:
+            logger.exception("Error in system analysis")
+            raise
 
     def plot_results(self, results: Dict, data: np.ndarray, save_plots: bool = False):
         """
