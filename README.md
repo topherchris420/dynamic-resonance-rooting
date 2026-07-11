@@ -11,6 +11,20 @@ A research framework for studying complex adaptive systems through resonance det
 
 ---
 
+## 📄 Flier
+
+A one-page overview of DRR — what it detects, who it's for, and how to get started.
+
+<p align="center">
+  <a href="docs/assets/drr-flier.png">
+    <img src="docs/assets/drr-flier.png" alt="Dynamic Resonance Rooting flier — resonance detection, causal rooting, stability diagnostics" width="600">
+  </a>
+</p>
+
+Print-ready (US Letter). Learn more at [Vers3Dynamics.com](https://vers3dynamics.com).
+
+---
+
 ## What is DRR?
 
 The **Dynamic Resonance Rooting (DRR) Framework** is a computational pipeline that analyzes time-series and panel data to answer three core questions about complex adaptive systems:
