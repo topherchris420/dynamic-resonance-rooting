@@ -95,8 +95,10 @@ class ResonanceDetector:
     ) -> dict:
         """Detect dominant resonance structure in one time series.
 
-        Supported methods are ``fft``, ``welch``, and ``markov``. ``wavelet`` is
-        reserved as an explicit not-yet-implemented research surface.
+        Supported methods are ``fft``, ``welch``, ``wavelet``, and ``markov``.
+        The ``wavelet`` method uses a Morlet continuous wavelet transform and
+        additionally returns a time-frequency ``scalogram`` for nonstationary
+        signals.
         """
 
         data = np.asarray(data, dtype=float)
@@ -110,7 +112,7 @@ class ResonanceDetector:
         if method == "welch":
             return self._detect_with_welch(data, sampling_rate, peak_height_ratio)
         if method == "wavelet":
-            return self._detect_with_wavelet(data)
+            return self._detect_with_wavelet(data, sampling_rate, peak_height_ratio)
         if method == "markov":
             return self._detect_with_markov(data, n_clusters)
         raise ValueError(f"Unknown resonance detection method: {method}")
@@ -196,11 +198,108 @@ class ResonanceDetector:
             "spectrum": psd,
         }
 
-    def _detect_with_wavelet(self, data: np.ndarray) -> dict:
-        raise NotImplementedError(
-            "Wavelet resonance detection is not implemented yet. "
-            "Use method='fft', method='welch', or method='markov'."
-        )
+    def _detect_with_wavelet(
+        self,
+        data: np.ndarray,
+        sampling_rate: float,
+        peak_height_ratio: float,
+        n_frequencies: int = 96,
+        omega0: float = 6.0,
+    ) -> dict:
+        """Detect resonances with a Morlet continuous wavelet transform.
+
+        The scalogram is computed by FFT-based convolution against
+        L1-normalized analytic Morlet wavelets, so a sinusoid produces the same
+        response magnitude at every frequency. The time-averaged scalogram
+        (the global wavelet spectrum) is then searched for peaks exactly like
+        the FFT/Welch paths, which keeps the return schema consistent. Unlike
+        those paths, the full ``scalogram`` is also returned (when small enough
+        to hold in memory), exposing when each resonance is active.
+        """
+        if sampling_rate <= 0:
+            raise ValueError("sampling_rate must be positive")
+        if not 0 < peak_height_ratio <= 1:
+            raise ValueError("peak_height_ratio must be in the interval (0, 1]")
+
+        n = len(data)
+        # Require roughly two full cycles of the slowest resolvable frequency.
+        min_frequency = 2.0 * sampling_rate / n if n else 0.0
+        max_frequency = sampling_rate / 2.0
+        if n < 16 or min_frequency >= max_frequency:
+            return self._detect_with_fft(data, sampling_rate, peak_height_ratio)
+
+        centered = data - np.mean(data)
+        frequencies = np.geomspace(min_frequency, max_frequency, n_frequencies)
+        scales = omega0 / (2.0 * np.pi * frequencies)
+
+        angular = 2.0 * np.pi * np.fft.fftfreq(n, d=1.0 / sampling_rate)
+        analytic_mask = angular > 0
+        data_hat = np.fft.fft(centered)
+
+        keep_scalogram = n * n_frequencies <= 8_000_000
+        scalogram = np.empty((n_frequencies, n)) if keep_scalogram else None
+        global_spectrum = np.empty(n_frequencies)
+
+        # Chunk over scales so the (chunk, n) wavelet window stays bounded in memory.
+        chunk = max(1, 4_000_000 // n)
+        for start in range(0, n_frequencies, chunk):
+            stop = min(start + chunk, n_frequencies)
+            window = np.exp(-0.5 * (scales[start:stop, None] * angular[None, :] - omega0) ** 2)
+            window *= analytic_mask[None, :]
+            power = np.abs(np.fft.ifft(data_hat[None, :] * window, axis=1)) ** 2
+            global_spectrum[start:stop] = power.mean(axis=1)
+            if scalogram is not None:
+                scalogram[start:stop] = power
+
+        max_power = float(np.max(global_spectrum)) if global_spectrum.size else 0.0
+        peaks, _ = find_peaks(global_spectrum, height=max_power * peak_height_ratio)
+
+        dominant_freq = self._refine_wavelet_peaks(frequencies, global_spectrum, peaks)
+        peak_power = global_spectrum[peaks]
+        if len(peak_power) > 0:
+            order = np.argsort(peak_power)[::-1]
+            dominant_freq = dominant_freq[order]
+            peak_power = peak_power[order]
+
+        noise_floor = float(np.median(global_spectrum)) if global_spectrum.size else 0.0
+
+        return {
+            "method": "wavelet",
+            "dominant_freq": dominant_freq,
+            "peak_magnitude": peak_power,
+            "confidence": _peak_confidence(peak_power, noise_floor),
+            "noise_floor": noise_floor,
+            "frequency_axis": frequencies,
+            "spectrum": global_spectrum,
+            "scalogram": scalogram,
+            "time_axis": np.arange(n) / sampling_rate,
+        }
+
+    @staticmethod
+    def _refine_wavelet_peaks(
+        frequencies: np.ndarray, spectrum: np.ndarray, peaks: np.ndarray
+    ) -> np.ndarray:
+        """Refine peak frequencies with a parabolic fit in log-frequency space.
+
+        The wavelet frequency grid is geometric, so interior peaks are sharpened
+        by fitting a parabola through the peak and its neighbors and shifting the
+        estimate by the vertex offset (clamped to half a grid step).
+        """
+        refined = frequencies[peaks].astype(float)
+        if len(peaks) == 0 or len(frequencies) < 2:
+            return refined
+
+        log_step = float(np.log(frequencies[1]) - np.log(frequencies[0]))
+        for i, peak in enumerate(peaks):
+            if peak <= 0 or peak >= len(spectrum) - 1:
+                continue
+            left, center, right = spectrum[peak - 1], spectrum[peak], spectrum[peak + 1]
+            curvature = left - 2.0 * center + right
+            if abs(curvature) <= _EPS:
+                continue
+            offset = float(np.clip(0.5 * (left - right) / curvature, -0.5, 0.5))
+            refined[i] = float(np.exp(np.log(frequencies[peak]) + offset * log_step))
+        return refined
 
     def _detect_with_markov(self, data: np.ndarray, n_clusters: int) -> dict:
         if not SKLEARN_AVAILABLE:

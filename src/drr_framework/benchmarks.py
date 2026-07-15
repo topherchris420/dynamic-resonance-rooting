@@ -55,7 +55,7 @@ class BenchmarkSystems:
 
         logger.info("Generating Heston benchmark data")
         state = initial_state or {"s0": 100, "v0": 0.04}
-        rng = np.random.default_rng(random_state) if random_state is not None else None
+        rng = np.random.default_rng(random_state)
         n_steps = int(duration * (1 / dt))
         s = np.zeros(n_steps)
         v = np.zeros(n_steps)
@@ -64,18 +64,20 @@ class BenchmarkSystems:
 
         kappa, theta, sigma, rho = 2.0, 0.04, 0.2, -0.7
 
-        for i in range(1, n_steps):
-            if rng is None:
-                w_s = np.random.normal()
-                w_v = rho * w_s + np.sqrt(1 - rho**2) * np.random.normal()
-            else:
-                w_s = rng.normal()
-                w_v = rho * w_s + np.sqrt(1 - rho**2) * rng.normal()
+        # Pre-draw the correlated Brownian increments; only the state recursion
+        # needs to stay sequential.
+        w_s = rng.normal(size=n_steps - 1)
+        w_v = rho * w_s + np.sqrt(1 - rho**2) * rng.normal(size=n_steps - 1)
 
-            s[i] = s[i - 1] * np.exp((0.05 - 0.5 * v[i - 1]) * dt + np.sqrt(v[i - 1] * dt) * w_s)
+        for i in range(1, n_steps):
+            s[i] = s[i - 1] * np.exp(
+                (0.05 - 0.5 * v[i - 1]) * dt + np.sqrt(v[i - 1] * dt) * w_s[i - 1]
+            )
             v[i] = np.maximum(
                 0,
-                v[i - 1] + kappa * (theta - v[i - 1]) * dt + sigma * np.sqrt(v[i - 1] * dt) * w_v,
+                v[i - 1]
+                + kappa * (theta - v[i - 1]) * dt
+                + sigma * np.sqrt(v[i - 1] * dt) * w_v[i - 1],
             )
 
         t = np.linspace(0, duration, n_steps)

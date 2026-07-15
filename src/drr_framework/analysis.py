@@ -100,7 +100,8 @@ class DynamicResonanceRooting:
 
         Args:
             data (np.ndarray): Time series data (1D or multivariate)
-            method (str): Method for spectral analysis ('fft', 'welch', or 'markov')
+            method (str): Method for spectral analysis
+                ('fft', 'welch', 'wavelet', or 'markov')
             peak_height_ratio (float): Ratio of max power for peak detection
 
         Returns:
@@ -241,6 +242,8 @@ class DynamicResonanceRooting:
         window_size: int = 100,
         state_space: bool = True,
         state_space_horizon: int = 12,
+        method: str = "fft",
+        peak_height_ratio: float = 0.1,
     ) -> Dict[str, object]:
         """
         Perform complete DRR analysis on system data.
@@ -251,6 +254,9 @@ class DynamicResonanceRooting:
             window_size (int): Window size for depth calculation
             state_space (bool): Whether to attach DSGE-inspired state-space diagnostics
             state_space_horizon (int): Horizon for impulse-response diagnostics
+            method (str): Spectral method for resonance detection
+                ('fft', 'welch', 'wavelet', or 'markov')
+            peak_height_ratio (float): Ratio of max power for peak detection
 
         Returns:
             Dict: Complete analysis results
@@ -260,7 +266,9 @@ class DynamicResonanceRooting:
         try:
             # Step 1: Detect resonances
             logger.info("Detecting resonances...")
-            resonances = self.detect_resonances(data)
+            resonances = self.detect_resonances(
+                data, method=method, peak_height_ratio=peak_height_ratio
+            )
             results["resonances"] = resonances
 
             # Step 2: Calculate resonance depths
@@ -303,7 +311,9 @@ class DynamicResonanceRooting:
             logger.exception("Error in system analysis")
             raise
 
-    def plot_results(self, results: Dict, data: np.ndarray, save_plots: bool = False):
+    def plot_results(
+        self, results: Dict, data: np.ndarray, save_plots: bool = False, show: bool = True
+    ):
         """
         Create comprehensive visualization of DRR analysis results.
 
@@ -311,6 +321,8 @@ class DynamicResonanceRooting:
             results (Dict): Analysis results from analyze_system
             data (np.ndarray): Original input data
             save_plots (bool): Whether to save plots to files
+            show (bool): Whether to display the figure; pass False in headless
+                or batch environments (the figure is closed after saving)
         """
         if not results:
             logger.warning("No results to plot")
@@ -482,7 +494,10 @@ class DynamicResonanceRooting:
             plt.savefig("drr_analysis_results.png", dpi=300, bbox_inches="tight")
             logger.info("Plot saved as 'drr_analysis_results.png'")
 
-        plt.show()
+        if show:
+            plt.show()
+        else:
+            plt.close(fig)
 
 
 # Make the class available for import

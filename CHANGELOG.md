@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Morlet wavelet resonance detection (`method="wavelet"`): an FFT-based
+  continuous wavelet transform with peak selection on the global wavelet
+  spectrum, parabolic peak refinement, and a returned `scalogram` and
+  `time_axis` that localize resonances in time for nonstationary signals
+- `analyze_system` accepts `method` and `peak_height_ratio`, so Welch or
+  wavelet detection can be used end to end instead of always falling back to
+  FFT
+- `RealTimeDRR` accepts `analysis_interval` to run the full analysis every
+  N-th point on high-frequency streams (default 1 keeps existing behavior)
+- `plot_results` accepts `show=False` for headless or batch environments
+  (the figure is closed after optional saving instead of displayed)
+
 ### Changed
 - Vectorized lagged-correlation rooting scores (one cross-correlation matrix per
   lag instead of a `corrcoef` call per variable pair), speeding up
@@ -22,6 +35,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   call, so repeated analyses on one instance produce identical belief states
 - `DynamicResonanceRooting` validates `embedding_dim`, `tau`, and
   `sampling_rate` at construction
+- The Heston benchmark now always uses `numpy.random.default_rng` with
+  pre-drawn correlated shocks instead of the legacy global NumPy RNG when no
+  seed is given (seeded draws are still deterministic, but differ from
+  previous versions)
 
 ### Fixed
 - `MarkovChain` stationary distribution had the wrong length when eigenvalue 1
@@ -30,6 +47,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `QBistAgent.reset()` now restores the prior belief instead of only clearing
   the history
 - `RealTimeDRR.reset()` also resets the anomaly detector history
+- `drr_framework.__version__` reported a stale `0.2.0`; it is now
+  single-sourced from the installed package metadata (`4.2.0`)
 
 ---
 
