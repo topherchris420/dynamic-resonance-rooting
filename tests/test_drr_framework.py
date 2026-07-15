@@ -50,11 +50,13 @@ def test_markov_detector_validates_cluster_configuration():
         detector.detect(np.random.rand(3), method="markov", n_clusters=4)
 
 
-def test_wavelet_detector_raises_not_implemented():
+def test_wavelet_detector_returns_standard_schema():
     detector = ResonanceDetector()
+    result = detector.detect(np.random.rand(64), method="wavelet", sampling_rate=100)
 
-    with pytest.raises(NotImplementedError, match="not implemented"):
-        detector.detect(np.random.rand(50), method="wavelet")
+    assert result["method"] == "wavelet"
+    for key in ("dominant_freq", "peak_magnitude", "confidence", "spectrum", "scalogram"):
+        assert key in result
 
 
 def test_rooting_analyzer():
@@ -205,6 +207,32 @@ def test_real_time_drr_rejects_invalid_configuration():
     with pytest.raises(ValueError, match="threshold"):
         RealTimeDRR(window_size=5, n_variables=1, threshold=1.5)
 
+    with pytest.raises(ValueError, match="analysis_interval"):
+        RealTimeDRR(window_size=5, n_variables=1, analysis_interval=0)
+
+
+def test_real_time_drr_analysis_interval_throttles_updates():
+    """
+    With analysis_interval=3 and window_size=5, results should come back on
+    points 5, 8, and 11 only.
+    """
+    rt_drr = RealTimeDRR(window_size=5, n_variables=1, analysis_interval=3)
+
+    analyzed_points = [
+        i for i in range(1, 12) if rt_drr.process_data_point(np.random.rand()) is not None
+    ]
+    assert analyzed_points == [5, 8, 11]
+
+
+def test_heston_benchmark_is_reproducible_with_seed():
+    t1, data1 = BenchmarkSystems.generate_heston_data(duration=1, dt=1 / 50, random_state=42)
+    t2, data2 = BenchmarkSystems.generate_heston_data(duration=1, dt=1 / 50, random_state=42)
+
+    assert data1.shape == (50, 2)
+    np.testing.assert_allclose(data1, data2)
+    assert np.all(data1[:, 0] > 0)  # prices stay positive
+    assert np.all(data1[:, 1] >= 0)  # variance stays non-negative
+
 
 def test_drr_framework_rejects_invalid_configuration():
     from drr_framework.analysis import DynamicResonanceRooting
@@ -235,6 +263,33 @@ def test_analyze_system_is_deterministic_across_repeated_calls():
 
     assert first["agent_belief"] == second["agent_belief"]
     assert first["is_rooted"] == second["is_rooted"]
+
+
+def test_analyze_system_passes_spectral_method_through():
+    """
+    The spectral method selected in analyze_system must reach the detector
+    instead of silently falling back to FFT.
+    """
+    from drr_framework.analysis import DynamicResonanceRooting
+
+    sampling_rate = 100.0
+    t = np.linspace(0, 10, 1000, endpoint=False)
+    data = np.sin(2 * np.pi * 5 * t)
+
+    drr = DynamicResonanceRooting(embedding_dim=3, tau=2, sampling_rate=sampling_rate)
+
+    seen_methods = []
+    original_detect = drr.resonance_detector.detect
+
+    def spying_detect(*args, **kwargs):
+        seen_methods.append(kwargs.get("method"))
+        return original_detect(*args, **kwargs)
+
+    drr.resonance_detector.detect = spying_detect
+    results = drr.analyze_system(data, window_size=128, method="welch")
+
+    assert seen_methods and set(seen_methods) == {"welch"}
+    assert np.isclose(results["resonances"]["dim_0"]["dominant_freq"], 5.0, atol=0.5)
 
 
 def test_analyze_system_propagates_errors():

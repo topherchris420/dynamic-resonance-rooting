@@ -16,7 +16,13 @@ class RealTimeDRR:
     repeated np.array() conversions on every analysis call.
     """
 
-    def __init__(self, window_size: int, n_variables: int = 1, threshold: float = 0.5):
+    def __init__(
+        self,
+        window_size: int,
+        n_variables: int = 1,
+        threshold: float = 0.5,
+        analysis_interval: int = 1,
+    ):
         """
         Initializes the real-time DRR analyzer.
 
@@ -24,6 +30,10 @@ class RealTimeDRR:
             window_size (int): The size of the sliding window.
             n_variables (int): The number of variables in the time series.
             threshold (float): The anomaly detection threshold.
+            analysis_interval (int): Run the full analysis every N-th point
+                once the window is full. The default of 1 analyzes every point;
+                larger values trade update latency for throughput on
+                high-frequency streams.
         """
         if window_size <= 0:
             raise ValueError("window_size must be a positive integer")
@@ -31,9 +41,12 @@ class RealTimeDRR:
             raise ValueError("n_variables must be a positive integer")
         if not 0 <= threshold <= 1:
             raise ValueError("threshold must be between 0 and 1")
+        if analysis_interval <= 0:
+            raise ValueError("analysis_interval must be a positive integer")
 
         self.window_size = window_size
         self.n_variables = n_variables
+        self.analysis_interval = analysis_interval
         self._buffer = np.empty((window_size, n_variables), dtype=np.float64)
         self._count = 0  # total points inserted
         self.resonance_detector = ResonanceDetector()
@@ -49,7 +62,8 @@ class RealTimeDRR:
 
         Returns:
             A list with one result dict per variable (resonances, depth, anomaly
-            flag) once the window is full, otherwise ``None``.
+            flag) once the window is full and the point lands on the configured
+            ``analysis_interval``, otherwise ``None``.
         """
         # Handle scalar input for single variable case
         if np.isscalar(data_point):
@@ -68,7 +82,10 @@ class RealTimeDRR:
         self._buffer[idx] = data_point
         self._count += 1
 
-        if self._count >= self.window_size:
+        if (
+            self._count >= self.window_size
+            and (self._count - self.window_size) % self.analysis_interval == 0
+        ):
             # Build the ordered view from the ring buffer
             start = self._count % self.window_size
             data_array: np.ndarray

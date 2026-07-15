@@ -18,13 +18,15 @@ Important methods:
 - `time_delay_embedding(data)`: build Takens-style delayed coordinates for a
   one-dimensional signal.
 - `detect_resonances(data, method="fft", peak_height_ratio=0.1)`: detect
-  dominant frequencies per dimension.
+  dominant frequencies per dimension. `method` accepts `"fft"`, `"welch"`,
+  `"wavelet"`, or `"markov"`.
 - `calculate_resonance_depths(window_size=100)`: compute scalar depth values and
   store component details.
 - `analyze_influence_network()`: build a directed NetworkX graph from rooting
   scores for multivariate data.
-- `analyze_system(data, multivariate=False, window_size=100, state_space=True)`: run
-  the end-to-end DRR workflow.
+- `analyze_system(data, multivariate=False, window_size=100, state_space=True,
+  method="fft", peak_height_ratio=0.1)`: run the end-to-end DRR workflow with
+  the chosen spectral method.
 
 ## Resonance Modules
 
@@ -43,6 +45,18 @@ result = ResonanceDetector().detect(
 
 Returns method name, dominant frequencies, peak magnitudes, confidence estimates,
 noise floor, frequency axis, and spectrum.
+
+Supported methods:
+
+- `"fft"`: single FFT magnitude spectrum.
+- `"welch"`: Welch-averaged power spectral density (lower variance).
+- `"wavelet"`: Morlet continuous wavelet transform. Peaks are selected from the
+  time-averaged global wavelet spectrum, and the result additionally includes a
+  `scalogram` (frequency x time power map) and `time_axis` for nonstationary
+  signals. For very long inputs the scalogram is omitted (`None`) to bound
+  memory; the spectrum and peaks are still returned.
+- `"markov"`: KMeans state clustering with transition-matrix persistence
+  analysis (returns a different, state-based schema).
 
 ### `DepthCalculator`
 

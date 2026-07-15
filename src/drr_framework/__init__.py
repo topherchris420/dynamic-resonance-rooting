@@ -86,7 +86,18 @@ def __getattr__(name):
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
-__version__ = "0.2.0"
+# Version is single-sourced from the installed package metadata (pyproject.toml).
+try:
+    from importlib.metadata import PackageNotFoundError as _PackageNotFoundError
+    from importlib.metadata import version as _package_version
+
+    try:
+        __version__ = _package_version("drr-framework")
+    except _PackageNotFoundError:
+        __version__ = "4.2.0"
+except ImportError:  # pragma: no cover - Python < 3.8
+    __version__ = "4.2.0"
+
 __author__ = "Christopher Woodyard"
 __email__ = "ciao_chris@example.com"
 

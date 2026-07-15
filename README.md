@@ -33,7 +33,7 @@ The **Dynamic Resonance Rooting (DRR) Framework** is a computational pipeline th
 2. **Rooting Analysis** — What are the directional lead-lag relationships between variables?
 3. **Stability Assessment** — How stable are the resonance structures over time?
 
-DRR combines spectral analysis (FFT, Welch PSD), causal rooting (transfer entropy, lagged correlation), and state-space diagnostics to provide evidence for hypothesis generation about system behavior.
+DRR combines spectral analysis (FFT, Welch PSD, Morlet wavelet scalograms), causal rooting (transfer entropy, lagged correlation), and state-space diagnostics to provide evidence for hypothesis generation about system behavior.
 
 ---
 
@@ -43,7 +43,7 @@ DRR combines spectral analysis (FFT, Welch PSD), causal rooting (transfer entrop
 
 | Capability | Description |
 |------------|-------------|
-| **Resonance Detection** | Identifies oscillatory patterns via FFT and Welch power spectral density |
+| **Resonance Detection** | Identifies oscillatory patterns via FFT, Welch power spectral density, or Morlet wavelet scalograms (time-localized, for nonstationary signals) |
 | **Causal Rooting** | Maps directional lead-lag relationships using transfer entropy or lagged correlation |
 | **Resonance Depth** | Composite scoring combining spectral concentration, temporal persistence, phase coherence, and amplitude stability |
 | **State-Space Diagnostics** | Transition, measurement, and stability analysis |

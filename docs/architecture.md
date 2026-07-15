@@ -45,9 +45,12 @@ flowchart TD
     Center --> Method{Detection method}
     Method --> FFT[FFT spectrum]
     Method --> Welch[Welch PSD]
+    Method --> Wavelet[Morlet wavelet scalogram]
     Method --> Markov[Discrete Markov states]
     FFT --> Peaks[Peak selection]
     Welch --> Peaks
+    Wavelet --> Global[Global wavelet spectrum]
+    Global --> Peaks
     Markov --> Persistent[Persistent state detection]
     Peaks --> Confidence[Noise-floor confidence estimate]
     Persistent --> Result[Resonance result]
