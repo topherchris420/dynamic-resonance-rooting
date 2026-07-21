@@ -1,12 +1,47 @@
 import numpy as np
+import pytest
 
 from drr_framework import DynamicResonanceRooting
 from drr_framework.state_space import (
+    Measurement,
+    StateSpaceSystem,
+    Transition,
     analyze_resonance_state_space,
+    chandrasekhar_recursion,
     fit_resonance_state_space,
     impulse_response,
     kalman_filter,
+    stationary_initialization,
 )
+
+
+def _known_system():
+    TTT = np.array([[0.6, 0.2], [0.0, 0.5]])
+    QQ = np.array([[0.20, 0.05], [0.05, 0.15]])
+    EE = np.eye(2) * 0.30
+    return StateSpaceSystem(
+        transition=Transition(TTT, np.eye(2), np.array([0.1, -0.05])),
+        measurement=Measurement(np.eye(2), np.zeros(2), QQ, EE),
+        state_names=["a", "b"],
+        observable_names=["a", "b"],
+        shock_names=["e0", "e1"],
+    )
+
+
+def _simulate(system, n=200, random_state=3):
+    rng = np.random.default_rng(random_state)
+    TTT = system["TTT"]
+    CCC = system["CCC"]
+    chol_q = np.linalg.cholesky(system["QQ"])
+    chol_e = np.linalg.cholesky(system["EE"])
+    state = np.zeros(system.n_states)
+    observations = np.zeros((n, system.n_observables))
+    for t in range(n):
+        state = TTT @ state + chol_q @ rng.standard_normal(system.n_shocks) + CCC
+        observations[t] = (
+            system["ZZ"] @ state + system["DD"] + chol_e @ rng.standard_normal(system.n_observables)
+        )
+    return observations
 
 
 def _generate_stable_var(random_state=11):
@@ -63,6 +98,61 @@ def test_impulse_response_and_analysis_bundle_are_consistent():
     assert len(analysis["impulse_responses"]) == 2
     assert analysis["diagnostics"]["state_count"] == 2
     assert np.isfinite(analysis["diagnostics"]["total_log_likelihood"])
+
+
+def test_stationary_initialization_solves_lyapunov_equation():
+    system = _known_system()
+    mean, covariance = stationary_initialization(system)
+
+    TTT = system["TTT"]
+    RRR = system["RRR"]
+    CCC = system["CCC"]
+    QQ = system["QQ"]
+    # mu = T mu + C  and  Sigma = T Sigma T' + R Q R'
+    assert np.allclose(mean, TTT @ mean + CCC, atol=1e-9)
+    assert np.allclose(covariance, TTT @ covariance @ TTT.T + RRR @ QQ @ RRR.T, atol=1e-8)
+
+
+def test_chandrasekhar_matches_kalman_under_stationary_initialization():
+    system = _known_system()
+    observations = _simulate(system)
+    mean, covariance = stationary_initialization(system)
+
+    kalman = kalman_filter(system, observations, initial_state=mean, initial_covariance=covariance)
+    chandrasekhar = chandrasekhar_recursion(system, observations)
+
+    assert abs(chandrasekhar.total_log_likelihood - kalman.total_log_likelihood) < 1e-4
+    assert np.allclose(chandrasekhar.log_likelihood, kalman.log_likelihood, atol=1e-4)
+
+
+def test_chandrasekhar_rejects_unstable_system_and_missing_data():
+    unstable = StateSpaceSystem(
+        transition=Transition(np.array([[1.05, 0.0], [0.0, 0.4]]), np.eye(2), np.zeros(2)),
+        measurement=Measurement(np.eye(2), np.zeros(2), np.eye(2), np.eye(2)),
+        state_names=["a", "b"],
+        observable_names=["a", "b"],
+        shock_names=["e0", "e1"],
+    )
+    with pytest.raises(ValueError):
+        chandrasekhar_recursion(unstable, np.ones((10, 2)))
+
+    system = _known_system()
+    observations = _simulate(system, n=20)
+    observations[5, 0] = np.nan
+    with pytest.raises(ValueError):
+        chandrasekhar_recursion(system, observations)
+
+
+def test_analyze_bundle_includes_smoother_by_default():
+    data = _generate_stable_var()[1]
+    analysis = analyze_resonance_state_space(data, smooth=True)
+
+    assert "smoother" in analysis
+    assert analysis["smoother"].smoothed_states.shape == data.shape
+    assert "mean_smoothed_uncertainty" in analysis["diagnostics"]
+
+    without = analyze_resonance_state_space(data, smooth=False)
+    assert "smoother" not in without
 
 
 def test_dynamic_resonance_rooting_attaches_state_space_diagnostics():

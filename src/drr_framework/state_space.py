@@ -14,7 +14,6 @@ from typing import Dict, Optional, Sequence
 
 import numpy as np
 
-
 _EPS = np.finfo(float).eps
 
 
@@ -376,6 +375,115 @@ def kalman_filter(
     )
 
 
+@dataclass(frozen=True)
+class ChandrasekharResult:
+    """Output of the Chandrasekhar recursion likelihood evaluation."""
+
+    log_likelihood: np.ndarray
+    innovations: np.ndarray
+
+    @property
+    def total_log_likelihood(self) -> float:
+        return float(np.sum(self.log_likelihood))
+
+
+def stationary_initialization(system: StateSpaceSystem) -> tuple[np.ndarray, np.ndarray]:
+    """Unconditional (stationary) state mean and covariance of the system.
+
+    Returns ``(mu, Sigma)`` where ``mu = (I - TTT)^{-1} CCC`` and ``Sigma`` solves
+    the discrete Lyapunov equation ``Sigma = TTT Sigma TTT' + RRR QQ RRR'``. This
+    matches ``init_stationary_states`` in ``StateSpaceRoutines.jl`` and is the
+    initialization required by :func:`chandrasekhar_recursion`.
+    """
+    TTT = system["TTT"]
+    RRR = system["RRR"]
+    CCC = system["CCC"]
+    QQ = system["QQ"]
+    n_states = system.n_states
+
+    eigenvalues = np.linalg.eigvals(TTT)
+    if np.max(np.abs(eigenvalues)) >= 1.0 - 1e-9:
+        raise ValueError(
+            "stationary initialization requires a stable transition (spectral radius < 1)"
+        )
+
+    mean = np.linalg.solve(np.eye(n_states) - TTT, CCC)
+    process_covariance = _symmetrize_psd(RRR @ QQ @ RRR.T)
+    # vec(Sigma) = (I - TTT (x) TTT)^{-1} vec(RQR')
+    kron = np.kron(TTT, TTT)
+    vec_sigma = np.linalg.solve(np.eye(n_states * n_states) - kron, process_covariance.reshape(-1))
+    covariance = _symmetrize_psd(vec_sigma.reshape(n_states, n_states))
+    return mean, covariance
+
+
+def chandrasekhar_recursion(
+    system: StateSpaceSystem,
+    observations: np.ndarray,
+) -> ChandrasekharResult:
+    """Evaluate the log-likelihood via the Chandrasekhar recursions.
+
+    This is a dependency-free port of ``chand_recursion`` from the New York Fed's
+    ``StateSpaceRoutines.jl``. For a *stable, time-invariant* system with complete
+    data it returns exactly the Kalman log-likelihood (under stationary
+    initialization), but propagates two small, fixed-size matrices (``W`` of shape
+    ``(n_states, n_observables)`` and ``M`` of shape
+    ``(n_observables, n_observables)``) instead of the full ``n_states`` by
+    ``n_states`` covariance, which is materially faster when the state dimension is
+    large.
+
+    The recursion is only valid from the stationary prediction covariance, so the
+    filter is initialized via :func:`stationary_initialization`. Missing
+    observations are not supported; use :func:`kalman_filter` for those. To
+    reproduce this value with :func:`kalman_filter`, pass the same stationary
+    ``initial_state`` and ``initial_covariance``.
+
+    See Herbst (2015), "Using the 'Chandrasekhar Recursions' for Likelihood
+    Evaluation of DSGE Models".
+    """
+    y = _as_2d_data(observations, name="observations", allow_nan=False)
+    if y.shape[1] != system.n_observables:
+        raise ValueError("observations column count must match system observables")
+
+    TTT = system["TTT"]
+    CCC = system["CCC"]
+    ZZ = system["ZZ"]
+    DD = system["DD"]
+
+    n_observables = system.n_observables
+
+    predicted_state, predicted_covariance = stationary_initialization(system)
+
+    V = _symmetrize_psd(ZZ @ predicted_covariance @ ZZ.T + system["EE"])
+    W = TTT @ predicted_covariance @ ZZ.T
+    V_inverse, _ = _safe_inverse_and_logdet(V)
+    M = -V_inverse
+    K = W @ V_inverse
+
+    n_obs = y.shape[0]
+    log_likelihood = np.zeros(n_obs)
+    innovations = np.zeros((n_obs, n_observables))
+
+    for t in range(n_obs):
+        innovation = y[t] - (ZZ @ predicted_state + DD)
+        current_inverse, logdet = _safe_inverse_and_logdet(V)
+        quadratic = float(innovation.T @ current_inverse @ innovation)
+        log_likelihood[t] = -0.5 * (n_observables * np.log(2 * np.pi) + logdet + quadratic)
+        innovations[t] = innovation
+
+        predicted_state = CCC + TTT @ predicted_state + K @ innovation
+
+        ZW = ZZ @ W
+        V_next = _symmetrize_psd(V + ZW @ M @ ZW.T)
+        inverse_next, _ = _safe_inverse_and_logdet(V_next)
+        K_next = (K @ V + TTT @ W @ M @ ZW.T) @ inverse_next
+        W_next = TTT @ W - K_next @ ZW
+        M_next = M + M @ ZW.T @ current_inverse @ ZW @ M
+
+        V, K, W, M = V_next, K_next, W_next, M_next
+
+    return ChandrasekharResult(log_likelihood=log_likelihood, innovations=innovations)
+
+
 def impulse_response(
     system: StateSpaceSystem,
     horizon: int = 20,
@@ -413,8 +521,27 @@ def analyze_resonance_state_space(
     ridge: float = 1e-6,
     state_names: Optional[Sequence[str]] = None,
     observable_names: Optional[Sequence[str]] = None,
+    smooth: bool = True,
+    smoother_method: str = "koopman",
 ) -> Dict[str, object]:
-    """Fit, filter, and diagnose a DRR state-space representation."""
+    """Fit, filter, smooth, and diagnose a DRR state-space representation.
+
+    Parameters
+    ----------
+    data:
+        ``(T, n_variables)`` observed trajectory.
+    impulse_horizon:
+        Horizon for the impulse-response diagnostics.
+    ridge:
+        Ridge penalty for the VAR(1) transition estimate.
+    state_names, observable_names:
+        Optional labels.
+    smooth:
+        When ``True`` (default) a fixed-interval Kalman smoother is run to
+        recover retrospective state and structural-shock estimates.
+    smoother_method:
+        ``"koopman"`` (disturbance smoother, default) or ``"hamilton"`` (RTS).
+    """
     observations = _as_2d_data(data)
     system = fit_resonance_state_space(
         observations,
@@ -430,9 +557,19 @@ def analyze_resonance_state_space(
     diagnostics: Dict[str, object] = dict(system.diagnostics())
     diagnostics.update(kalman.summary())
 
-    return {
+    result: Dict[str, object] = {
         "system": system,
         "kalman": kalman,
         "diagnostics": diagnostics,
         "impulse_responses": responses,
     }
+
+    if smooth:
+        # Local import avoids a module-level cycle (smoothers imports state_space).
+        from .smoothers import kalman_smoother
+
+        smoothed = kalman_smoother(system, observations, method=smoother_method, kalman=kalman)
+        result["smoother"] = smoothed
+        diagnostics.update(smoothed.summary())
+
+    return result

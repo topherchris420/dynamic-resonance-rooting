@@ -113,10 +113,71 @@ row counts so downstream reports carry provenance.
 - `fit_resonance_state_space`
 - `kalman_filter`
 - `impulse_response`
-- `analyze_resonance_state_space`
+- `analyze_resonance_state_space` — now runs a smoother by default
+  (`smooth=True`, `smoother_method="koopman"`)
 
 These functions expose transition, measurement, covariance, likelihood,
 innovation, stability, and impulse-response diagnostics.
+
+### Smoothers, simulation smoothers, and fast likelihoods
+
+Ported from the New York Fed's
+[`StateSpaceRoutines.jl`](https://github.com/FRBNY-DSGE/StateSpaceRoutines.jl)
+as dependency-free NumPy, these estimate the latent resonance state *given the
+whole sample*, recover the structural shocks that drove it, and provide fast /
+nonlinear likelihood evaluation.
+
+- `kalman_smoother(system, observations, method="koopman")` — dispatches to the
+  disturbance (`"koopman"`) or Rauch–Tung–Striebel (`"hamilton"`) smoother.
+- `koopman_smoother`, `hamilton_smoother` — return a `SmootherResult` with
+  `smoothed_states`, `smoothed_covariances`, `smoothed_shocks`, and
+  `smoothed_observables`.
+- `durbin_koopman_smoother`, `carter_kohn_smoother` — draw posterior state and
+  shock paths (`SimulationSmootherResult`), with `posterior_mean()` and
+  `posterior_band(lower, upper)` for credible bands.
+- `chandrasekhar_recursion(system, observations)` — exact log-likelihood of a
+  stable time-invariant system, propagating small fixed-size matrices instead
+  of the full covariance. `stationary_initialization(system)` returns the
+  unconditional mean/covariance it uses.
+
+```python
+from drr_framework import kalman_smoother, durbin_koopman_smoother
+
+smoothed = kalman_smoother(system, observations, method="koopman")
+print(smoothed.smoothed_shocks)          # E[eps_t | y_1:T]
+
+draws = durbin_koopman_smoother(system, observations, n_draws=500, random_state=0)
+band = draws.posterior_band(5.0, 95.0)   # 90% credible band per state
+```
+
+### Nonlinear systems: tempered particle filter
+
+For nonlinear resonance systems (chaotic flows, stochastic volatility), the
+tempered particle filter (Herbst & Schorfheide, 2019) estimates the
+log-likelihood when the Kalman filter no longer applies.
+
+- `NonlinearStateSpaceModel(transition, measurement, shock_cov, measurement_cov, ...)`
+  — the nonlinear model interface; `transition` and `measurement` are vectorised
+  over the particle axis.
+- `tempered_particle_filter(model, observations, n_particles=1000, r_star=2.0, ...)`
+  — returns a `ParticleFilterResult` with per-period `log_likelihood`,
+  `filtered_states`, effective sample sizes, tempering stages, and MH
+  acceptance rates.
+- `linear_gaussian_model(system)` — wraps a linear `StateSpaceSystem` as a
+  `NonlinearStateSpaceModel` (useful for validation: the filter reproduces the
+  Kalman log-likelihood up to Monte Carlo error).
+
+```python
+from drr_framework import NonlinearStateSpaceModel, tempered_particle_filter
+
+model = NonlinearStateSpaceModel(
+    transition=phi, measurement=psi,
+    shock_cov=Q, measurement_cov=E,
+    n_states=2, n_shocks=2, n_observables=1,
+)
+result = tempered_particle_filter(model, observations, n_particles=2000, random_state=0)
+print(result.total_log_likelihood)
+```
 
 ## Validation Readiness
 

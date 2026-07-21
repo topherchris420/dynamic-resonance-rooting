@@ -13,7 +13,6 @@ from drr_framework import (
     write_tableau_artifacts,
 )
 
-
 METRICS = (
     "liquidity_ratio",
     "capital_ratio",
