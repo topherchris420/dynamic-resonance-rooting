@@ -6,8 +6,7 @@ import unittest
 
 class MissingScipyRuntimeTest(unittest.TestCase):
     def test_core_resonance_workflow_runs_without_scipy(self):
-        script = textwrap.dedent(
-            """
+        script = textwrap.dedent("""
             import importlib.abc
             import sys
 
@@ -44,8 +43,7 @@ class MissingScipyRuntimeTest(unittest.TestCase):
             assert detector_result["dominant_freq"].size > 0
             assert abs(float(detector_result["dominant_freq"][0]) - 5.0) <= 1.0
             assert 0.0 <= depth_result["resonance_depth"] <= 1.0
-            """
-        )
+            """)
         result = subprocess.run(
             [sys.executable, "-c", script],
             cwd=".",

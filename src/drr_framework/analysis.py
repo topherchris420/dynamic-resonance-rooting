@@ -1,5 +1,5 @@
 """
-Dynamic Resonance Rooting (DRR) Framework 
+Dynamic Resonance Rooting (DRR) Framework
 Author: Christopher Woodyard (2025)
 """
 

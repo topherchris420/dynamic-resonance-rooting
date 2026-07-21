@@ -22,14 +22,32 @@ from .datasets import (
 )
 from .realtime import RealTimeDRR
 from .state_space import (
+    ChandrasekharResult,
     KalmanResult,
     Measurement,
     StateSpaceSystem,
     Transition,
     analyze_resonance_state_space,
+    chandrasekhar_recursion,
     fit_resonance_state_space,
     impulse_response,
     kalman_filter,
+    stationary_initialization,
+)
+from .smoothers import (
+    SimulationSmootherResult,
+    SmootherResult,
+    carter_kohn_smoother,
+    durbin_koopman_smoother,
+    hamilton_smoother,
+    kalman_smoother,
+    koopman_smoother,
+)
+from .particle_filter import (
+    NonlinearStateSpaceModel,
+    ParticleFilterResult,
+    linear_gaussian_model,
+    tempered_particle_filter,
 )
 
 
@@ -94,9 +112,9 @@ try:
     try:
         __version__ = _package_version("drr-framework")
     except _PackageNotFoundError:
-        __version__ = "4.2.0"
+        __version__ = "4.3.0"
 except ImportError:  # pragma: no cover - Python < 3.8
-    __version__ = "4.2.0"
+    __version__ = "4.3.0"
 
 __author__ = "Christopher Woodyard"
 __email__ = "ciao_chris@example.com"
@@ -126,10 +144,24 @@ __all__ = [
     "Measurement",
     "StateSpaceSystem",
     "KalmanResult",
+    "ChandrasekharResult",
     "fit_resonance_state_space",
     "kalman_filter",
     "impulse_response",
     "analyze_resonance_state_space",
+    "chandrasekhar_recursion",
+    "stationary_initialization",
+    "SmootherResult",
+    "SimulationSmootherResult",
+    "kalman_smoother",
+    "hamilton_smoother",
+    "koopman_smoother",
+    "durbin_koopman_smoother",
+    "carter_kohn_smoother",
+    "NonlinearStateSpaceModel",
+    "ParticleFilterResult",
+    "tempered_particle_filter",
+    "linear_gaussian_model",
     "serialize_analysis_results",
     "summarize_analysis_results",
     "render_markdown_report",

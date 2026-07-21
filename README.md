@@ -5,7 +5,7 @@
 
 A research framework for studying complex adaptive systems through resonance detection, causal rooting analysis, and stability diagnostics.
 
-**Version:** 4.2.0  
+**Version:** 4.3.0  
 **License:** MIT  
 **Author:** Christopher Woodyard
 
@@ -46,7 +46,9 @@ DRR combines spectral analysis (FFT, Welch PSD, Morlet wavelet scalograms), caus
 | **Resonance Detection** | Identifies oscillatory patterns via FFT, Welch power spectral density, or Morlet wavelet scalograms (time-localized, for nonstationary signals) |
 | **Causal Rooting** | Maps directional lead-lag relationships using transfer entropy or lagged correlation |
 | **Resonance Depth** | Composite scoring combining spectral concentration, temporal persistence, phase coherence, and amplitude stability |
-| **State-Space Diagnostics** | Transition, measurement, and stability analysis |
+| **State-Space Diagnostics** | Transition, measurement, and stability analysis with a Kalman filter |
+| **State-Space Smoothing** | Retrospective states and structural shocks via Hamilton (RTS) and Koopman disturbance smoothers, plus Durbin–Koopman and Carter–Kohn posterior draws |
+| **Nonlinear Filtering** | Tempered particle filter (Herbst–Schorfheide) for likelihood evaluation of nonlinear resonance systems, plus fast Chandrasekhar recursions for linear ones |
 | **Phase-Transition Detection** | Evidence for drift or abrupt changes in system behavior |
 
 ### Supported Data Sources
@@ -141,6 +143,13 @@ Federal Reserve banking supervision:
 - Validation-readiness packets
 - **Tableau exports for executive dashboards**
 
+### State-Space Lab
+**File:** `examples/state_space_lab.py`
+
+End-to-end state-space workflow — fit, Kalman filter, Koopman smooth (with
+structural shocks), Durbin–Koopman posterior bands, Chandrasekhar likelihood,
+and a tempered particle filter on a nonlinear observation.
+
 ### Quick Start
 **File:** `examples/quickstart_resonance_export.py`
 
@@ -182,7 +191,9 @@ dynamic-resonance-rooting/
 │   ├── benchmarks.py           # Benchmark generators
 │   ├── datasets.py              # Data adapters
 │   ├── reporting.py            # Export utilities
-│   ├── state_space.py          # State-space diagnostics
+│   ├── state_space.py          # State-space filter, Chandrasekhar recursions
+│   ├── smoothers.py            # Kalman & simulation smoothers
+│   ├── particle_filter.py      # Tempered particle filter (nonlinear)
 │   ├── supervision.py           # Supervisory components
 │   └── validation_readiness.py # Validation packets
 ├── examples/                    # Usage examples
@@ -239,7 +250,7 @@ If you use DRR in your research, please cite:
   author = {Christopher Woodyard},
   title = {Dynamic Resonance Rooting (DRR) Framework},
   url = {https://github.com/topherchris420/dynamic-resonance-rooting},
-  version = {4.2.0},
+  version = {4.3.0},
   year = {2026}
 }
 ```
@@ -252,8 +263,23 @@ MIT License — see LICENSE file for details.
 
 ---
 
+## Acknowledgments
+
+The state-space filtering and smoothing routines (`state_space.py`,
+`smoothers.py`, `particle_filter.py`) are dependency-free NumPy ports of the
+algorithms in the New York Fed's
+[`StateSpaceRoutines.jl`](https://github.com/FRBNY-DSGE/StateSpaceRoutines.jl):
+the Kalman filter and Chandrasekhar recursions, the Hamilton and Koopman
+smoothers, the Durbin–Koopman and Carter–Kohn simulation smoothers, and the
+tempered particle filter (Herbst & Schorfheide, 2019). DRR does not depend on
+Julia; the ports let DRR use these methods natively in Python.
+
 ## References
 
+- Herbst, E. & Schorfheide, F. (2019). *Tempered Particle Filtering.* Journal of Econometrics.
+- Durbin, J. & Koopman, S. J. (2012). *Time Series Analysis by State Space Methods.*
+- Herbst, E. (2015). *Using the "Chandrasekhar Recursions" for Likelihood Evaluation of DSGE Models.*
+- [StateSpaceRoutines.jl](https://github.com/FRBNY-DSGE/StateSpaceRoutines.jl)
 - [FFIEC 002 Reports](https://www.ffiec.gov/NPW)
 - [Federal Reserve Supervision](https://www.federalreserve.gov/supervisionreg.htm)
 - [SR 11-7: Model Risk Management](https://www.federalreserve.gov/supervisionreg/srletters/sr1107.htm)

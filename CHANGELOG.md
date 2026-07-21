@@ -10,6 +10,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **State-space smoothers** (`drr_framework.smoothers`), a dependency-free NumPy
+  port of the smoothing routines in the New York Fed's
+  [`StateSpaceRoutines.jl`](https://github.com/FRBNY-DSGE/StateSpaceRoutines.jl):
+  the Hamilton/Rauch–Tung–Striebel fixed-interval smoother
+  (`hamilton_smoother`), Koopman disturbance smoother (`koopman_smoother`), and
+  the Durbin–Koopman (`durbin_koopman_smoother`) and Carter–Kohn
+  (`carter_kohn_smoother`) simulation smoothers. Smoothing recovers cleaner
+  latent resonance trajectories and, for the first time in DRR, an estimate of
+  the structural shocks that drove the system, plus posterior credible bands
+- **Tempered particle filter** (`drr_framework.particle_filter`) after
+  Herbst & Schorfheide (2019), for likelihood evaluation of *nonlinear*
+  resonance systems (`tempered_particle_filter`, `NonlinearStateSpaceModel`).
+  Adaptive tempering keeps particle inefficiency near a target, with
+  systematic/multinomial resampling and a self-adapting random-walk
+  Metropolis–Hastings mutation step
+- **Chandrasekhar recursions** (`chandrasekhar_recursion`) and stationary
+  initialization (`stationary_initialization`) for fast, exact likelihood
+  evaluation of stable time-invariant systems
+- `analyze_resonance_state_space` now runs a Kalman smoother by default
+  (`smooth=True`, `smoother_method="koopman"`) and attaches the smoothed
+  states, shocks, and uncertainty-reduction diagnostics to every DRR analysis;
+  `examples/state_space_lab.py` demonstrates the full filter → smooth →
+  simulate → particle-filter workflow
 - Morlet wavelet resonance detection (`method="wavelet"`): an FFT-based
   continuous wavelet transform with peak selection on the global wavelet
   spectrum, parabolic peak refinement, and a returned `scalogram` and

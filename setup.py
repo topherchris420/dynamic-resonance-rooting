@@ -6,5 +6,4 @@ two competing package definitions while still supporting older setuptools flows.
 
 from setuptools import setup
 
-
 setup()

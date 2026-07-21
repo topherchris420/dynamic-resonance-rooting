@@ -10,7 +10,6 @@ from typing import Any, Dict, Mapping, Optional, Sequence
 import numpy as np
 import pandas as pd
 
-
 VALIDATION_REFERENCE_BASIS = (
     {
         "label": "SR 11-7 model risk management guidance",

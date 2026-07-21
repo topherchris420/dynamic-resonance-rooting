@@ -4,7 +4,6 @@ import numpy as np
 from .modules import ResonanceDetector, DepthCalculator, AnomalyDetector
 import logging
 
-
 logger = logging.getLogger(__name__)
 
 

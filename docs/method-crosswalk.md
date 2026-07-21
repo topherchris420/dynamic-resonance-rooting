@@ -17,6 +17,10 @@ support different interpretations, but interpretation belongs to the domain.
 | Shock covariance `QQ` | Process-noise energy | Innovation covariance in the fitted transition system |
 | Measurement covariance `EE` | Sensor noise | Observation or measurement uncertainty |
 | Kalman innovations | Model residuals after prediction | One-step-ahead forecast errors in a state-space diagnostic |
+| Smoothed state | Best retrospective estimate of a mode given the whole record | Two-sided estimate of a latent series using all observations |
+| Smoothed shock `eps_t` | Structural disturbance that drove the trajectory | Retrospective innovation attributed to each period |
+| Simulation-smoother draw | One plausible latent path consistent with the data | Posterior sample used to build credible bands |
+| Particle-filter likelihood | Monte Carlo fit of a nonlinear model to the trajectory | Model-comparison diagnostic for nonlinear dynamics |
 | Log likelihood | Fit of filtered model to observed trajectory | Model-comparison diagnostic, not a policy objective |
 | Spectral radius | Linear stability of transition dynamics | Stability check for fitted observable transition |
 | Impulse response | Response to a controlled perturbation | Shock-propagation path for scenario design |

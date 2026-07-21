@@ -12,7 +12,6 @@ import pandas as pd
 
 from .state_space import KalmanResult, Measurement, StateSpaceSystem, Transition
 
-
 Audience = Literal["general", "physics", "policy", "supervision"]
 
 
@@ -55,6 +54,37 @@ def serialize_analysis_results(value: Any) -> Any:
             "final_state": serialize_analysis_results(value.final_state),
             "final_covariance": serialize_analysis_results(value.final_covariance),
             "innovations": serialize_analysis_results(value.innovations),
+            "summary": serialize_analysis_results(value.summary()),
+        }
+    # Lazy import keeps optional smoother/particle-filter modules off the hot path.
+    from .particle_filter import ParticleFilterResult
+    from .smoothers import SimulationSmootherResult, SmootherResult
+
+    if isinstance(value, SmootherResult):
+        # The full smoothed-covariance tensor is intentionally omitted to keep
+        # reports lean; per-state uncertainty is captured in the summary.
+        return {
+            "method": value.method,
+            "smoothed_states": serialize_analysis_results(value.smoothed_states),
+            "smoothed_shocks": serialize_analysis_results(value.smoothed_shocks),
+            "smoothed_observables": serialize_analysis_results(value.smoothed_observables),
+            "summary": serialize_analysis_results(value.summary()),
+        }
+    if isinstance(value, SimulationSmootherResult):
+        return {
+            "method": value.method,
+            "n_draws": value.n_draws,
+            "posterior_mean": serialize_analysis_results(value.posterior_mean()),
+            "posterior_band": serialize_analysis_results(value.posterior_band()),
+        }
+    if isinstance(value, ParticleFilterResult):
+        return {
+            "log_likelihood": serialize_analysis_results(value.log_likelihood),
+            "filtered_states": serialize_analysis_results(value.filtered_states),
+            "filtered_state_std": serialize_analysis_results(value.filtered_state_std),
+            "effective_sample_sizes": serialize_analysis_results(value.effective_sample_sizes),
+            "tempering_stages": serialize_analysis_results(value.tempering_stages),
+            "acceptance_rates": serialize_analysis_results(value.acceptance_rates),
             "summary": serialize_analysis_results(value.summary()),
         }
     # Lazy import for networkx - only needed for graph serialization
@@ -510,6 +540,8 @@ def _state_space_section(results: Dict[str, Any]) -> list[str]:
         "final_uncertainty_trace",
         "state_count",
         "shock_count",
+        "mean_smoothed_uncertainty",
+        "state_reduction_ratio",
     ]
     lines = [
         "## State-Space Diagnostics",
