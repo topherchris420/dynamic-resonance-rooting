@@ -56,9 +56,7 @@ def plot_sonoluminescence_multimodal_analysis(
     # 2. Bubble Dynamics & Collapse
     ax_bub = axes[0, 1]
     ax_bub.plot(t_ms, data[:, 2], "m-", label="Normalized Radius (R/R0)")
-    ax_bub.axhline(
-        1.0, color="gray", linestyle="--", alpha=0.5, label="Equilibrium R0"
-    )
+    ax_bub.axhline(1.0, color="gray", linestyle="--", alpha=0.5, label="Equilibrium R0")
     ax_bub.set_title("2. Nonlinear Bubble Cavitation Dynamics")
     ax_bub.set_xlabel("Time (ms)")
     ax_bub.set_ylabel("Radius R(t) / R0")
@@ -68,7 +66,9 @@ def plot_sonoluminescence_multimodal_analysis(
     # 3. Sonoluminescence Flash Emission
     ax_em = axes[1, 0]
     ax_em.plot(t_ms, data[:, 5], "r-", label="Emission Flash Intensity I_SL(t)")
-    ax_em.plot(t_ms, data[:, 6], "orange", linestyle="--", alpha=0.8, label="Collected Optical Signal")
+    ax_em.plot(
+        t_ms, data[:, 6], "orange", linestyle="--", alpha=0.8, label="Collected Optical Signal"
+    )
     center_wl = metadata["optical_emission_parameters"]["spectral_center_nm"]
     ax_em.set_title(f"3. Sonoluminescent Emission ({center_wl:.1f} nm Multispectral)")
     ax_em.set_xlabel("Time (ms)")
@@ -175,7 +175,9 @@ def main() -> None:
     print(" DRR Research Benchmark: Sonoluminescence Resonant System")
     print(" (With Copper-Boron Waveguide Metallurgy & Solute Doping)")
     print("============================================================")
-    print(f"Generating coupled simulation at {sampling_rate:.0f} Hz, {duration*1000:.1f} ms duration...")
+    print(
+        f"Generating coupled simulation at {sampling_rate:.0f} Hz, {duration*1000:.1f} ms duration..."
+    )
 
     time, data, metadata = generate_sonoluminescence_system(
         sampling_rate=sampling_rate,
@@ -195,24 +197,38 @@ def main() -> None:
     )
 
     print(f"Generated {data.shape[0]} samples across {data.shape[1]} channels.")
-    
+
     mat_props = metadata.get("waveguide_material_properties", {})
     print(f"\n--- Waveguide Metallurgy & Acoustic Impedance ---")
-    print(f"  Material: {mat_props.get('name')} (Cu: {mat_props.get('copper_fraction')*100:.1f}%, B: {mat_props.get('boron_fraction')*100:.1f}%)")
-    print(f"  Solid Density: {mat_props.get('solid_density_kg_m3')} kg/m^3 | Sound Speed: {mat_props.get('solid_sound_speed_m_s')} m/s")
+    print(
+        f"  Material: {mat_props.get('name')} (Cu: {mat_props.get('copper_fraction')*100:.1f}%, B: {mat_props.get('boron_fraction')*100:.1f}%)"
+    )
+    print(
+        f"  Solid Density: {mat_props.get('solid_density_kg_m3')} kg/m^3 | Sound Speed: {mat_props.get('solid_sound_speed_m_s')} m/s"
+    )
     print(f"  Acoustic Impedance: {mat_props.get('acoustic_impedance_rayl'):.2e} Rayls")
-    print(f"  Interface Transmission Coeff: {mat_props.get('interface_transmission_coefficient'):.4f}")
+    print(
+        f"  Interface Transmission Coeff: {mat_props.get('interface_transmission_coefficient'):.4f}"
+    )
 
     dop_props = metadata.get("dopant_mixture_properties", {})
     print(f"\n--- Cavitation Fluid & Solute/Dopant Mixture ---")
-    print(f"  Carrier: {dop_props.get('carrier_liquid')} | Dissolved Gas: {dop_props.get('gas_species')} ({dop_props.get('gas_fraction')*100:.1f}%)")
-    print(f"  Cu Solute: {dop_props.get('copper_solute_fraction')*1e6:.0f} ppm | B Solute: {dop_props.get('boron_solute_fraction')*1e6:.0f} ppm")
-    print(f"  Effective Density: {dop_props.get('effective_density_kg_m3'):.1f} kg/m^3 | Polytropic Gamma: {dop_props.get('effective_polytropic_index'):.3f}")
+    print(
+        f"  Carrier: {dop_props.get('carrier_liquid')} | Dissolved Gas: {dop_props.get('gas_species')} ({dop_props.get('gas_fraction')*100:.1f}%)"
+    )
+    print(
+        f"  Cu Solute: {dop_props.get('copper_solute_fraction')*1e6:.0f} ppm | B Solute: {dop_props.get('boron_solute_fraction')*1e6:.0f} ppm"
+    )
+    print(
+        f"  Effective Density: {dop_props.get('effective_density_kg_m3'):.1f} kg/m^3 | Polytropic Gamma: {dop_props.get('effective_polytropic_index'):.3f}"
+    )
 
     opt_props = metadata.get("optical_emission_parameters", {})
     print(f"\n--- Multispectral Emission Lines ---")
     for line in opt_props.get("spectral_lines", []):
-        print(f"  [{line.get('species'):<10}] {line.get('name'):<40}: {line.get('wavelength_nm'):>5.1f} nm (weight={line.get('relative_weight'):.3f})")
+        print(
+            f"  [{line.get('species'):<10}] {line.get('name'):<40}: {line.get('wavelength_nm'):>5.1f} nm (weight={line.get('relative_weight'):.3f})"
+        )
 
     print("\nRunning Dynamic Resonance Rooting (DRR) analysis...")
 
@@ -232,7 +248,9 @@ def main() -> None:
         dim_key = f"dim_{dim_idx}"
         dom_freq = results["resonances"].get(dim_key, {}).get("dominant_freq", 0.0)
         depth = results["resonance_depths"].get(dim_key, 0.0)
-        print(f"  Channel {dim_idx} [{ch_name:<20}]: Dominant Freq = {dom_freq:>9.1f} Hz | Depth = {depth:.4f}")
+        print(
+            f"  Channel {dim_idx} [{ch_name:<20}]: Dominant Freq = {dom_freq:>9.1f} Hz | Depth = {depth:.4f}"
+        )
 
     print("\n--- Directed Rooting / Causal Relationships ---")
     rooting_res = results.get("rooting_analysis", {})
@@ -249,17 +267,21 @@ def main() -> None:
 
     print("\n--- Transduction & RTEI Metrics ---")
     print(f"  Resonant Transduction Efficiency Index (RTEI): {rtei_metrics['rtei']:.6f}")
-    print(f"  Acoustic Input Energy:   {metadata['transduction_parameters']['acoustic_input_energy_joules']:.3e} J")
-    print(f"  Electrical Output Energy:{metadata['transduction_parameters']['modeled_electrical_energy_joules']:.3e} J")
-    print(f"  Energy Efficiency Ratio: {metadata['transduction_parameters']['transduction_efficiency_ratio']:.3e}")
+    print(
+        f"  Acoustic Input Energy:   {metadata['transduction_parameters']['acoustic_input_energy_joules']:.3e} J"
+    )
+    print(
+        f"  Electrical Output Energy:{metadata['transduction_parameters']['modeled_electrical_energy_joules']:.3e} J"
+    )
+    print(
+        f"  Energy Efficiency Ratio: {metadata['transduction_parameters']['transduction_efficiency_ratio']:.3e}"
+    )
 
     results_dir = Path("results") / "sonoluminescence_lab"
     results_dir.mkdir(parents=True, exist_ok=True)
 
     fig_path = results_dir / "sonoluminescence_drr_analysis.png"
-    plot_sonoluminescence_multimodal_analysis(
-        time, data, metadata, results, rtei_metrics, fig_path
-    )
+    plot_sonoluminescence_multimodal_analysis(time, data, metadata, results, rtei_metrics, fig_path)
 
     report_paths = write_analysis_report(
         results,
@@ -273,7 +295,9 @@ def main() -> None:
             "sampling_rate_hz": sampling_rate,
             "acoustic_frequency_hz": acoustic_freq_hz,
             "rtei": rtei_metrics["rtei"],
-            "transduction_efficiency": metadata["transduction_parameters"]["transduction_efficiency_ratio"],
+            "transduction_efficiency": metadata["transduction_parameters"][
+                "transduction_efficiency_ratio"
+            ],
         },
     )
     print(f"\nWrote markdown report to: {report_paths['markdown']}")

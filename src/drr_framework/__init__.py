@@ -74,9 +74,6 @@ from .sonoluminescence import (
 )
 
 
-
-
-
 # Lazy imports for modules with heavy optional dependencies
 def __getattr__(name):
     if name in (

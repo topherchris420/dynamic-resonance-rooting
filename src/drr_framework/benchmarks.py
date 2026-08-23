@@ -184,5 +184,3 @@ class BenchmarkSystems:
             dopant_mixture=dopant_mixture,
             random_state=random_state,
         )
-
-

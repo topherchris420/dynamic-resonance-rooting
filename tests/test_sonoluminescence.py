@@ -122,9 +122,7 @@ def test_resonator_resonance_response_and_detuning():
     )
 
     # Exactly at resonance
-    gain_res, detuning_res, length_ratio_res = resonator.cavity_response(
-        f_res, sound_speed
-    )
+    gain_res, detuning_res, length_ratio_res = resonator.cavity_response(f_res, sound_speed)
     assert np.isclose(detuning_res, 0.0, atol=1e-10)
     assert np.isclose(gain_res, 40.0)
     assert np.isclose(length_ratio_res, 0.5)
@@ -322,9 +320,7 @@ def test_drr_system_analysis_compatibility():
         random_state=42,
     )
 
-    drr = DynamicResonanceRooting(
-        embedding_dim=3, tau=1, sampling_rate=sampling_rate
-    )
+    drr = DynamicResonanceRooting(embedding_dim=3, tau=1, sampling_rate=sampling_rate)
     results = drr.analyze_system(
         data,
         multivariate=True,
@@ -408,8 +404,6 @@ def test_parameter_validation_and_edge_cases():
 
     # Benchmark generator validation
     with pytest.raises(ValueError, match="sampling_rate .* must be at least twice"):
-        generate_sonoluminescence_system(
-            sampling_rate=30_000, acoustic_frequency_hz=25_000
-        )
+        generate_sonoluminescence_system(sampling_rate=30_000, acoustic_frequency_hz=25_000)
     with pytest.raises(ValueError, match="duration must be positive"):
         generate_sonoluminescence_system(duration=-0.01)

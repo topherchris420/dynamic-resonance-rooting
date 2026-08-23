@@ -281,20 +281,14 @@ class DopantMixture:
         """Liquid surface tension sigma_mix in N/m."""
         return float(
             self.carrier_surface_tension_n_m
-            * (
-                1.0
-                - 0.02 * self.copper_solute_fraction
-                + 0.05 * self.alkali_solute_fraction
-            )
+            * (1.0 - 0.02 * self.copper_solute_fraction + 0.05 * self.alkali_solute_fraction)
         )
 
     @property
     def effective_vapor_pressure_pa(self) -> float:
         """Solvent vapor pressure P_v modified by solute mole fraction."""
         solute_total = (
-            self.copper_solute_fraction
-            + self.boron_solute_fraction
-            + self.alkali_solute_fraction
+            self.copper_solute_fraction + self.boron_solute_fraction + self.alkali_solute_fraction
         )
         return float(self.carrier_vapor_pressure_pa * max(0.5, 1.0 - solute_total))
 
@@ -606,8 +600,7 @@ class CavitationModel:
         P_Blake = P_0 + 0.77 * (sigma / R_0).
         """
         return float(
-            self.ambient_pressure_pa
-            + 0.77 * (self.surface_tension / self.equilibrium_radius_m)
+            self.ambient_pressure_pa + 0.77 * (self.surface_tension / self.equilibrium_radius_m)
         )
 
     @property
@@ -641,9 +634,7 @@ class BubbleDynamics:
     ) -> None:
         self.cavitation = cavitation_model or CavitationModel()
         if not (0.0 < hard_core_ratio < 0.5):
-            raise ValueError(
-                f"hard_core_ratio must be in (0.0, 0.5), got {hard_core_ratio}"
-            )
+            raise ValueError(f"hard_core_ratio must be in (0.0, 0.5), got {hard_core_ratio}")
         self.hard_core_ratio = hard_core_ratio
 
     def _rk4_step(
@@ -785,18 +776,14 @@ class BubbleDynamics:
 
         # Detect collapse event indices: local radius minima where R < 0.85 * R_0
         collapse_mask = (
-            (r_arr[1:-1] <= r_arr[:-2])
-            & (r_arr[1:-1] <= r_arr[2:])
-            & (r_arr[1:-1] < 0.85 * r0)
+            (r_arr[1:-1] <= r_arr[:-2]) & (r_arr[1:-1] <= r_arr[2:]) & (r_arr[1:-1] < 0.85 * r0)
         )
         collapse_indices = np.where(collapse_mask)[0] + 1
 
         r_min = float(np.min(r_arr))
         max_compression_ratio = float(r0 / max(r_min, h_core))
 
-        collapse_times = (
-            time[collapse_indices] if len(collapse_indices) > 0 else np.array([])
-        )
+        collapse_times = time[collapse_indices] if len(collapse_indices) > 0 else np.array([])
         collapse_intensities = (
             np.abs(v_arr[collapse_indices]) if len(collapse_indices) > 0 else np.array([])
         )
@@ -838,17 +825,13 @@ class SonoluminescenceModel:
 
     def __post_init__(self) -> None:
         if self.spectral_center_nm <= 0:
-            raise ValueError(
-                f"spectral_center_nm must be positive, got {self.spectral_center_nm}"
-            )
+            raise ValueError(f"spectral_center_nm must be positive, got {self.spectral_center_nm}")
         if self.spectral_bandwidth_nm <= 0:
             raise ValueError(
                 f"spectral_bandwidth_nm must be positive, got {self.spectral_bandwidth_nm}"
             )
         if self.pulse_duration_s <= 0:
-            raise ValueError(
-                f"pulse_duration_s must be positive, got {self.pulse_duration_s}"
-            )
+            raise ValueError(f"pulse_duration_s must be positive, got {self.pulse_duration_s}")
         if self.emission_threshold_compression <= 1.0:
             raise ValueError(
                 f"emission_threshold_compression must be > 1.0, got {self.emission_threshold_compression}"
@@ -880,7 +863,9 @@ class SonoluminescenceModel:
         total_w = sum(line["relative_weight"] for line in lines)
         if total_w <= 0:
             return self.spectral_center_nm
-        return float(sum(line["wavelength_nm"] * line["relative_weight"] for line in lines) / total_w)
+        return float(
+            sum(line["wavelength_nm"] * line["relative_weight"] for line in lines) / total_w
+        )
 
     @property
     def optical_frequency_hz(self) -> float:
@@ -977,8 +962,7 @@ class OpticalElectricalTransducer:
             )
         if not (0.0 <= self.conversion_efficiency <= 1.0):
             raise ValueError(
-                "conversion_efficiency must be in [0.0, 1.0], "
-                f"got {self.conversion_efficiency}"
+                "conversion_efficiency must be in [0.0, 1.0], " f"got {self.conversion_efficiency}"
             )
         if self.detector_gain <= 0:
             raise ValueError(f"detector_gain must be positive, got {self.detector_gain}")
@@ -1010,9 +994,7 @@ class OpticalElectricalTransducer:
         electrical_signal = np.zeros(n_steps, dtype=float)
         v_prev = 0.0
         for i in range(n_steps):
-            v_target = (
-                self.detector_gain * self.conversion_efficiency * optical_signal[i]
-            )
+            v_target = self.detector_gain * self.conversion_efficiency * optical_signal[i]
             v_curr = v_prev + alpha * (v_target - v_prev)
             electrical_signal[i] = v_curr
             v_prev = v_curr
@@ -1104,9 +1086,7 @@ class SonoluminescenceSystem:
         self.resonator = resonator or AcousticResonator(material=self.material)
         self.dopant_mixture = dopant_mixture or DopantMixture()
         self.cavitation = cavitation or CavitationModel(dopant_mixture=self.dopant_mixture)
-        self.bubble_dynamics = bubble_dynamics or BubbleDynamics(
-            cavitation_model=self.cavitation
-        )
+        self.bubble_dynamics = bubble_dynamics or BubbleDynamics(cavitation_model=self.cavitation)
         self.emission_model = emission_model or SonoluminescenceModel(
             dopant_mixture=self.dopant_mixture
         )
@@ -1160,9 +1140,7 @@ class SonoluminescenceSystem:
         emission_intensity = emission_res["emission_intensity"]
 
         # 4. Electrical transduction & energy accounting
-        trans_res = self.transducer.transduce(
-            time, emission_intensity, self.driver, self.resonator
-        )
+        trans_res = self.transducer.transduce(time, emission_intensity, self.driver, self.resonator)
         optical_signal = trans_res["optical_signal"]
         electrical_signal = trans_res["electrical_signal"]
 
@@ -1175,22 +1153,14 @@ class SonoluminescenceSystem:
             waveguide_pressure_noisy = waveguide_pressure + noise_matrix[:, 1] * (
                 self.driver.input_pressure_pa * geom_gain * 0.05
             )
-            bubble_radius_noisy = np.maximum(
-                0.05, bubble_radius + noise_matrix[:, 2] * 0.02
-            )
+            bubble_radius_noisy = np.maximum(0.05, bubble_radius + noise_matrix[:, 2] * 0.02)
             bubble_velocity_noisy = bubble_velocity + noise_matrix[:, 3] * 10.0
-            collapse_pressure_noisy = np.maximum(
-                0.0, collapse_pressure + noise_matrix[:, 4] * 1e4
-            )
+            collapse_pressure_noisy = np.maximum(0.0, collapse_pressure + noise_matrix[:, 4] * 1e4)
             emission_intensity_noisy = np.clip(
                 emission_intensity + noise_matrix[:, 5] * 0.01, 0.0, 1.0
             )
-            optical_signal_noisy = np.maximum(
-                0.0, optical_signal + noise_matrix[:, 6] * 0.01
-            )
-            electrical_signal_noisy = np.maximum(
-                0.0, electrical_signal + noise_matrix[:, 7] * 0.01
-            )
+            optical_signal_noisy = np.maximum(0.0, optical_signal + noise_matrix[:, 6] * 0.01)
+            electrical_signal_noisy = np.maximum(0.0, electrical_signal + noise_matrix[:, 7] * 0.01)
         else:
             acoustic_pressure_noisy = acoustic_pressure
             waveguide_pressure_noisy = waveguide_pressure
@@ -1226,13 +1196,21 @@ class SonoluminescenceSystem:
                 "copper_fraction": float(self.material.copper_fraction) if self.material else 0.0,
                 "boron_fraction": float(self.material.boron_fraction) if self.material else 0.0,
                 "solid_density_kg_m3": float(self.material.density_kg_m3) if self.material else 0.0,
-                "solid_sound_speed_m_s": float(self.material.sound_speed_m_s) if self.material else 0.0,
-                "acoustic_impedance_rayl": float(self.material.acoustic_impedance_rayl) if self.material else 0.0,
-                "interface_transmission_coefficient": float(
-                    self.material.interface_transmission_coefficient(
-                        self.cavitation.density, self.driver.sound_speed_m_s
+                "solid_sound_speed_m_s": (
+                    float(self.material.sound_speed_m_s) if self.material else 0.0
+                ),
+                "acoustic_impedance_rayl": (
+                    float(self.material.acoustic_impedance_rayl) if self.material else 0.0
+                ),
+                "interface_transmission_coefficient": (
+                    float(
+                        self.material.interface_transmission_coefficient(
+                            self.cavitation.density, self.driver.sound_speed_m_s
+                        )
                     )
-                ) if self.material else 1.0,
+                    if self.material
+                    else 1.0
+                ),
             },
             "dopant_mixture_properties": {
                 "carrier_liquid": self.dopant_mixture.carrier_liquid,
@@ -1243,7 +1221,9 @@ class SonoluminescenceSystem:
                 "alkali_solute_fraction": float(self.dopant_mixture.alkali_solute_fraction),
                 "effective_density_kg_m3": float(self.dopant_mixture.effective_density_kg_m3),
                 "effective_viscosity_pa_s": float(self.dopant_mixture.effective_viscosity_pa_s),
-                "effective_surface_tension_n_m": float(self.dopant_mixture.effective_surface_tension_n_m),
+                "effective_surface_tension_n_m": float(
+                    self.dopant_mixture.effective_surface_tension_n_m
+                ),
                 "effective_polytropic_index": float(self.dopant_mixture.effective_polytropic_index),
             },
             "acoustic_parameters": {
@@ -1267,12 +1247,8 @@ class SonoluminescenceSystem:
             },
             "cavitation_parameters": {
                 "equilibrium_radius_m": float(self.cavitation.equilibrium_radius_m),
-                "blake_threshold_pressure_pa": float(
-                    self.cavitation.blake_threshold_pressure
-                ),
-                "blake_acoustic_threshold_pa": float(
-                    self.cavitation.blake_acoustic_threshold_pa
-                ),
+                "blake_threshold_pressure_pa": float(self.cavitation.blake_threshold_pressure),
+                "blake_acoustic_threshold_pa": float(self.cavitation.blake_acoustic_threshold_pa),
                 "is_cavitation_active": bool(
                     self.cavitation.is_cavitation_active(
                         self.resonator.effective_pressure_amplitude(self.driver)
@@ -1299,18 +1275,10 @@ class SonoluminescenceSystem:
                 "conversion_efficiency": float(self.transducer.conversion_efficiency),
                 "detector_gain": float(self.transducer.detector_gain),
                 "load_resistance_ohms": float(self.transducer.load_resistance_ohms),
-                "acoustic_input_energy_joules": float(
-                    trans_res["acoustic_energy_joules"]
-                ),
-                "modeled_emission_energy_joules": float(
-                    trans_res["emission_energy_joules"]
-                ),
-                "modeled_electrical_energy_joules": float(
-                    trans_res["electrical_energy_joules"]
-                ),
-                "transduction_efficiency_ratio": float(
-                    trans_res["transduction_efficiency"]
-                ),
+                "acoustic_input_energy_joules": float(trans_res["acoustic_energy_joules"]),
+                "modeled_emission_energy_joules": float(trans_res["emission_energy_joules"]),
+                "modeled_electrical_energy_joules": float(trans_res["electrical_energy_joules"]),
+                "transduction_efficiency_ratio": float(trans_res["transduction_efficiency"]),
                 "is_downstream_transduction_model": True,
             },
             "notes": (
@@ -1443,19 +1411,12 @@ def calculate_resonant_transduction_efficiency_index(
     d_emission = float(depths.get("dim_5", 0.5))
     d_electrical = float(depths.get("dim_7", 0.5))
 
-    q = float(
-        metadata.get("waveguide_resonator_parameters", {}).get("quality_factor_q", 30.0)
-    )
-    cav_gain = float(
-        metadata.get("waveguide_resonator_parameters", {}).get("cavity_gain", 1.0)
-    )
+    q = float(metadata.get("waveguide_resonator_parameters", {}).get("quality_factor_q", 30.0))
+    cav_gain = float(metadata.get("waveguide_resonator_parameters", {}).get("cavity_gain", 1.0))
     cavity_coherence_factor = float(np.clip(cav_gain / max(q, 1.0), 0.0, 1.0))
 
     stage_coherence = (
-        (d_acoustic * 0.5 + d_waveguide * 0.5)
-        * d_cavitation
-        * d_emission
-        * d_electrical
+        (d_acoustic * 0.5 + d_waveguide * 0.5) * d_cavitation * d_emission * d_electrical
     )
     rtei = float(np.clip(stage_coherence * cavity_coherence_factor, 0.0, 1.0))
 
