@@ -130,3 +130,46 @@ class BenchmarkSystems:
             ]
         t = np.linspace(0, duration, n_steps)
         return t, xyz
+
+    @staticmethod
+    def generate_sonoluminescence_data(
+        sampling_rate: float = 100_000.0,
+        duration: float = 0.002,
+        acoustic_frequency_hz: float = 25_000.0,
+        sound_speed_m_s: float = 1482.0,
+        input_pressure_pa: float = 60_000.0,
+        resonator_length_m: float = 0.02964,
+        waveguide_input_diameter_m: float = 0.020,
+        waveguide_output_diameter_m: float = 0.004,
+        bubble_radius_m: float = 5.0e-6,
+        quality_factor_q: float = 30.0,
+        optical_wavelength_nm: float = 350.0,
+        optical_collection_efficiency: float = 0.15,
+        conversion_efficiency: float = 0.25,
+        detector_gain: float = 10.0,
+        noise_scale: float = 0.005,
+        random_state: Optional[int] = 42,
+    ) -> Tuple[np.ndarray, np.ndarray, dict]:
+        """Generate sonoluminescence / acousto-opto-electrical benchmark data."""
+        logger.info("Generating Sonoluminescence benchmark data")
+        from .sonoluminescence import generate_sonoluminescence_system
+
+        return generate_sonoluminescence_system(
+            sampling_rate=sampling_rate,
+            duration=duration,
+            acoustic_frequency_hz=acoustic_frequency_hz,
+            sound_speed_m_s=sound_speed_m_s,
+            input_pressure_pa=input_pressure_pa,
+            resonator_length_m=resonator_length_m,
+            waveguide_input_diameter_m=waveguide_input_diameter_m,
+            waveguide_output_diameter_m=waveguide_output_diameter_m,
+            bubble_radius_m=bubble_radius_m,
+            quality_factor_q=quality_factor_q,
+            optical_wavelength_nm=optical_wavelength_nm,
+            optical_collection_efficiency=optical_collection_efficiency,
+            conversion_efficiency=conversion_efficiency,
+            detector_gain=detector_gain,
+            noise_scale=noise_scale,
+            random_state=random_state,
+        )
+

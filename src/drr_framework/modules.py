@@ -302,11 +302,6 @@ class ResonanceDetector:
         return refined
 
     def _detect_with_markov(self, data: np.ndarray, n_clusters: int) -> dict:
-        if not SKLEARN_AVAILABLE:
-            raise ImportError(
-                "sklearn is required for markov resonance detection. "
-                "Install it with: pip install scikit-learn"
-            )
         if n_clusters <= 1:
             raise ValueError("n_clusters must be greater than 1")
 
@@ -315,6 +310,12 @@ class ResonanceDetector:
 
         if len(data) < n_clusters:
             raise ValueError("n_clusters cannot exceed number of observations")
+
+        if not SKLEARN_AVAILABLE:
+            raise ImportError(
+                "sklearn is required for markov resonance detection. "
+                "Install it with: pip install scikit-learn"
+            )
 
         kmeans = KMeans(n_clusters=n_clusters, random_state=0, n_init=10)
         states = kmeans.fit_predict(data)

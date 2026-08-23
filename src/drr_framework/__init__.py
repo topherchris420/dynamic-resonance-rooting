@@ -49,6 +49,28 @@ from .particle_filter import (
     linear_gaussian_model,
     tempered_particle_filter,
 )
+from .sonoluminescence import (
+    DEFAULT_AMBIENT_PRESSURE,
+    DEFAULT_LIQUID_VISCOSITY,
+    DEFAULT_POLYTROPIC_INDEX,
+    DEFAULT_SOUND_SPEED,
+    DEFAULT_SURFACE_TENSION,
+    DEFAULT_VAPOR_PRESSURE,
+    DEFAULT_WATER_DENSITY,
+    SPEED_OF_LIGHT,
+    AcousticDriver,
+    AcousticResonator,
+    AcousticWaveguide,
+    BubbleDynamics,
+    CavitationModel,
+    OpticalElectricalTransducer,
+    SonoluminescenceModel,
+    SonoluminescenceSystem,
+    calculate_resonant_transduction_efficiency_index,
+    generate_sonoluminescence_system,
+)
+
+
 
 
 # Lazy imports for modules with heavy optional dependencies
@@ -179,4 +201,22 @@ __all__ = [
     "create_shadow_review_record",
     "explain_supervisory_signal",
     "run_event_backtest",
+    "SPEED_OF_LIGHT",
+    "DEFAULT_SOUND_SPEED",
+    "DEFAULT_WATER_DENSITY",
+    "DEFAULT_SURFACE_TENSION",
+    "DEFAULT_LIQUID_VISCOSITY",
+    "DEFAULT_VAPOR_PRESSURE",
+    "DEFAULT_AMBIENT_PRESSURE",
+    "DEFAULT_POLYTROPIC_INDEX",
+    "AcousticDriver",
+    "AcousticResonator",
+    "AcousticWaveguide",
+    "CavitationModel",
+    "BubbleDynamics",
+    "SonoluminescenceModel",
+    "OpticalElectricalTransducer",
+    "SonoluminescenceSystem",
+    "generate_sonoluminescence_system",
+    "calculate_resonant_transduction_efficiency_index",
 ]

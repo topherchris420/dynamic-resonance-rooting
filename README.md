@@ -117,6 +117,17 @@ print(results["rooting_analysis"]["significant_edges"])
 
 ## Use Cases
 
+### Sonoluminescence Lab
+**File:** `examples/sonoluminescence_lab.py`
+
+Multimodal coupled resonant system benchmark spanning acoustic, cavitation, optical, and electrical domains:
+- Ultrasonic acoustic driver ($f_a \sim 25\text{ kHz}$)
+- Acoustic waveguide horn resonator & impedance concentration
+- Rayleigh-Plesset nonlinear bubble oscillator & Blake cavitation threshold
+- Ultrafast UV-blue sonoluminescence flash emission ($\lambda_{EM} \sim 350\text{ nm}$)
+- Downstream optical/electrical transduction & energy bookkeeping
+- Resonant Transduction Efficiency Index (RTEI) metric
+
 ### Physics Lab
 **File:** `examples/physics_lab.py`
 
@@ -157,6 +168,76 @@ Compact load-detect-export demonstration
 
 ---
 
+## Sonoluminescence / Resonant Transduction Benchmark
+
+The framework includes a research-grade physical benchmark modeling multi-stage coupled energy transduction across distinct physical domains:
+
+```
+    Acoustic Excitation
+           ↓
+    Acoustic Resonator
+           ↓
+    Impedance Transformation
+           ↓
+    Cavitation
+           ↓
+    Bubble Collapse
+           ↓
+    Sonoluminescence
+           ↓
+    Optical/EM Coupling
+           ↓
+    Electrical Transduction
+           ↓
+    DRR Analysis
+```
+
+### Physical vs. Phenomenological Modeling Disclosures
+
+| Domain | Governing Physics / Formulation | Status |
+|--------|----------------------------------|--------|
+| **Acoustic Driver** | Acoustic wave speed $c_s = 1482\text{ m/s}$, ultrasonic frequency $f_a \approx 25\text{ kHz}$, wavelength $\lambda_a = c_s / f_a \approx 5.93\text{ cm}$ | Physically motivated |
+| **Acoustic Waveguide / Resonator** | Geometric area concentration $(d_{in}/d_{out})$, half-wave standing-wave cavity response with quality factor $Q$ and detuning $\delta$. *Waveguide is an acoustic impedance structure, not an electrical transformer.* | Idealized 1D acoustic approximation |
+| **Bubble Cavitation Dynamics** | Modified Rayleigh-Plesset equation with van der Waals excluded volume core ($R_{core} \approx R_0 / 8.5$), liquid viscosity $\mu_L$, surface tension $\sigma$, and Blake cavitation threshold | Physically motivated |
+| **Sonoluminescent Emission** | Ultrafast flash pulses ($\tau \sim 200\text{ ps}$) triggered during violent collapse rebounds ($R \to R_{min}$), optical center $\lambda_{EM} \approx 350\text{ nm}$ (UV-blue continuum), $f_{EM} = c / \lambda_{EM} \approx 8.57 \times 10^{14}\text{ Hz}$ | Phenomenological model |
+| **Electrical Transduction** | Downstream photodetector responsivity, collection factor $\eta_{col}$, RC low-pass filter, and energy accounting | Downstream detector model |
+| **DRR Metrics (RTEI)** | Resonant Transduction Efficiency Index quantifying multimodal coherence across the 8-channel time series | Proposed DRR research metric |
+
+> [!IMPORTANT]
+> **No Net Energy Amplification Claimed**: The benchmark explicitly accounts for total acoustic input energy versus electrical output energy ($E_{elec} / E_{acoustic} \ll 1$). The purpose is computational study of nonlinear resonance, modal concentration, phase coherence, and causal lead-lag rooting across multimodal physics.
+
+### Benchmark Usage Example
+
+```python
+from drr_framework import (
+    DynamicResonanceRooting,
+    calculate_resonant_transduction_efficiency_index,
+    generate_sonoluminescence_system,
+)
+
+# 1. Generate 8-channel multivariate acousto-opto-electrical benchmark
+time, data, metadata = generate_sonoluminescence_system(
+    sampling_rate=100_000,
+    duration=0.002,
+    acoustic_frequency_hz=25_000,
+    input_pressure_pa=60_000,
+    waveguide_input_diameter_m=0.020,
+    waveguide_output_diameter_m=0.004,
+    random_state=42,
+)
+
+# 2. Analyze multi-channel resonance and directed rooting with DRR
+drr = DynamicResonanceRooting(sampling_rate=100_000)
+results = drr.analyze_system(data, multivariate=True)
+
+# 3. Compute the Resonant Transduction Efficiency Index (RTEI)
+rtei = calculate_resonant_transduction_efficiency_index(results, metadata)
+print(f"RTEI: {rtei['rtei']:.5f}")
+```
+
+
+---
+
 ## Macro Stability & Banking Skin Cockpit
 
 The framework includes a specialized supervisory application for Federal Reserve oversight:
@@ -189,6 +270,7 @@ dynamic-resonance-rooting/
 │   ├── analysis.py             # DynamicResonanceRooting class
 │   ├── _spectral.py            # Spectral analysis
 │   ├── benchmarks.py           # Benchmark generators
+│   ├── sonoluminescence.py     # Sonoluminescence & acousto-opto-electrical benchmark
 │   ├── datasets.py              # Data adapters
 │   ├── reporting.py            # Export utilities
 │   ├── state_space.py          # State-space filter, Chandrasekhar recursions
@@ -197,11 +279,14 @@ dynamic-resonance-rooting/
 │   ├── supervision.py           # Supervisory components
 │   └── validation_readiness.py # Validation packets
 ├── examples/                    # Usage examples
+│   ├── sonoluminescence_lab.py
 │   ├── physics_lab.py
 │   ├── policy_lab.py
 │   ├── supervisory_policy_lab.py
 │   └── quickstart_resonance_export.py
 ├── tests/                       # Test suite
+│   ├── test_sonoluminescence.py
+
 ├── docs/                        # Documentation
 │   ├── architecture.md
 │   ├── user-guide.md
