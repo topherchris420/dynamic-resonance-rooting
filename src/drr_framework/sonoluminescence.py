@@ -5,15 +5,15 @@ coupled resonant physical system:
 
     Acoustic Driver
           ↓
-    Acoustic Resonator / Waveguide
+    Acoustic Resonator / Waveguide (Copper, Boron, or Custom Alloys)
           ↓
     Acoustic Impedance Transformation
           ↓
-    Cavitation / Bubble Dynamics
+    Cavitation / Bubble Dynamics (Doped with Noble Gases, Cu, B, Electrolytes)
           ↓
     Nonlinear Bubble Collapse
           ↓
-    Sonoluminescent Emission
+    Sonoluminescent Emission (Multispectral Continuum + Atomic/Excimer Lines)
           ↓
     Optical / Electromagnetic Coupling
           ↓
@@ -21,31 +21,42 @@ coupled resonant physical system:
 
 Physical vs. Phenomenological Modeling Disclosures:
 --------------------------------------------------
-1. Acoustic Domain:
+1. Acoustic Domain & Waveguide Metallurgy:
    - Governed by fluid acoustic wave speed c_s (~1482 m/s in water) and ultrasonic
      frequencies f_a (~20-50 kHz), with acoustic wavelength lambda_a = c_s / f_a (~cm).
-   - Resonator cavity response is modeled via standing-wave harmonic detuning and
-     quality factor Q.
-   - Waveguide / horn pressure concentration (d_in / d_out) is an idealized 1D
+   - Resonator horns can be composed of specific metallurgical alloys (e.g., OFHC Copper,
+     Copper-Boron alloys, Beryllium-Copper, Titanium, or Aluminum).
+   - Solid acoustic impedance Z_mat = rho_mat * c_mat and horn-to-liquid interface
+     transmission coefficient T = 4 * Z_mat * Z_fluid / (Z_mat + Z_fluid)^2 are modeled
+     from continuum acoustic boundary physics.
+   - Waveguide horn pressure concentration (d_in / d_out) is an idealized 1D
      geometric approximation assuming lossless energy flux conservation.
-     A rigorous continuous-field acoustic model would additionally require complex
-     acoustic boundary impedances, fluid viscosity, thermal dissipation, higher-order
-     modal cutoff structures, and radiation impedance at horn terminations.
+     A continuous-field model would additionally require complex boundary layer
+     viscous/thermal dissipation, horn cut-off frequencies, and radiation impedance.
 
-2. Cavitation / Bubble Dynamics:
-   - Modeled via the Rayleigh-Plesset nonlinear radial oscillator with van der Waals
-     excluded-volume hard-core gas thermodynamics (R_core ≈ R_0 / 8.5), liquid viscosity,
-     surface tension, and the classical Blake cavitation threshold.
+2. Cavitation Fluid & Solute/Dopant Mixtures:
+   - Supports gas doping (e.g. Argon, Xenon, Helium, Nitrogen) modulating effective
+     gas heat capacity ratio / polytropic index gamma_mix.
+   - Supports dissolved / colloidal metal and metalloid solutes (Copper Cu, Boron B,
+     Alkali electrolytes) modulating mixture density rho_mix, viscosity mu_mix,
+     and surface tension sigma_mix.
+   - Bubble oscillation is solved via the modified Rayleigh-Plesset equation with
+     van der Waals excluded volume hard core (R_core ≈ R_0 / 8.5) and Blake threshold.
 
-3. Optical / Electromagnetic Domain:
+3. Optical / Electromagnetic Domain & Multispectral Lines:
    - Ultrafast sonoluminescent emission flashes (~100-300 ps) are triggered during
      violent collapse rebounds when gas compression exceeds threshold.
-   - Optical wavelength lambda_EM (~350 nm UV-blue) and optical frequency
-     f_EM = c / lambda_EM (~8.57e14 Hz) are strictly distinct from acoustic
+   - Solute species generate characteristic atomic/molecular emission lines:
+     * Continuum baseline: UV-blue bremsstrahlung/blackbody (~350 nm)
+     * Copper lines: Cu I atomic transitions (324.7 nm & 327.4 nm)
+     * Boron lines: BO* excimer/oxide green bands (518.0 nm)
+     * Alkali lines: Na D-line (589.0 nm)
+   - Optical wavelength lambda_EM (~320-600 nm) and optical frequency
+     f_EM = c / lambda_EM (~10^14-10^15 Hz) are strictly distinct from acoustic
      frequencies and wavelengths (separated by ~10 orders of magnitude).
 
 4. Electrical Transduction & Energy Bookkeeping:
-   - Transduction represents downstream detector photodiode/photomultiplier response.
+   - Transduction represents downstream photodetector responsivity.
    - This computational benchmark explicitly DOES NOT claim net energy amplification.
      Total transduction efficiency (electrical / acoustic energy) is strictly << 1.
 """
@@ -54,7 +65,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Literal, Optional, Tuple
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 import numpy as np
 
@@ -71,6 +82,289 @@ DEFAULT_LIQUID_VISCOSITY: float = 0.001002  # Pa*s
 DEFAULT_VAPOR_PRESSURE: float = 2330.0  # Pa
 DEFAULT_AMBIENT_PRESSURE: float = 101325.0  # Pa (1 atm)
 DEFAULT_POLYTROPIC_INDEX: float = 1.4  # Diatomic gas ratio of specific heats
+
+
+@dataclass(frozen=True)
+class WaveguideMaterial:
+    """Solid material properties of the acoustic waveguide resonator horn.
+
+    Parameters:
+        name: Material or alloy identifier.
+        density_kg_m3: Solid density in kg/m^3 (> 0).
+        sound_speed_m_s: Longitudinal sound velocity in the solid in m/s (> 0).
+        quality_factor_q: Mechanical quality factor Q of the solid material (>= 1.0).
+        copper_fraction: Mass/volume fraction of Copper (Cu) in [0.0, 1.0].
+        boron_fraction: Mass/volume fraction of Boron (B) in [0.0, 1.0].
+        other_fractions: Dictionary of additional alloying element fractions.
+    """
+
+    name: str = "copper_boron_alloy"
+    density_kg_m3: float = 8920.0
+    sound_speed_m_s: float = 4850.0
+    quality_factor_q: float = 75.0
+    copper_fraction: float = 0.98
+    boron_fraction: float = 0.02
+    other_fractions: Dict[str, float] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        if self.density_kg_m3 <= 0:
+            raise ValueError(f"density_kg_m3 must be positive, got {self.density_kg_m3}")
+        if self.sound_speed_m_s <= 0:
+            raise ValueError(f"sound_speed_m_s must be positive, got {self.sound_speed_m_s}")
+        if self.quality_factor_q < 1.0:
+            raise ValueError(f"quality_factor_q must be >= 1.0, got {self.quality_factor_q}")
+        if not (0.0 <= self.copper_fraction <= 1.0):
+            raise ValueError(f"copper_fraction must be in [0, 1], got {self.copper_fraction}")
+        if not (0.0 <= self.boron_fraction <= 1.0):
+            raise ValueError(f"boron_fraction must be in [0, 1], got {self.boron_fraction}")
+
+    @property
+    def acoustic_impedance_rayl(self) -> float:
+        """Characteristic acoustic impedance Z_mat = rho_mat * c_mat in Rayls (Pa*s/m)."""
+        return float(self.density_kg_m3 * self.sound_speed_m_s)
+
+    def interface_transmission_coefficient(
+        self,
+        fluid_density_kg_m3: float = DEFAULT_WATER_DENSITY,
+        fluid_sound_speed_m_s: float = DEFAULT_SOUND_SPEED,
+    ) -> float:
+        """Power transmission coefficient T across normal solid-fluid interface.
+
+        T = 4 * Z_solid * Z_fluid / (Z_solid + Z_fluid)^2.
+        """
+        z_solid = self.acoustic_impedance_rayl
+        z_fluid = fluid_density_kg_m3 * fluid_sound_speed_m_s
+        return float(4.0 * z_solid * z_fluid / ((z_solid + z_fluid) ** 2))
+
+
+# Canonical Material Presets
+WAVEGUIDE_MATERIALS: Dict[str, WaveguideMaterial] = {
+    "ofhc_copper": WaveguideMaterial(
+        name="ofhc_copper",
+        density_kg_m3=8960.0,
+        sound_speed_m_s=4700.0,
+        quality_factor_q=50.0,
+        copper_fraction=1.0,
+        boron_fraction=0.0,
+    ),
+    "copper_boron_alloy": WaveguideMaterial(
+        name="copper_boron_alloy",
+        density_kg_m3=8920.0,
+        sound_speed_m_s=4850.0,
+        quality_factor_q=75.0,
+        copper_fraction=0.98,
+        boron_fraction=0.02,
+    ),
+    "beryllium_copper": WaveguideMaterial(
+        name="beryllium_copper",
+        density_kg_m3=8250.0,
+        sound_speed_m_s=5000.0,
+        quality_factor_q=80.0,
+        copper_fraction=0.98,
+        boron_fraction=0.0,
+        other_fractions={"Be": 0.02},
+    ),
+    "titanium_ti6al4v": WaveguideMaterial(
+        name="titanium_ti6al4v",
+        density_kg_m3=4430.0,
+        sound_speed_m_s=6070.0,
+        quality_factor_q=100.0,
+        copper_fraction=0.0,
+        boron_fraction=0.0,
+        other_fractions={"Ti": 0.90, "Al": 0.06, "V": 0.04},
+    ),
+    "aluminum_6061": WaveguideMaterial(
+        name="aluminum_6061",
+        density_kg_m3=2700.0,
+        sound_speed_m_s=6320.0,
+        quality_factor_q=90.0,
+        copper_fraction=0.003,
+        boron_fraction=0.0,
+        other_fractions={"Al": 0.98, "Mg": 0.01, "Si": 0.006},
+    ),
+    "boron_carbide": WaveguideMaterial(
+        name="boron_carbide",
+        density_kg_m3=2520.0,
+        sound_speed_m_s=11000.0,
+        quality_factor_q=120.0,
+        copper_fraction=0.0,
+        boron_fraction=0.78,
+        other_fractions={"C": 0.22},
+    ),
+}
+
+
+@dataclass(frozen=True)
+class DopantMixture:
+    """Thermodynamic, fluid mechanical, and spectroscopic properties of liquid/gas mixtures.
+
+    Parameters:
+        carrier_liquid: Base solvent name (e.g. 'water').
+        gas_species: Dissolved gas species ('argon', 'xenon', 'helium', 'nitrogen', 'air').
+        gas_fraction: Dissolved noble/active gas fraction in [0.0, 0.1].
+        copper_solute_fraction: Dissolved or colloidal copper fraction (e.g. 0.001 = 1000 ppm).
+        boron_solute_fraction: Dissolved or colloidal boron fraction (e.g. 0.001 = 1000 ppm).
+        alkali_solute_fraction: Dissolved alkali salt fraction (e.g. NaCl / KCl).
+        carrier_density_kg_m3: Density of carrier liquid in kg/m^3.
+        carrier_viscosity_pa_s: Viscosity of carrier liquid in Pa*s.
+        carrier_surface_tension_n_m: Surface tension of carrier liquid in N/m.
+        carrier_vapor_pressure_pa: Vapor pressure of carrier liquid in Pa.
+    """
+
+    carrier_liquid: str = "water"
+    gas_species: Literal["argon", "xenon", "helium", "nitrogen", "air"] = "argon"
+    gas_fraction: float = 0.01  # 1% Argon dissolved (typical SBSL optimum)
+    copper_solute_fraction: float = 0.0
+    boron_solute_fraction: float = 0.0
+    alkali_solute_fraction: float = 0.0
+    carrier_density_kg_m3: float = DEFAULT_WATER_DENSITY
+    carrier_viscosity_pa_s: float = DEFAULT_LIQUID_VISCOSITY
+    carrier_surface_tension_n_m: float = DEFAULT_SURFACE_TENSION
+    carrier_vapor_pressure_pa: float = DEFAULT_VAPOR_PRESSURE
+
+    def __post_init__(self) -> None:
+        if not (0.0 <= self.gas_fraction <= 0.20):
+            raise ValueError(f"gas_fraction must be in [0.0, 0.20], got {self.gas_fraction}")
+        if not (0.0 <= self.copper_solute_fraction <= 0.10):
+            raise ValueError(
+                f"copper_solute_fraction must be in [0.0, 0.10], got {self.copper_solute_fraction}"
+            )
+        if not (0.0 <= self.boron_solute_fraction <= 0.10):
+            raise ValueError(
+                f"boron_solute_fraction must be in [0.0, 0.10], got {self.boron_solute_fraction}"
+            )
+        if not (0.0 <= self.alkali_solute_fraction <= 0.10):
+            raise ValueError(
+                f"alkali_solute_fraction must be in [0.0, 0.10], got {self.alkali_solute_fraction}"
+            )
+        if self.gas_species not in ("argon", "xenon", "helium", "nitrogen", "air"):
+            raise ValueError(f"Unsupported gas_species: {self.gas_species}")
+
+    @property
+    def effective_polytropic_index(self) -> float:
+        """Effective gas polytropic index gamma_mix.
+
+        Monatomic noble gases (Ar, Xe, He) have gamma = 5/3 ≈ 1.667.
+        Diatomic gases (N2, air) have gamma = 7/5 = 1.40.
+        """
+        gamma_gas = 1.667 if self.gas_species in ("argon", "xenon", "helium") else 1.40
+        # Weighted mix between base vapor/diatomic background and dissolved gas
+        return float((1.0 - self.gas_fraction) * 1.40 + self.gas_fraction * gamma_gas)
+
+    @property
+    def effective_density_kg_m3(self) -> float:
+        """Liquid mixture mass density rho_mix accounting for dissolved/colloidal species."""
+        return float(
+            self.carrier_density_kg_m3
+            * (
+                1.0
+                + 0.8 * self.copper_solute_fraction
+                + 0.2 * self.boron_solute_fraction
+                + 0.1 * self.alkali_solute_fraction
+            )
+        )
+
+    @property
+    def effective_viscosity_pa_s(self) -> float:
+        """Liquid dynamic viscosity mu_mix accounting for colloidal solutes."""
+        return float(
+            self.carrier_viscosity_pa_s
+            * (
+                1.0
+                + 2.5 * (self.copper_solute_fraction + self.boron_solute_fraction)
+                + 1.5 * self.alkali_solute_fraction
+            )
+        )
+
+    @property
+    def effective_surface_tension_n_m(self) -> float:
+        """Liquid surface tension sigma_mix in N/m."""
+        return float(
+            self.carrier_surface_tension_n_m
+            * (
+                1.0
+                - 0.02 * self.copper_solute_fraction
+                + 0.05 * self.alkali_solute_fraction
+            )
+        )
+
+    @property
+    def effective_vapor_pressure_pa(self) -> float:
+        """Solvent vapor pressure P_v modified by solute mole fraction."""
+        solute_total = (
+            self.copper_solute_fraction
+            + self.boron_solute_fraction
+            + self.alkali_solute_fraction
+        )
+        return float(self.carrier_vapor_pressure_pa * max(0.5, 1.0 - solute_total))
+
+    @property
+    def active_spectral_lines(self) -> List[Dict[str, Any]]:
+        """List of active spectroscopic emission lines for this mixture.
+
+        Includes thermal continuum plus element-specific atomic and molecular transitions:
+        - Continuum: Bremsstrahlung / blackbody (~350 nm UV-blue)
+        - Copper (Cu I): 324.7 nm & 327.4 nm resonance doublet
+        - Boron (BO*): 518.0 nm excimer green band
+        - Alkali (Na I): 589.0 nm D-line doublet
+        """
+        lines: List[Dict[str, Any]] = [
+            {
+                "species": "Continuum",
+                "name": "Bremsstrahlung / Blackbody Continuum",
+                "wavelength_nm": 350.0,
+                "bandwidth_nm": 150.0,
+                "relative_weight": 1.0,
+            }
+        ]
+
+        if self.copper_solute_fraction > 0:
+            w_cu1 = float(np.clip(self.copper_solute_fraction * 150.0, 0.01, 0.6))
+            w_cu2 = float(np.clip(self.copper_solute_fraction * 120.0, 0.01, 0.5))
+            lines.append(
+                {
+                    "species": "Copper",
+                    "name": "Cu I (324.7 nm)",
+                    "wavelength_nm": 324.7,
+                    "bandwidth_nm": 3.0,
+                    "relative_weight": w_cu1,
+                }
+            )
+            lines.append(
+                {
+                    "species": "Copper",
+                    "name": "Cu I (327.4 nm)",
+                    "wavelength_nm": 327.4,
+                    "bandwidth_nm": 3.0,
+                    "relative_weight": w_cu2,
+                }
+            )
+
+        if self.boron_solute_fraction > 0:
+            w_b = float(np.clip(self.boron_solute_fraction * 180.0, 0.01, 0.6))
+            lines.append(
+                {
+                    "species": "Boron",
+                    "name": "BO* Excimer Green Band (518.0 nm)",
+                    "wavelength_nm": 518.0,
+                    "bandwidth_nm": 15.0,
+                    "relative_weight": w_b,
+                }
+            )
+
+        if self.alkali_solute_fraction > 0:
+            w_alkali = float(np.clip(self.alkali_solute_fraction * 200.0, 0.01, 0.6))
+            lines.append(
+                {
+                    "species": "Alkali",
+                    "name": "Na D-line (589.0 nm)",
+                    "wavelength_nm": 589.0,
+                    "bandwidth_nm": 5.0,
+                    "relative_weight": w_alkali,
+                }
+            )
+
+        return lines
 
 
 @dataclass(frozen=True)
@@ -124,6 +418,7 @@ class AcousticResonator:
         length_m: Resonator longitudinal length in meters (must be > 0).
         taper_profile: Horn profile ('conical', 'exponential', or 'cylindrical').
         quality_factor_q: Acoustic cavity quality factor Q (must be >= 1.0).
+        material: Solid metallurgical horn material (e.g. Copper-Boron alloy, OFHC Cu).
     """
 
     input_diameter_m: float = 0.020  # 20 mm
@@ -131,6 +426,7 @@ class AcousticResonator:
     length_m: float = 0.02964  # Half-wavelength in water at 25 kHz (1482 / (2 * 25000))
     taper_profile: Literal["conical", "exponential", "cylindrical"] = "conical"
     quality_factor_q: float = 30.0
+    material: Optional[WaveguideMaterial] = None
 
     def __post_init__(self) -> None:
         if self.input_diameter_m <= 0:
@@ -165,23 +461,23 @@ class AcousticResonator:
 
         Approximated via 1D lossless energy flux conservation across the horn:
             P_out / P_in ≈ sqrt(A_in / A_out) = d_in / d_out.
-
-        Note:
-            This is an idealized phenomenological approximation. Real acoustic horns
-            are subject to boundary layer viscosity, radiation resistance,
-            and taper cut-off frequencies.
         """
         if self.taper_profile == "cylindrical":
             return 1.0
         return float(self.input_diameter_m / self.output_diameter_m)
 
+    @property
+    def effective_quality_factor(self) -> float:
+        """Effective quality factor Q incorporating material damping if material is specified."""
+        if self.material is not None:
+            # Composite cavity Q influenced by solid horn Q
+            return float(max(self.quality_factor_q, self.material.quality_factor_q))
+        return float(self.quality_factor_q)
+
     def resonant_harmonics(
         self, sound_speed_m_s: float = DEFAULT_SOUND_SPEED, n_modes: int = 5
     ) -> np.ndarray:
-        """Calculate the first n longitudinal half-wave resonant frequencies in Hz.
-
-        f_n = n * c_s / (2 * L) for n = 1, 2, ..., n_modes.
-        """
+        """Calculate the first n longitudinal half-wave resonant frequencies in Hz."""
         if n_modes < 1:
             raise ValueError("n_modes must be at least 1")
         modes = np.arange(1, n_modes + 1, dtype=float)
@@ -190,27 +486,18 @@ class AcousticResonator:
     def cavity_response(
         self, frequency_hz: float, sound_speed_m_s: float = DEFAULT_SOUND_SPEED
     ) -> Tuple[float, float, float]:
-        """Compute standing-wave cavity resonance response.
-
-        Returns:
-            gain: Standing-wave cavity amplification factor G_cavity.
-            detuning_error: Fractional frequency offset from nearest harmonic mode delta = (f - f_res) / f_res.
-            resonator_length_ratio: Normalized length L / lambda_a.
-        """
+        """Compute standing-wave cavity resonance response."""
         if frequency_hz <= 0:
             raise ValueError("frequency_hz must be positive")
         acoustic_wavelength = sound_speed_m_s / frequency_hz
         resonator_length_ratio = self.length_m / acoustic_wavelength
 
-        # Find nearest standing-wave mode index (half-wave cavity n = round(2 * L / lambda))
         mode_n = max(1, int(np.round(2.0 * self.length_m * frequency_hz / sound_speed_m_s)))
         resonant_freq = mode_n * sound_speed_m_s / (2.0 * self.length_m)
 
         detuning_error = (frequency_hz - resonant_freq) / resonant_freq
 
-        # Lorentzian resonant standing-wave cavity gain
-        # At resonance (delta=0), gain is Q. Off resonance, decays according to Q-curve.
-        q = self.quality_factor_q
+        q = self.effective_quality_factor
         gain = float(1.0 + (q - 1.0) / np.sqrt(1.0 + 4.0 * (q**2) * (detuning_error**2)))
 
         return gain, float(detuning_error), float(resonator_length_ratio)
@@ -230,13 +517,14 @@ class CavitationModel:
     """Thermodynamic and fluid mechanics cavitation properties.
 
     Parameters:
-        equilibrium_radius_m: Undisturbed bubble equilibrium radius R_0 in meters (must be > 0).
-        liquid_density_kg_m3: Liquid mass density rho_L in kg/m^3 (must be > 0).
+        equilibrium_radius_m: Undisturbed bubble equilibrium radius R_0 in meters (> 0).
+        liquid_density_kg_m3: Liquid mass density rho_L in kg/m^3 (> 0).
         surface_tension_n_m: Gas-liquid surface tension sigma in N/m (>= 0).
         liquid_viscosity_pa_s: Dynamic shear viscosity mu_L in Pa*s (>= 0).
         vapor_pressure_pa: Saturated vapor pressure P_v in Pascals (>= 0).
         ambient_pressure_pa: Static ambient atmospheric pressure P_0 in Pascals (> 0).
-        polytropic_index: Polytropic gas exponent gamma (must be >= 1.0).
+        polytropic_index: Polytropic gas exponent gamma (>= 1.0).
+        dopant_mixture: Optional dopant mixture defining solute & gas modifications.
     """
 
     equilibrium_radius_m: float = 5.0e-6  # 5 micrometers
@@ -246,6 +534,7 @@ class CavitationModel:
     vapor_pressure_pa: float = DEFAULT_VAPOR_PRESSURE
     ambient_pressure_pa: float = DEFAULT_AMBIENT_PRESSURE
     polytropic_index: float = DEFAULT_POLYTROPIC_INDEX
+    dopant_mixture: Optional[DopantMixture] = None
 
     def __post_init__(self) -> None:
         if self.equilibrium_radius_m <= 0:
@@ -276,21 +565,55 @@ class CavitationModel:
             raise ValueError(f"polytropic_index must be >= 1.0, got {self.polytropic_index}")
 
     @property
+    def density(self) -> float:
+        """Effective fluid density in kg/m^3."""
+        if self.dopant_mixture is not None:
+            return self.dopant_mixture.effective_density_kg_m3
+        return self.liquid_density_kg_m3
+
+    @property
+    def viscosity(self) -> float:
+        """Effective fluid viscosity in Pa*s."""
+        if self.dopant_mixture is not None:
+            return self.dopant_mixture.effective_viscosity_pa_s
+        return self.liquid_viscosity_pa_s
+
+    @property
+    def surface_tension(self) -> float:
+        """Effective surface tension in N/m."""
+        if self.dopant_mixture is not None:
+            return self.dopant_mixture.effective_surface_tension_n_m
+        return self.surface_tension_n_m
+
+    @property
+    def vapor_pressure(self) -> float:
+        """Effective vapor pressure in Pa."""
+        if self.dopant_mixture is not None:
+            return self.dopant_mixture.effective_vapor_pressure_pa
+        return self.vapor_pressure_pa
+
+    @property
+    def gamma(self) -> float:
+        """Effective polytropic index gamma."""
+        if self.dopant_mixture is not None:
+            return self.dopant_mixture.effective_polytropic_index
+        return self.polytropic_index
+
+    @property
     def blake_threshold_pressure(self) -> float:
         """Blake critical cavitation threshold pressure in Pascals.
 
         P_Blake = P_0 + 0.77 * (sigma / R_0).
-        Acoustic tension must overcome this threshold for transient cavitation.
         """
         return float(
             self.ambient_pressure_pa
-            + 0.77 * (self.surface_tension_n_m / self.equilibrium_radius_m)
+            + 0.77 * (self.surface_tension / self.equilibrium_radius_m)
         )
 
     @property
     def blake_acoustic_threshold_pa(self) -> float:
         """Acoustic pressure amplitude threshold delta P_a = 0.77 * (sigma / R_0) in Pa."""
-        return float(0.77 * (self.surface_tension_n_m / self.equilibrium_radius_m))
+        return float(0.77 * (self.surface_tension / self.equilibrium_radius_m))
 
     def is_cavitation_active(self, acoustic_pressure_amplitude_pa: float) -> bool:
         """Evaluate whether driving pressure amplitude exceeds the Blake threshold."""
@@ -412,11 +735,11 @@ class BubbleDynamics:
         r0 = self.cavitation.equilibrium_radius_m
         h_core = r0 * self.hard_core_ratio
         p0 = self.cavitation.ambient_pressure_pa
-        pv = self.cavitation.vapor_pressure_pa
-        sigma = self.cavitation.surface_tension_n_m
-        mu = self.cavitation.liquid_viscosity_pa_s
-        rho = self.cavitation.liquid_density_kg_m3
-        gamma = self.cavitation.polytropic_index
+        pv = self.cavitation.vapor_pressure
+        sigma = self.cavitation.surface_tension
+        mu = self.cavitation.viscosity
+        rho = self.cavitation.density
+        gamma = self.cavitation.gamma
         p_gas0 = p0 + (2.0 * sigma / r0) - pv
 
         r_arr = np.zeros(n_steps, dtype=float)
@@ -494,14 +817,16 @@ class BubbleDynamics:
 class SonoluminescenceModel:
     """Phenomenological sonoluminescence flash emission model.
 
-    Generates optical emission flashes during violent bubble collapse rebounds.
+    Generates optical emission flashes during violent bubble collapse rebounds,
+    including multispectral atomic lines from dissolved metal/metalloid solutes (Cu, B, Na).
 
     Parameters:
-        spectral_center_nm: Center optical emission wavelength in nanometers (must be > 0).
-        spectral_bandwidth_nm: Optical emission bandwidth in nanometers (must be > 0).
-        pulse_duration_s: Modeled physical emission flash duration in seconds (must be > 0).
+        spectral_center_nm: Center optical emission wavelength in nanometers (> 0).
+        spectral_bandwidth_nm: Optical emission bandwidth in nanometers (> 0).
+        pulse_duration_s: Modeled physical emission flash duration in seconds (> 0).
         emission_threshold_compression: Minimum compression ratio R_0 / R required for light emission.
         intensity_scaling: Dimensionless scaling factor for peak normalized intensity.
+        dopant_mixture: Optional dopant mixture generating multispectral lines.
     """
 
     spectral_center_nm: float = 350.0  # UV-blue (~350 nm center for SBSL in water)
@@ -509,6 +834,7 @@ class SonoluminescenceModel:
     pulse_duration_s: float = 2.0e-10  # 200 picoseconds physical duration
     emission_threshold_compression: float = 2.2
     intensity_scaling: float = 1.0
+    dopant_mixture: Optional[DopantMixture] = None
 
     def __post_init__(self) -> None:
         if self.spectral_center_nm <= 0:
@@ -533,9 +859,33 @@ class SonoluminescenceModel:
             )
 
     @property
+    def spectral_lines(self) -> List[Dict[str, Any]]:
+        """Active spectral lines from continuum and dopants."""
+        if self.dopant_mixture is not None:
+            return self.dopant_mixture.active_spectral_lines
+        return [
+            {
+                "species": "Continuum",
+                "name": "Bremsstrahlung Continuum",
+                "wavelength_nm": self.spectral_center_nm,
+                "bandwidth_nm": self.spectral_bandwidth_nm,
+                "relative_weight": 1.0,
+            }
+        ]
+
+    @property
+    def effective_spectral_center_nm(self) -> float:
+        """Weighted effective optical center wavelength in nm across all emission lines."""
+        lines = self.spectral_lines
+        total_w = sum(line["relative_weight"] for line in lines)
+        if total_w <= 0:
+            return self.spectral_center_nm
+        return float(sum(line["wavelength_nm"] * line["relative_weight"] for line in lines) / total_w)
+
+    @property
     def optical_frequency_hz(self) -> float:
         """Optical electromagnetic frequency f_EM = c / lambda_EM in Hertz."""
-        return float(SPEED_OF_LIGHT / (self.spectral_center_nm * 1e-9))
+        return float(SPEED_OF_LIGHT / (self.effective_spectral_center_nm * 1e-9))
 
     def simulate_emission(
         self,
@@ -543,18 +893,7 @@ class SonoluminescenceModel:
         bubble_results: Dict[str, Any],
         sound_speed_m_s: float = DEFAULT_SOUND_SPEED,
     ) -> Dict[str, Any]:
-        """Compute sonoluminescent emission intensity time series.
-
-        Returns:
-            Dictionary containing:
-                emission_intensity: Normalized emission intensity array I_SL(t) in [0, 1].
-                peak_emission: Maximum peak emission intensity.
-                emission_duration_s: Flash duration in seconds.
-                emission_event_times: Array of collapse flash timestamps.
-                spectral_center_nm: Optical center wavelength in nm.
-                spectral_bandwidth_nm: Optical bandwidth in nm.
-                optical_frequency_hz: Optical electromagnetic frequency in Hz.
-        """
+        """Compute sonoluminescent emission intensity time series."""
         n_steps = len(time)
         dt = float(time[1] - time[0]) if n_steps > 1 else 1e-6
         emission_arr = np.zeros(n_steps, dtype=float)
@@ -565,9 +904,13 @@ class SonoluminescenceModel:
         collapse_indices = bubble_results["collapse_indices"]
 
         active_collapse_times: List[float] = []
-
-        # Effective discrete pulse width in timesteps (at least 1-2 samples for numerical representation)
         sigma_dt = max(dt * 0.75, self.pulse_duration_s)
+
+        # Total intensity multiplier from noble gas and dopants
+        dopant_boost = 1.0
+        if self.dopant_mixture is not None:
+            # Noble gas (e.g. Argon 1%) significantly enhances peak SBSL emission
+            dopant_boost = 1.0 + 5.0 * self.dopant_mixture.gas_fraction
 
         for idx in collapse_indices:
             r_val = radius[idx]
@@ -575,17 +918,16 @@ class SonoluminescenceModel:
 
             if compression >= self.emission_threshold_compression:
                 v_wall = abs(velocity[idx])
-                # Intensity scales strongly with compression ratio and Mach number of collapse
                 mach = v_wall / sound_speed_m_s
                 peak_i = float(
                     self.intensity_scaling
+                    * dopant_boost
                     * ((compression / self.emission_threshold_compression) ** 2.5)
                     * (mach**1.5)
                 )
                 t_event = time[idx]
                 active_collapse_times.append(float(t_event))
 
-                # Deposit Gaussian pulse into discrete emission array
                 window_samples = max(3, int(np.ceil(3.0 * sigma_dt / dt)))
                 start_i = max(0, idx - window_samples)
                 end_i = min(n_steps, idx + window_samples + 1)
@@ -595,7 +937,6 @@ class SonoluminescenceModel:
                 emission_arr[start_i:end_i] += pulse
 
         max_val = float(np.max(emission_arr)) if np.max(emission_arr) > 0 else 1.0
-        # Normalize peak to [0, 1] range while retaining relative dynamics
         normalized_emission = np.clip(emission_arr / max(max_val, 1.0), 0.0, 1.0)
 
         return {
@@ -603,18 +944,16 @@ class SonoluminescenceModel:
             "peak_emission": float(np.max(normalized_emission)),
             "emission_duration_s": self.pulse_duration_s,
             "emission_event_times": np.array(active_collapse_times, dtype=float),
-            "spectral_center_nm": self.spectral_center_nm,
+            "spectral_center_nm": self.effective_spectral_center_nm,
             "spectral_bandwidth_nm": self.spectral_bandwidth_nm,
             "optical_frequency_hz": self.optical_frequency_hz,
+            "spectral_lines": self.spectral_lines,
         }
 
 
 @dataclass(frozen=True)
 class OpticalElectricalTransducer:
     """Downstream optical-to-electrical transducer (photodiode / detector model).
-
-    Converts collected sonoluminescent optical flux into an electrical signal.
-    Includes explicit energy bookkeeping across acoustic, optical, and electrical domains.
 
     Parameters:
         optical_collection_efficiency: Fraction of emitted optical flux collected (0 < eta_col <= 1).
@@ -755,14 +1094,22 @@ class SonoluminescenceSystem:
         bubble_dynamics: Optional[BubbleDynamics] = None,
         emission_model: Optional[SonoluminescenceModel] = None,
         transducer: Optional[OpticalElectricalTransducer] = None,
+        waveguide_material: Optional[WaveguideMaterial] = None,
+        dopant_mixture: Optional[DopantMixture] = None,
     ) -> None:
+        self.material = waveguide_material or (
+            resonator.material if resonator else WAVEGUIDE_MATERIALS["copper_boron_alloy"]
+        )
         self.driver = driver or AcousticDriver()
-        self.resonator = resonator or AcousticResonator()
-        self.cavitation = cavitation or CavitationModel()
+        self.resonator = resonator or AcousticResonator(material=self.material)
+        self.dopant_mixture = dopant_mixture or DopantMixture()
+        self.cavitation = cavitation or CavitationModel(dopant_mixture=self.dopant_mixture)
         self.bubble_dynamics = bubble_dynamics or BubbleDynamics(
             cavitation_model=self.cavitation
         )
-        self.emission_model = emission_model or SonoluminescenceModel()
+        self.emission_model = emission_model or SonoluminescenceModel(
+            dopant_mixture=self.dopant_mixture
+        )
         self.transducer = transducer or OpticalElectricalTransducer()
 
     def simulate(
@@ -772,19 +1119,7 @@ class SonoluminescenceSystem:
         noise_scale: float = 0.005,
         random_state: Optional[int] = 42,
     ) -> Tuple[np.ndarray, np.ndarray, Dict[str, Any]]:
-        """Simulate the complete coupled acousto-opto-electrical benchmark.
-
-        Args:
-            duration: Simulation duration in seconds (must be > 0).
-            sampling_rate: Sampling frequency in Hz (must be > 0 and >= 2 * f_a).
-            noise_scale: Standard deviation of additive observational noise.
-            random_state: Optional random seed for reproducible noise additions.
-
-        Returns:
-            time: 1D numpy array of timestamps in seconds.
-            data: 2D numpy array of shape (N, 8) with aligned channels.
-            metadata: Comprehensive dictionary of model parameters and diagnostics.
-        """
+        """Simulate the complete coupled acousto-opto-electrical benchmark."""
         if duration <= 0:
             raise ValueError(f"duration must be positive, got {duration}")
         if sampling_rate <= 0:
@@ -881,11 +1216,36 @@ class SonoluminescenceSystem:
 
         metadata: Dict[str, Any] = {
             "benchmark_system": "sonoluminescence_acousto_opto_electrical",
-            "version": "1.0.0",
+            "version": "1.1.0",
             "sampling_rate_hz": float(sampling_rate),
             "duration_s": float(duration),
             "n_samples": int(n_steps),
             "channel_names": list(self.CHANNEL_NAMES),
+            "waveguide_material_properties": {
+                "name": self.material.name if self.material else "custom",
+                "copper_fraction": float(self.material.copper_fraction) if self.material else 0.0,
+                "boron_fraction": float(self.material.boron_fraction) if self.material else 0.0,
+                "solid_density_kg_m3": float(self.material.density_kg_m3) if self.material else 0.0,
+                "solid_sound_speed_m_s": float(self.material.sound_speed_m_s) if self.material else 0.0,
+                "acoustic_impedance_rayl": float(self.material.acoustic_impedance_rayl) if self.material else 0.0,
+                "interface_transmission_coefficient": float(
+                    self.material.interface_transmission_coefficient(
+                        self.cavitation.density, self.driver.sound_speed_m_s
+                    )
+                ) if self.material else 1.0,
+            },
+            "dopant_mixture_properties": {
+                "carrier_liquid": self.dopant_mixture.carrier_liquid,
+                "gas_species": self.dopant_mixture.gas_species,
+                "gas_fraction": float(self.dopant_mixture.gas_fraction),
+                "copper_solute_fraction": float(self.dopant_mixture.copper_solute_fraction),
+                "boron_solute_fraction": float(self.dopant_mixture.boron_solute_fraction),
+                "alkali_solute_fraction": float(self.dopant_mixture.alkali_solute_fraction),
+                "effective_density_kg_m3": float(self.dopant_mixture.effective_density_kg_m3),
+                "effective_viscosity_pa_s": float(self.dopant_mixture.effective_viscosity_pa_s),
+                "effective_surface_tension_n_m": float(self.dopant_mixture.effective_surface_tension_n_m),
+                "effective_polytropic_index": float(self.dopant_mixture.effective_polytropic_index),
+            },
             "acoustic_parameters": {
                 "frequency_hz": float(self.driver.frequency_hz),
                 "sound_speed_m_s": float(self.driver.sound_speed_m_s),
@@ -899,7 +1259,7 @@ class SonoluminescenceSystem:
                 "length_m": float(self.resonator.length_m),
                 "area_ratio": float(self.resonator.area_ratio),
                 "geometric_pressure_gain": float(geom_gain),
-                "quality_factor_q": float(self.resonator.quality_factor_q),
+                "quality_factor_q": float(self.resonator.effective_quality_factor),
                 "cavity_gain": float(cavity_gain),
                 "detuning_error": float(detuning),
                 "length_ratio_in_acoustic_wavelengths": float(length_ratio),
@@ -923,16 +1283,13 @@ class SonoluminescenceSystem:
                 "is_physical_formulation": True,
             },
             "optical_emission_parameters": {
-                "spectral_center_nm": float(self.emission_model.spectral_center_nm),
-                "spectral_bandwidth_nm": float(
-                    self.emission_model.spectral_bandwidth_nm
-                ),
-                "optical_frequency_hz": float(
-                    self.emission_model.optical_frequency_hz
-                ),
-                "pulse_duration_s": float(self.emission_model.pulse_duration_s),
+                "spectral_center_nm": float(emission_res["spectral_center_nm"]),
+                "spectral_bandwidth_nm": float(emission_res["spectral_bandwidth_nm"]),
+                "optical_frequency_hz": float(emission_res["optical_frequency_hz"]),
+                "pulse_duration_s": float(emission_res["emission_duration_s"]),
                 "peak_emission": float(emission_res["peak_emission"]),
                 "emission_event_count": int(len(emission_res["emission_event_times"])),
+                "spectral_lines": emission_res.get("spectral_lines", []),
                 "is_phenomenological": True,
             },
             "transduction_parameters": {
@@ -958,7 +1315,7 @@ class SonoluminescenceSystem:
             },
             "notes": (
                 "Sonoluminescence computational benchmark for DRR multimodal resonance "
-                "and causal rooting analysis. Waveguide is an acoustic impedance structure. "
+                "and causal rooting analysis with copper/boron waveguide metallurgy and fluid doping. "
                 "No net energy amplification is claimed."
             ),
         }
@@ -982,6 +1339,12 @@ def generate_sonoluminescence_system(
     conversion_efficiency: float = 0.25,
     detector_gain: float = 10.0,
     noise_scale: float = 0.005,
+    waveguide_material: Optional[Union[str, WaveguideMaterial]] = None,
+    copper_solute_fraction: float = 0.0,
+    boron_solute_fraction: float = 0.0,
+    noble_gas_fraction: float = 0.01,
+    noble_gas_species: Literal["argon", "xenon", "helium", "nitrogen", "air"] = "argon",
+    dopant_mixture: Optional[DopantMixture] = None,
     random_state: Optional[int] = 42,
 ) -> Tuple[np.ndarray, np.ndarray, Dict[str, Any]]:
     """Generate multivariate acousto-opto-electrical sonoluminescence benchmark data.
@@ -997,8 +1360,29 @@ def generate_sonoluminescence_system(
             5: emission_intensity (normalized [0, 1])
             6: optical_signal (a.u.)
             7: electrical_signal (a.u.)
-        metadata: Comprehensive metadata documenting physical parameters and units.
+        metadata: Comprehensive metadata documenting physical parameters, mixtures, and units.
     """
+    # Resolve waveguide material
+    mat_obj: Optional[WaveguideMaterial] = None
+    if isinstance(waveguide_material, str):
+        if waveguide_material in WAVEGUIDE_MATERIALS:
+            mat_obj = WAVEGUIDE_MATERIALS[waveguide_material]
+        else:
+            raise ValueError(
+                f"Unknown waveguide_material preset '{waveguide_material}'. "
+                f"Available presets: {list(WAVEGUIDE_MATERIALS.keys())}"
+            )
+    elif isinstance(waveguide_material, WaveguideMaterial):
+        mat_obj = waveguide_material
+
+    # Resolve dopant mixture
+    mix_obj = dopant_mixture or DopantMixture(
+        gas_species=noble_gas_species,
+        gas_fraction=noble_gas_fraction,
+        copper_solute_fraction=copper_solute_fraction,
+        boron_solute_fraction=boron_solute_fraction,
+    )
+
     driver = AcousticDriver(
         frequency_hz=acoustic_frequency_hz,
         sound_speed_m_s=sound_speed_m_s,
@@ -1009,10 +1393,17 @@ def generate_sonoluminescence_system(
         output_diameter_m=waveguide_output_diameter_m,
         length_m=resonator_length_m,
         quality_factor_q=quality_factor_q,
+        material=mat_obj,
     )
-    cavitation = CavitationModel(equilibrium_radius_m=bubble_radius_m)
+    cavitation = CavitationModel(
+        equilibrium_radius_m=bubble_radius_m,
+        dopant_mixture=mix_obj,
+    )
     bubble = BubbleDynamics(cavitation_model=cavitation)
-    emission = SonoluminescenceModel(spectral_center_nm=optical_wavelength_nm)
+    emission = SonoluminescenceModel(
+        spectral_center_nm=optical_wavelength_nm,
+        dopant_mixture=mix_obj,
+    )
     transducer = OpticalElectricalTransducer(
         optical_collection_efficiency=optical_collection_efficiency,
         conversion_efficiency=conversion_efficiency,
@@ -1026,6 +1417,8 @@ def generate_sonoluminescence_system(
         bubble_dynamics=bubble,
         emission_model=emission,
         transducer=transducer,
+        waveguide_material=mat_obj,
+        dopant_mixture=mix_obj,
     )
 
     return system.simulate(
@@ -1041,16 +1434,7 @@ def calculate_resonant_transduction_efficiency_index(
 ) -> Dict[str, float]:
     """Compute the Resonant Transduction Efficiency Index (RTEI).
 
-    RTEI is a proposed DRR research metric quantifying multimodal coherence and
-    resonant persistence across the complete acousto-opto-electrical pipeline:
-
-        RTEI = D_acoustic * D_cavitation * D_emission * D_electrical * (G_cavity / Q)
-
-    where D_i are the DRR empirical resonance depths of the respective channels.
-
-    Note:
-        RTEI is explicitly labeled as an exploratory research metric developed for
-        this benchmark, not an established thermodynamic universal constant.
+    RTEI = D_acoustic * D_cavitation * D_emission * D_electrical * (G_cavity / Q)
     """
     depths = drr_results.get("resonance_depths", {})
     d_acoustic = float(depths.get("dim_0", depths.get("dim_1", 0.5)))
@@ -1095,6 +1479,9 @@ __all__ = [
     "DEFAULT_VAPOR_PRESSURE",
     "DEFAULT_AMBIENT_PRESSURE",
     "DEFAULT_POLYTROPIC_INDEX",
+    "WAVEGUIDE_MATERIALS",
+    "WaveguideMaterial",
+    "DopantMixture",
     "AcousticDriver",
     "AcousticResonator",
     "AcousticWaveguide",

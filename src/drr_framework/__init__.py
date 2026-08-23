@@ -58,17 +58,21 @@ from .sonoluminescence import (
     DEFAULT_VAPOR_PRESSURE,
     DEFAULT_WATER_DENSITY,
     SPEED_OF_LIGHT,
+    WAVEGUIDE_MATERIALS,
     AcousticDriver,
     AcousticResonator,
     AcousticWaveguide,
     BubbleDynamics,
     CavitationModel,
+    DopantMixture,
     OpticalElectricalTransducer,
     SonoluminescenceModel,
     SonoluminescenceSystem,
+    WaveguideMaterial,
     calculate_resonant_transduction_efficiency_index,
     generate_sonoluminescence_system,
 )
+
 
 
 
@@ -209,6 +213,9 @@ __all__ = [
     "DEFAULT_VAPOR_PRESSURE",
     "DEFAULT_AMBIENT_PRESSURE",
     "DEFAULT_POLYTROPIC_INDEX",
+    "WAVEGUIDE_MATERIALS",
+    "WaveguideMaterial",
+    "DopantMixture",
     "AcousticDriver",
     "AcousticResonator",
     "AcousticWaveguide",

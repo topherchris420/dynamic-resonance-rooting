@@ -197,16 +197,18 @@ The framework includes a research-grade physical benchmark modeling multi-stage 
 | Domain | Governing Physics / Formulation | Status |
 |--------|----------------------------------|--------|
 | **Acoustic Driver** | Acoustic wave speed $c_s = 1482\text{ m/s}$, ultrasonic frequency $f_a \approx 25\text{ kHz}$, wavelength $\lambda_a = c_s / f_a \approx 5.93\text{ cm}$ | Physically motivated |
+| **Waveguide Metallurgy** | Solid acoustic horn materials (OFHC Copper, Copper-Boron alloy $\text{Cu}_{0.98}\text{B}_{0.02}$, $\text{CuBe}$, Titanium) with impedance matching $Z_{solid} = \rho c$ and interface transmission $T = \frac{4 Z_{solid} Z_{fluid}}{(Z_{solid} + Z_{fluid})^2}$ | Physically motivated |
 | **Acoustic Waveguide / Resonator** | Geometric area concentration $(d_{in}/d_{out})$, half-wave standing-wave cavity response with quality factor $Q$ and detuning $\delta$. *Waveguide is an acoustic impedance structure, not an electrical transformer.* | Idealized 1D acoustic approximation |
 | **Bubble Cavitation Dynamics** | Modified Rayleigh-Plesset equation with van der Waals excluded volume core ($R_{core} \approx R_0 / 8.5$), liquid viscosity $\mu_L$, surface tension $\sigma$, and Blake cavitation threshold | Physically motivated |
-| **Sonoluminescent Emission** | Ultrafast flash pulses ($\tau \sim 200\text{ ps}$) triggered during violent collapse rebounds ($R \to R_{min}$), optical center $\lambda_{EM} \approx 350\text{ nm}$ (UV-blue continuum), $f_{EM} = c / \lambda_{EM} \approx 8.57 \times 10^{14}\text{ Hz}$ | Phenomenological model |
+| **Fluid & Solute Doping** | Dissolved gas doping (Argon, Xenon, Helium) modifying $\gamma_{mix}$, plus dissolved/colloidal Copper (Cu), Boron (B), and Alkali salts altering fluid density, viscosity, and surface tension | Physically motivated |
+| **Sonoluminescent Emission** | Ultrafast flash pulses ($\tau \sim 200\text{ ps}$) triggered during violent collapse rebounds ($R \to R_{min}$), multispectral continuum + atomic lines (Cu I at 324.7/327.4 nm, $\text{BO}^*$ excimer at 518 nm) | Phenomenological model |
 | **Electrical Transduction** | Downstream photodetector responsivity, collection factor $\eta_{col}$, RC low-pass filter, and energy accounting | Downstream detector model |
 | **DRR Metrics (RTEI)** | Resonant Transduction Efficiency Index quantifying multimodal coherence across the 8-channel time series | Proposed DRR research metric |
 
 > [!IMPORTANT]
 > **No Net Energy Amplification Claimed**: The benchmark explicitly accounts for total acoustic input energy versus electrical output energy ($E_{elec} / E_{acoustic} \ll 1$). The purpose is computational study of nonlinear resonance, modal concentration, phase coherence, and causal lead-lag rooting across multimodal physics.
 
-### Benchmark Usage Example
+### Benchmark Usage Example (With Copper-Boron Metallurgy & Solute Doping)
 
 ```python
 from drr_framework import (
@@ -216,6 +218,7 @@ from drr_framework import (
 )
 
 # 1. Generate 8-channel multivariate acousto-opto-electrical benchmark
+#    with Copper-Boron alloy waveguide and Argon/Cu/B fluid doping
 time, data, metadata = generate_sonoluminescence_system(
     sampling_rate=100_000,
     duration=0.002,
@@ -223,6 +226,11 @@ time, data, metadata = generate_sonoluminescence_system(
     input_pressure_pa=60_000,
     waveguide_input_diameter_m=0.020,
     waveguide_output_diameter_m=0.004,
+    waveguide_material="copper_boron_alloy",
+    noble_gas_species="argon",
+    noble_gas_fraction=0.01,
+    copper_solute_fraction=0.001,
+    boron_solute_fraction=0.001,
     random_state=42,
 )
 

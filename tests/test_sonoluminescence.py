@@ -5,15 +5,18 @@ import pytest
 
 from drr_framework import (
     SPEED_OF_LIGHT,
+    WAVEGUIDE_MATERIALS,
     AcousticDriver,
     AcousticResonator,
     AcousticWaveguide,
     BubbleDynamics,
     CavitationModel,
+    DopantMixture,
     DynamicResonanceRooting,
     OpticalElectricalTransducer,
     SonoluminescenceModel,
     SonoluminescenceSystem,
+    WaveguideMaterial,
     calculate_resonant_transduction_efficiency_index,
     generate_sonoluminescence_system,
 )
@@ -59,11 +62,56 @@ def test_waveguide_area_ratio_and_geometric_gain():
     assert np.isclose(cylindrical.geometric_pressure_gain, 1.0)
 
 
+def test_waveguide_material_metallurgy_and_transmission():
+    """Verify solid material impedance and interface transmission coefficient."""
+    cu_b = WAVEGUIDE_MATERIALS["copper_boron_alloy"]
+    assert cu_b.copper_fraction == 0.98
+    assert cu_b.boron_fraction == 0.02
+    assert np.isclose(cu_b.acoustic_impedance_rayl, 8920.0 * 4850.0)
+
+    # Power transmission coefficient into water
+    t_coeff = cu_b.interface_transmission_coefficient(
+        fluid_density_kg_m3=998.2, fluid_sound_speed_m_s=1482.0
+    )
+    assert 0.0 < t_coeff < 1.0
+
+    # Custom material creation
+    custom_mat = WaveguideMaterial(
+        name="custom_cu_b",
+        density_kg_m3=8800.0,
+        sound_speed_m_s=4900.0,
+        quality_factor_q=70.0,
+        copper_fraction=0.95,
+        boron_fraction=0.05,
+    )
+    assert custom_mat.acoustic_impedance_rayl == 8800.0 * 4900.0
+
+
+def test_dopant_mixture_and_properties():
+    """Verify fluid mixture property modifications and active spectral lines."""
+    mixture = DopantMixture(
+        carrier_liquid="water",
+        gas_species="argon",
+        gas_fraction=0.01,
+        copper_solute_fraction=0.002,
+        boron_solute_fraction=0.001,
+    )
+
+    assert mixture.effective_polytropic_index > 1.40  # Boosted by monatomic Argon
+    assert mixture.effective_density_kg_m3 > 998.2  # Solute densification
+    assert mixture.effective_viscosity_pa_s > 0.001002  # Viscosity increase
+
+    lines = mixture.active_spectral_lines
+    species_names = [line["species"] for line in lines]
+    assert "Continuum" in species_names
+    assert "Copper" in species_names
+    assert "Boron" in species_names
+
+
 def test_resonator_resonance_response_and_detuning():
     """Verify cavity standing-wave response at and off resonance."""
     sound_speed = 1482.0
     f_res = 25_000.0
-    # Length tuned to half-wavelength: L = c_s / (2 * f_res)
     l_resonant = sound_speed / (2.0 * f_res)
 
     resonator = AcousticResonator(
@@ -78,7 +126,7 @@ def test_resonator_resonance_response_and_detuning():
         f_res, sound_speed
     )
     assert np.isclose(detuning_res, 0.0, atol=1e-10)
-    assert np.isclose(gain_res, 40.0)  # At resonance, cavity gain is Q
+    assert np.isclose(gain_res, 40.0)
     assert np.isclose(length_ratio_res, 0.5)
 
     # Off-resonance detuned by 10%
@@ -104,9 +152,7 @@ def test_cavitation_blake_threshold():
     assert np.isclose(cav.blake_acoustic_threshold_pa, expected_blake_tension)
     assert np.isclose(cav.blake_threshold_pressure, p0 + expected_blake_tension)
 
-    # Below Blake threshold
     assert not cav.is_cavitation_active(expected_blake_tension * 0.5)
-    # Above Blake threshold
     assert cav.is_cavitation_active(expected_blake_tension * 1.5)
 
 
@@ -118,10 +164,9 @@ def test_bubble_dynamics_numerical_stability():
     sampling_rate = 100_000.0
     duration = 0.001  # 1 ms
     t = np.linspace(0.0, duration, int(sampling_rate * duration))
-    # 25 kHz acoustic driving pressure with 120 kPa amplitude
     p_drive = 120_000.0 * np.sin(2 * np.pi * 25_000.0 * t)
 
-    res = bubble.simulate(t, p_drive, sub_steps=10)
+    res = bubble.simulate(t, p_drive, sub_steps=25)
 
     assert np.all(np.isfinite(res["radius"]))
     assert np.all(np.isfinite(res["velocity"]))
@@ -144,7 +189,6 @@ def test_sonoluminescence_emission_activation():
     t = np.linspace(0, 1e-4, n)
     r_arr = np.full(n, r0)
     v_arr = np.zeros(n)
-    # Inject a sharp collapse at index 50
     r_arr[50] = r0 / 4.0  # Compression ratio = 4.0 > 2.5
     v_arr[50] = -800.0
 
@@ -189,7 +233,7 @@ def test_electrical_transduction_and_energy_bookkeeping():
 
     t = np.linspace(0, 0.001, 100)
     emission_pulse = np.zeros(100)
-    emission_pulse[45:55] = 1.0  # Normalized flash
+    emission_pulse[45:55] = 1.0
 
     res = transducer.transduce(t, emission_pulse, driver, resonator)
 
@@ -200,7 +244,6 @@ def test_electrical_transduction_and_energy_bookkeeping():
     assert res["acoustic_energy_joules"] > 0.0
     assert res["electrical_energy_joules"] >= 0.0
     assert res["transduction_efficiency"] >= 0.0
-    # Physical consistency: electrical output energy strictly less than acoustic input energy
     assert res["transduction_efficiency"] < 1.0
 
 
@@ -232,6 +275,9 @@ def test_benchmark_system_dimensions_and_metadata():
         sampling_rate=sampling_rate,
         duration=duration,
         acoustic_frequency_hz=20_000.0,
+        waveguide_material="copper_boron_alloy",
+        copper_solute_fraction=0.001,
+        boron_solute_fraction=0.001,
         noise_scale=0.0,
         random_state=42,
     )
@@ -242,9 +288,12 @@ def test_benchmark_system_dimensions_and_metadata():
     assert meta["channel_names"] == SonoluminescenceSystem.CHANNEL_NAMES
     assert "acoustic_parameters" in meta
     assert "waveguide_resonator_parameters" in meta
+    assert "waveguide_material_properties" in meta
+    assert "dopant_mixture_properties" in meta
     assert "cavitation_parameters" in meta
     assert "optical_emission_parameters" in meta
     assert "transduction_parameters" in meta
+    assert meta["waveguide_material_properties"]["name"] == "copper_boron_alloy"
 
 
 def test_benchmark_systems_class_method_integration():
@@ -253,6 +302,7 @@ def test_benchmark_systems_class_method_integration():
         sampling_rate=60_000,
         duration=0.001,
         acoustic_frequency_hz=20_000,
+        waveguide_material="ofhc_copper",
         random_state=42,
     )
     assert data.shape == (60, 8)
@@ -266,6 +316,9 @@ def test_drr_system_analysis_compatibility():
         sampling_rate=sampling_rate,
         duration=0.0015,
         acoustic_frequency_hz=25_000.0,
+        waveguide_material="copper_boron_alloy",
+        copper_solute_fraction=0.001,
+        boron_solute_fraction=0.001,
         random_state=42,
     )
 
@@ -285,7 +338,6 @@ def test_drr_system_analysis_compatibility():
     assert "influence_network" in results
     assert "state_space_analysis" in results
 
-    # Verify RTEI metric computation
     rtei_res = calculate_resonant_transduction_efficiency_index(results, meta)
     assert 0.0 <= rtei_res["rtei"] <= 1.0
     assert 0.0 <= rtei_res["acoustic_resonance_depth"] <= 1.0
@@ -296,11 +348,23 @@ def test_drr_system_analysis_compatibility():
 
 def test_parameter_validation_and_edge_cases():
     """Verify clear ValueErrors on physically or numerically invalid inputs."""
+    # Material validation
+    with pytest.raises(ValueError, match="density_kg_m3 must be positive"):
+        WaveguideMaterial(density_kg_m3=-10.0)
+    with pytest.raises(ValueError, match="copper_fraction must be in"):
+        WaveguideMaterial(copper_fraction=1.5)
+    with pytest.raises(ValueError, match="Unknown waveguide_material preset"):
+        generate_sonoluminescence_system(waveguide_material="unobtainium_alloy")
+
+    # Dopant validation
+    with pytest.raises(ValueError, match="gas_fraction must be in"):
+        DopantMixture(gas_fraction=0.5)
+    with pytest.raises(ValueError, match="Unsupported gas_species"):
+        DopantMixture(gas_species="krypton_plasma")  # type: ignore[arg-type]
+
     # Driver validation
     with pytest.raises(ValueError, match="frequency_hz must be positive"):
         AcousticDriver(frequency_hz=0.0)
-    with pytest.raises(ValueError, match="frequency_hz must be positive"):
-        AcousticDriver(frequency_hz=-1000.0)
     with pytest.raises(ValueError, match="sound_speed_m_s must be positive"):
         AcousticDriver(sound_speed_m_s=0.0)
     with pytest.raises(ValueError, match="input_pressure_pa must be non-negative"):

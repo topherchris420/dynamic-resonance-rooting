@@ -1,7 +1,7 @@
 """Sonoluminescence and Acousto-Opto-Electrical Resonant Lab.
 
 Demonstrates the multimodal resonant coupling pipeline:
-    Acoustic Drive -> Waveguide Cavity -> Bubble Cavitation -> Sonoluminescence -> Electrical Transduction
+    Acoustic Drive -> Waveguide (Cu-B Alloy) -> Bubble Cavitation (Doped) -> Sonoluminescence -> Electrical Transduction
 and analyzes the multivariate system using Dynamic Resonance Rooting (DRR).
 
 Run from repository root:
@@ -46,7 +46,8 @@ def plot_sonoluminescence_multimodal_analysis(
     ax_ac = axes[0, 0]
     ax_ac.plot(t_ms, data[:, 0] / 1e3, "b-", alpha=0.7, label="Acoustic Input (kPa)")
     ax_ac.plot(t_ms, data[:, 1] / 1e3, "c-", alpha=0.85, label="Waveguide Focus (kPa)")
-    ax_ac.set_title("1. Acoustic Driving & Waveguide Concentration")
+    mat_name = metadata.get("waveguide_material_properties", {}).get("name", "Waveguide")
+    ax_ac.set_title(f"1. Acoustic Drive & Waveguide Concentration ({mat_name})")
     ax_ac.set_xlabel("Time (ms)")
     ax_ac.set_ylabel("Pressure (kPa)")
     ax_ac.legend(loc="upper right")
@@ -68,9 +69,8 @@ def plot_sonoluminescence_multimodal_analysis(
     ax_em = axes[1, 0]
     ax_em.plot(t_ms, data[:, 5], "r-", label="Emission Flash Intensity I_SL(t)")
     ax_em.plot(t_ms, data[:, 6], "orange", linestyle="--", alpha=0.8, label="Collected Optical Signal")
-    ax_em.set_title(
-        f"3. Sonoluminescent Emission ({metadata['optical_emission_parameters']['spectral_center_nm']:.0f} nm UV-Blue)"
-    )
+    center_wl = metadata["optical_emission_parameters"]["spectral_center_nm"]
+    ax_em.set_title(f"3. Sonoluminescent Emission ({center_wl:.1f} nm Multispectral)")
     ax_em.set_xlabel("Time (ms)")
     ax_em.set_ylabel("Normalized Optical Intensity")
     ax_em.legend(loc="upper right")
@@ -121,11 +121,16 @@ def plot_sonoluminescence_multimodal_analysis(
     ax_diag.axis("off")
     ac_p = metadata["acoustic_parameters"]
     wg_p = metadata["waveguide_resonator_parameters"]
+    mat_p = metadata.get("waveguide_material_properties", {})
+    dop_p = metadata.get("dopant_mixture_properties", {})
     cav_p = metadata["cavitation_parameters"]
     tr_p = metadata["transduction_parameters"]
 
     diag_text = (
         "=== SONOLUMINESCENCE / DRR DIAGNOSTICS ===\n\n"
+        f"Waveguide: {mat_p.get('name', 'N/A')} (Cu: {mat_p.get('copper_fraction',0)*100:.1f}%, B: {mat_p.get('boron_fraction',0)*100:.1f}%)\n"
+        f"Acoustic Impedance: {mat_p.get('acoustic_impedance_rayl',0):.2e} Rayl (T_int: {mat_p.get('interface_transmission_coefficient',0):.3f})\n"
+        f"Dopants: {dop_p.get('gas_species','N/A')} ({dop_p.get('gas_fraction',0)*100:.1f}%), Cu: {dop_p.get('copper_solute_fraction',0)*1e6:.0f} ppm, B: {dop_p.get('boron_solute_fraction',0)*1e6:.0f} ppm\n"
         f"Acoustic Drive: {ac_p['frequency_hz']:.1f} Hz (Wavelength: {ac_p['acoustic_wavelength_m']*100:.2f} cm)\n"
         f"Waveguide Q: {wg_p['quality_factor_q']:.1f} | Area Ratio: {wg_p['area_ratio']:.4f}\n"
         f"Geometric Gain: {wg_p['geometric_pressure_gain']:.2f}x | Cavity Gain: {wg_p['cavity_gain']:.2f}x\n"
@@ -147,12 +152,12 @@ def plot_sonoluminescence_multimodal_analysis(
         0.95,
         diag_text,
         transform=ax_diag.transAxes,
-        fontsize=9,
+        fontsize=8.5,
         verticalalignment="top",
         fontfamily="monospace",
         bbox=dict(boxstyle="round,pad=0.5", facecolor="#f8f9fa", edgecolor="#ced4da"),
     )
-    ax_diag.set_title("6. Resonant Coupling & Energy Summary")
+    ax_diag.set_title("6. Resonant Coupling & Material/Dopant Summary")
 
     plt.tight_layout()
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -168,6 +173,7 @@ def main() -> None:
 
     print("============================================================")
     print(" DRR Research Benchmark: Sonoluminescence Resonant System")
+    print(" (With Copper-Boron Waveguide Metallurgy & Solute Doping)")
     print("============================================================")
     print(f"Generating coupled simulation at {sampling_rate:.0f} Hz, {duration*1000:.1f} ms duration...")
 
@@ -178,12 +184,36 @@ def main() -> None:
         input_pressure_pa=60_000.0,
         waveguide_input_diameter_m=0.020,
         waveguide_output_diameter_m=0.004,
-        quality_factor_q=30.0,
+        waveguide_material="copper_boron_alloy",
+        noble_gas_species="argon",
+        noble_gas_fraction=0.01,
+        copper_solute_fraction=0.001,
+        boron_solute_fraction=0.001,
+        quality_factor_q=75.0,
         optical_wavelength_nm=350.0,
         random_state=42,
     )
 
     print(f"Generated {data.shape[0]} samples across {data.shape[1]} channels.")
+    
+    mat_props = metadata.get("waveguide_material_properties", {})
+    print(f"\n--- Waveguide Metallurgy & Acoustic Impedance ---")
+    print(f"  Material: {mat_props.get('name')} (Cu: {mat_props.get('copper_fraction')*100:.1f}%, B: {mat_props.get('boron_fraction')*100:.1f}%)")
+    print(f"  Solid Density: {mat_props.get('solid_density_kg_m3')} kg/m^3 | Sound Speed: {mat_props.get('solid_sound_speed_m_s')} m/s")
+    print(f"  Acoustic Impedance: {mat_props.get('acoustic_impedance_rayl'):.2e} Rayls")
+    print(f"  Interface Transmission Coeff: {mat_props.get('interface_transmission_coefficient'):.4f}")
+
+    dop_props = metadata.get("dopant_mixture_properties", {})
+    print(f"\n--- Cavitation Fluid & Solute/Dopant Mixture ---")
+    print(f"  Carrier: {dop_props.get('carrier_liquid')} | Dissolved Gas: {dop_props.get('gas_species')} ({dop_props.get('gas_fraction')*100:.1f}%)")
+    print(f"  Cu Solute: {dop_props.get('copper_solute_fraction')*1e6:.0f} ppm | B Solute: {dop_props.get('boron_solute_fraction')*1e6:.0f} ppm")
+    print(f"  Effective Density: {dop_props.get('effective_density_kg_m3'):.1f} kg/m^3 | Polytropic Gamma: {dop_props.get('effective_polytropic_index'):.3f}")
+
+    opt_props = metadata.get("optical_emission_parameters", {})
+    print(f"\n--- Multispectral Emission Lines ---")
+    for line in opt_props.get("spectral_lines", []):
+        print(f"  [{line.get('species'):<10}] {line.get('name'):<40}: {line.get('wavelength_nm'):>5.1f} nm (weight={line.get('relative_weight'):.3f})")
+
     print("\nRunning Dynamic Resonance Rooting (DRR) analysis...")
 
     drr = DynamicResonanceRooting(embedding_dim=3, tau=1, sampling_rate=sampling_rate)
@@ -239,6 +269,7 @@ def main() -> None:
         title="DRR Sonoluminescence & Acousto-Opto-Electrical Benchmark",
         metadata={
             "system": "sonoluminescence_acousto_opto_electrical",
+            "material": mat_props.get("name"),
             "sampling_rate_hz": sampling_rate,
             "acoustic_frequency_hz": acoustic_freq_hz,
             "rtei": rtei_metrics["rtei"],

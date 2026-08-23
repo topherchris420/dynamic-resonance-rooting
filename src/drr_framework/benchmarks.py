@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional, Sequence, Tuple
+from typing import Any, Optional, Sequence, Tuple
 
 import numpy as np
 
@@ -148,6 +148,12 @@ class BenchmarkSystems:
         conversion_efficiency: float = 0.25,
         detector_gain: float = 10.0,
         noise_scale: float = 0.005,
+        waveguide_material: Optional[Any] = None,
+        copper_solute_fraction: float = 0.0,
+        boron_solute_fraction: float = 0.0,
+        noble_gas_fraction: float = 0.01,
+        noble_gas_species: str = "argon",
+        dopant_mixture: Optional[Any] = None,
         random_state: Optional[int] = 42,
     ) -> Tuple[np.ndarray, np.ndarray, dict]:
         """Generate sonoluminescence / acousto-opto-electrical benchmark data."""
@@ -170,6 +176,13 @@ class BenchmarkSystems:
             conversion_efficiency=conversion_efficiency,
             detector_gain=detector_gain,
             noise_scale=noise_scale,
+            waveguide_material=waveguide_material,
+            copper_solute_fraction=copper_solute_fraction,
+            boron_solute_fraction=boron_solute_fraction,
+            noble_gas_fraction=noble_gas_fraction,
+            noble_gas_species=noble_gas_species,  # type: ignore[arg-type]
+            dopant_mixture=dopant_mixture,
             random_state=random_state,
         )
+
 
