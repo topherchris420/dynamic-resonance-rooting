@@ -1,13 +1,53 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Glowing Axes</title>
-  <link rel="stylesheet" href="assets/web-demo/style.css">
-</head>
-<body>
-  <div class="axis x-axis"></div>
-  <div class="axis y-axis"></div>
-  <script src="assets/web-demo/script.js"></script>
-</body>
+<!doctype html>
+<html lang="en" class="site-root">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#08111f" />
+    <meta name="description" content="Dynamic Resonance Rooting — a visual field for finding signal in complex systems." />
+    <title>Dynamic Resonance Rooting | Find the signal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="assets/web-demo/style.css" />
+  </head>
+  <body>
+    <div class="ambient-grid" aria-hidden="true"></div>
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="Dynamic Resonance Rooting home">
+        <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
+        <span>DRR<span class="brand-dot">.</span></span>
+      </a>
+      <div class="header-status"><span class="status-dot"></span><span>System online</span></div>
+    </header>
+
+    <main id="top" class="layout">
+      <section class="intro" aria-labelledby="page-title">
+        <p class="eyebrow"><span class="eyebrow-line"></span>Signal mapping / 01</p>
+        <h1 id="page-title">Find the signal<br /><em>inside the noise.</em></h1>
+        <p class="lede">Dynamic Resonance Rooting is a visual field for locating the patterns that hold a complex system together.</p>
+        <div class="actions">
+          <button class="primary-action" id="focus-button" type="button"><span>Enter the field</span><span class="arrow" aria-hidden="true">↗</span></button>
+          <button class="text-action" id="pulse-button" type="button" aria-pressed="false">Pause resonance</button>
+        </div>
+        <div class="metrics" aria-label="Field metrics">
+          <div><strong>02</strong><span>active axes</span></div>
+          <div><strong>∞</strong><span>possible patterns</span></div>
+        </div>
+      </section>
+
+      <section class="field-card" id="field" aria-labelledby="field-title">
+        <div class="field-header"><div><p class="field-kicker">Live visualization</p><h2 id="field-title">Resonance field</h2></div><span class="field-code">DRR / 001</span></div>
+        <div class="field-visual" role="img" aria-label="An animated cyan resonance crosshair on a dark grid">
+          <div class="field-orbit orbit-one"></div><div class="field-orbit orbit-two"></div>
+          <div class="axis x-axis"></div><div class="axis y-axis"></div><div class="signal-point"></div>
+          <span class="axis-label axis-label-x">X / relation</span><span class="axis-label axis-label-y">Y / time</span>
+          <span class="coordinate">0.00 <span>/</span> 0.00</span>
+        </div>
+        <div class="field-footer"><span><span class="legend-swatch"></span>Core frequency</span><span class="mono" id="field-state" aria-live="polite">tracking · 60 fps</span></div>
+      </section>
+    </main>
+    <footer class="site-footer"><span>Dynamic Resonance Rooting</span><span>Observe. Orient. Act.</span></footer>
+    <script src="assets/web-demo/script.js"></script>
+  </body>
 </html>
