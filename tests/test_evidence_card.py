@@ -23,5 +23,8 @@ def test_create_drr_evidence_card():
     assert card.signal_id == "sig_test_001"
     assert card.reproducibility_hash is not None
     assert len(card.reproducibility_hash) == 64  # SHA-256 length
-    assert card.detection_vs_interpretation["detection"] == "Dominant peak at 12.5 Hz detected with p=0.02"
+    assert (
+        card.detection_vs_interpretation["detection"]
+        == "Dominant peak at 12.5 Hz detected with p=0.02"
+    )
     assert "caveat" in card.detection_vs_interpretation

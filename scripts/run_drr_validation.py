@@ -34,12 +34,16 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 logger = logging.getLogger("drr_validation_runner")
 
 
-def run_full_validation_suite(output_dir: str = "results/validation", random_state: int = 42) -> dict:
+def run_full_validation_suite(
+    output_dir: str = "results/validation", random_state: int = 42
+) -> dict:
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
 
     logger.info("1. Running Deterministic Reproduction Experiment...")
-    reproduction_res = run_reproduction_experiment(output_dir=output_path, random_state=random_state)
+    reproduction_res = run_reproduction_experiment(
+        output_dir=output_path, random_state=random_state
+    )
 
     logger.info("2. Running Temporal Out-of-Sample Benchmark Suite...")
     rng = np.random.default_rng(random_state)
@@ -49,11 +53,17 @@ def run_full_validation_suite(output_dir: str = "results/validation", random_sta
 
     logger.info("3. Running Automated Parameter Sensitivity Sweeps...")
     sensitivity_res = run_parameter_sensitivity_experiment(
-        synth_data[:300], sampling_rate=100.0, window_sizes=[32, 64], methods=["welch"], tau_values=[1, 2]
+        synth_data[:300],
+        sampling_rate=100.0,
+        window_sizes=[32, 64],
+        methods=["welch"],
+        tau_values=[1, 2],
     )
 
     logger.info("4. Running Placebo and Null Experiments...")
-    null_res = run_placebo_and_null_tests(n_samples=300, sampling_rate=100.0, random_state=random_state)
+    null_res = run_placebo_and_null_tests(
+        n_samples=300, sampling_rate=100.0, random_state=random_state
+    )
 
     logger.info("5. Generating Supervisory Evidence Card...")
     card = create_drr_evidence_card(
@@ -64,7 +74,10 @@ def run_full_validation_suite(output_dir: str = "results/validation", random_sta
         p_value=0.01,
         effect_size_dict={"resonance_depth": reproduction_res["resonance_depth"]},
         robustness_score=1.0 - sensitivity_res["fragility_score"],
-        benchmark_comparison={"auroc_vs_volatility": oos_res["DRR_Resonance_Depth"]["auroc"] - oos_res["Rolling_Volatility"]["auroc"]},
+        benchmark_comparison={
+            "auroc_vs_volatility": oos_res["DRR_Resonance_Depth"]["auroc"]
+            - oos_res["Rolling_Volatility"]["auroc"]
+        },
         confidence_interval=(
             reproduction_res["resonance_depth_confidence_interval"][0],
             reproduction_res["resonance_depth_confidence_interval"][1],

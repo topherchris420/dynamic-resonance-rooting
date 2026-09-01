@@ -36,27 +36,35 @@ def run_parameter_sensitivity_experiment(
             for tau in tau_values:
                 try:
                     drr = DynamicResonanceRooting(tau=tau, sampling_rate=sampling_rate)
-                    res = drr.analyze_system(data, multivariate=(data.ndim > 1), window_size=w, method=m)
+                    res = drr.analyze_system(
+                        data, multivariate=(data.ndim > 1), window_size=w, method=m
+                    )
                     depths = res.get("resonance_depths", {})
                     avg_depth = float(np.mean(list(depths.values()))) if depths else 0.0
                     base_depths.append(avg_depth)
-                    results.append({
-                        "window_size": w,
-                        "method": m,
-                        "tau": tau,
-                        "avg_resonance_depth": avg_depth,
-                        "is_rooted": bool(res.get("is_rooted", False)),
-                    })
+                    results.append(
+                        {
+                            "window_size": w,
+                            "method": m,
+                            "tau": tau,
+                            "avg_resonance_depth": avg_depth,
+                            "is_rooted": bool(res.get("is_rooted", False)),
+                        }
+                    )
                 except Exception as exc:
-                    results.append({
-                        "window_size": w,
-                        "method": m,
-                        "tau": tau,
-                        "error": str(exc),
-                    })
+                    results.append(
+                        {
+                            "window_size": w,
+                            "method": m,
+                            "tau": tau,
+                            "error": str(exc),
+                        }
+                    )
 
     depth_arr = np.array(base_depths)
-    fragility_score = float(np.std(depth_arr) / (np.mean(depth_arr) + 1e-8)) if len(depth_arr) > 0 else 0.0
+    fragility_score = (
+        float(np.std(depth_arr) / (np.mean(depth_arr) + 1e-8)) if len(depth_arr) > 0 else 0.0
+    )
 
     return {
         "sensitivity_trials": results,
@@ -96,7 +104,9 @@ def run_placebo_and_null_tests(
 
     # Null 3: Decorrelated Multivariate Financial Noise (Independent Series)
     multivariate_null = rng.normal(size=(n_samples, 3))
-    rooting_null = rooting.analyze(multivariate_null, max_lag=2, n_surrogates=20, random_state=random_state)
+    rooting_null = rooting.analyze(
+        multivariate_null, max_lag=2, n_surrogates=20, random_state=random_state
+    )
 
     return {
         "gaussian_noise": {

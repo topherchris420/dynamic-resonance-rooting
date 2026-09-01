@@ -79,6 +79,6 @@ def create_drr_evidence_card(
         detection_vs_interpretation={
             "detection": detection_statement,
             "interpretation": interpretation_statement,
-            "caveat": "Detection of statistical resonance/coupling does not automatically imply economic cause or supervisory failure."
+            "caveat": "Detection of statistical resonance/coupling does not automatically imply economic cause or supervisory failure.",
         },
     )

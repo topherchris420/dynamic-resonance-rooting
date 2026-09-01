@@ -137,22 +137,35 @@ def run_temporal_out_of_sample_benchmark(
             det = detector.detect(series, method="welch", sampling_rate=100.0)
             res_freqs = det.get("dominant_freq", np.array([]))
             depth_res = depth_calc.calculate(
-                series, window_size=min(window_size, len(series)), sampling_rate=100.0, resonance_frequencies=res_freqs
+                series,
+                window_size=min(window_size, len(series)),
+                sampling_rate=100.0,
+                resonance_frequencies=res_freqs,
             )
             drr_scores[t] = float(depth_res["resonance_depth"])
         except Exception:
             drr_scores[t] = 0.0
 
-    vol_scores = BenchmarkSuite.rolling_volatility_indicator(data[:, 0] if data.ndim > 1 else data, window_size)
+    vol_scores = BenchmarkSuite.rolling_volatility_indicator(
+        data[:, 0] if data.ndim > 1 else data, window_size
+    )
     corr_scores = BenchmarkSuite.rolling_correlation_indicator(data, window_size)
     var_scores = BenchmarkSuite.var_granger_proxy(data)
 
     eval_start = window_size
     results = {
-        "DRR_Resonance_Depth": compute_binary_classification_metrics(ground_truth_events[eval_start:], drr_scores[eval_start:]),
-        "Rolling_Volatility": compute_binary_classification_metrics(ground_truth_events[eval_start:], vol_scores[eval_start:]),
-        "Rolling_Correlation": compute_binary_classification_metrics(ground_truth_events[eval_start:], corr_scores[eval_start:]),
-        "VAR_Residual_Variance": compute_binary_classification_metrics(ground_truth_events[eval_start:], var_scores[eval_start:]),
+        "DRR_Resonance_Depth": compute_binary_classification_metrics(
+            ground_truth_events[eval_start:], drr_scores[eval_start:]
+        ),
+        "Rolling_Volatility": compute_binary_classification_metrics(
+            ground_truth_events[eval_start:], vol_scores[eval_start:]
+        ),
+        "Rolling_Correlation": compute_binary_classification_metrics(
+            ground_truth_events[eval_start:], corr_scores[eval_start:]
+        ),
+        "VAR_Residual_Variance": compute_binary_classification_metrics(
+            ground_truth_events[eval_start:], var_scores[eval_start:]
+        ),
     }
 
     return results
