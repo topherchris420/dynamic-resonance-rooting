@@ -69,8 +69,8 @@ class BenchmarkSuite:
             win = data[:t]
             y = win[lag:]
             x_cols = []
-            for l in range(1, lag + 1):
-                x_cols.append(win[lag - l : len(win) - l])
+            for lag_idx in range(1, lag + 1):
+                x_cols.append(win[lag - lag_idx : len(win) - lag_idx])
             X = np.hstack(x_cols)
             # Ordinary least squares
             try:
