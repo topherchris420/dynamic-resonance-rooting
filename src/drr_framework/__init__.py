@@ -11,7 +11,7 @@ License: MIT
 # Lazy import pattern for optional dependencies
 # Core modules that work without optional dependencies
 from .modules import ResonanceDetector, RootingAnalyzer, DepthCalculator, AnomalyDetector
-from .benchmarks import BenchmarkSystems
+from .benchmarks import BenchmarkSystems, generate_micro_doppler_analog
 from .datasets import (
     PolicyResonanceDataset,
     SupervisoryPanelDataset,
@@ -144,6 +144,7 @@ __email__ = "ciao_chris@example.com"
 
 __all__ = [
     "BenchmarkSystems",
+    "generate_micro_doppler_analog",
     "PolicyResonanceDataset",
     "SupervisoryPanelDataset",
     "load_policy_dataset",
