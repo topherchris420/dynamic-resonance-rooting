@@ -69,6 +69,28 @@ prioritize questions, compare institutions with peers, and identify places where
 metric movement deserves source-data review. They should not be written as
 ratings, findings, enforcement recommendations, MRAs, MRIAs, policy decisions,
 or causal claims.
+
+## Sensing-systems analog
+
+The signal-processing architecture in US Patent 8,169,362 B2 ("Mobile Sense
+Through The Wall Radar System", Cook et al., Raytheon, issued 2012) serves as a
+cross-domain benchmark inspiration for DRR's diagnostic pipeline. DRR adapts
+these operations for generalized time-series stress testing across four
+diagnostic categories:
+
+| Sensing System Concept | DRR Method Analog | Diagnostic Role |
+| --- | --- | --- |
+| Range & Doppler compression (2D FFT) | Welch / FFT resonance detection | Extracts dominant oscillatory modes from range-gated multi-channel signals |
+| CFAR adaptive thresholding | Surrogate-based significance testing | Locally adaptive thresholding against noise to identify significant edges |
+| Range-bin correlation matrix | Directed lead-lag rooting analysis | Disambiguates micro-motions (e.g. postural sway) via channel lead-lag transfer entropy |
+| Target tracking across frames | State-space Kalman filtering & smoothing | Fits observable metric transitions and tracks state evolution |
+| Coherent change-detection map | Phase-transition & innovation diagnostics | Detects regime shifts and phase/amplitude drift across windowed returns |
+
+*Caveat & Boundary Language:* This crosswalk represents a research and
+software-engineering analogy only. DRR is not an operational sensing system or
+radar signal processor; domain-specific conclusions require independent field
+and operational validation.
+
 ## Reviewer Checklist
 
 - Are input transformations documented?

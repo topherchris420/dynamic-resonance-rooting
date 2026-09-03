@@ -10,6 +10,107 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 
+def generate_micro_doppler_analog(
+    duration: float = 30.0,
+    sampling_rate: float = 100.0,
+    n_channels: int = 3,
+    target_frequency_hz: float = 0.3,
+    clutter_frequency_hz: float = 0.02,
+    lag: int = 2,
+    regime_change_time: Optional[float] = None,
+    noise_scale: float = 0.05,
+    random_state: Optional[int] = 42,
+) -> Tuple[np.ndarray, np.ndarray, dict]:
+    """Generate multi-channel micro-Doppler radar DSP analog time series.
+
+    Simulates range-gated radar returns as a cross-domain stress test for
+    DRR diagnostics (resonance detection, rooting analysis, resonance depth,
+    and state-space change detection).
+
+    Features:
+    - Strong quasi-static clutter near 0 Hz.
+    - Weak low-frequency target oscillator (e.g., breathing scale) with known lag across channels.
+    - Injected regime change partway through (e.g., standing still -> walking).
+
+    Args:
+        duration: Total duration of signal in seconds.
+        sampling_rate: Sampling frequency in Hz.
+        n_channels: Number of range-bin / sensor channels.
+        target_frequency_hz: Weak target oscillation frequency in Hz (e.g., 0.3 Hz breathing).
+        clutter_frequency_hz: Quasi-static clutter drift frequency near 0 Hz (e.g., 0.02 Hz).
+        lag: Inter-channel sample lag from channel 0 to successive channels.
+        regime_change_time: Time in seconds where regime transition occurs (default: duration / 2).
+        noise_scale: Standard deviation of additive Gaussian noise.
+        random_state: Random seed for reproducible noise generation.
+
+    Returns:
+        Tuple of (t, data, metadata):
+            t: 1D NumPy array of time stamps in seconds.
+            data: (N, n_channels) 2D NumPy array of channel measurements.
+            metadata: Dictionary containing ground-truth parameters.
+    """
+    if duration <= 0:
+        raise ValueError("duration must be positive")
+    if sampling_rate <= 0:
+        raise ValueError("sampling_rate must be positive")
+    if n_channels < 1:
+        raise ValueError("n_channels must be at least 1")
+
+    if regime_change_time is None:
+        regime_change_time = duration / 2.0
+
+    rng = np.random.default_rng(random_state)
+    n_samples = int(duration * sampling_rate)
+    t = np.arange(n_samples) / sampling_rate
+
+    # Generate source breathing target signal
+    source_target = 0.4 * np.sin(2 * np.pi * target_frequency_hz * t)
+
+    # Injected regime change: standing still -> walking (stride frequency ~1.8 Hz)
+    walking_mask = (t >= regime_change_time).astype(float)
+    walking_component = 1.2 * np.sin(2 * np.pi * 1.8 * t) * walking_mask
+
+    data = np.zeros((n_samples, n_channels))
+
+    for c in range(n_channels):
+        # Quasi-static clutter (strong offset/drift near 0 Hz)
+        clutter = 3.0 * np.cos(2 * np.pi * clutter_frequency_hz * t + (c * 0.1)) + 1.5 * (c + 1)
+
+        # Lagged target signal for channel c
+        c_lag = c * lag
+        if c_lag > 0:
+            target_c = np.roll(source_target, c_lag)
+            target_c[:c_lag] = 0.0
+            walking_c = np.roll(walking_component, c_lag)
+            walking_c[:c_lag] = 0.0
+        else:
+            target_c = source_target
+            walking_c = walking_component
+
+        # Add Gaussian noise
+        noise = rng.normal(scale=noise_scale, size=n_samples)
+
+        data[:, c] = clutter + target_c + walking_c + noise
+
+    metadata = {
+        "benchmark_system": "micro_doppler_sensing_analog",
+        "sampling_rate_hz": sampling_rate,
+        "duration_seconds": duration,
+        "n_samples": n_samples,
+        "n_channels": n_channels,
+        "target_frequency_hz": target_frequency_hz,
+        "clutter_frequency_hz": clutter_frequency_hz,
+        "walking_stride_frequency_hz": 1.8,
+        "inter_channel_lag_samples": lag,
+        "regime_change_time_seconds": regime_change_time,
+        "noise_scale": noise_scale,
+        "channel_names": [f"channel_{c}" for c in range(n_channels)],
+        "regimes": ["standing_still", "walking"],
+    }
+
+    return t, data, metadata
+
+
 class BenchmarkSystems:
     """Factory methods for canonical dynamical-system benchmark data."""
 
@@ -182,5 +283,31 @@ class BenchmarkSystems:
             noble_gas_fraction=noble_gas_fraction,
             noble_gas_species=noble_gas_species,  # type: ignore[arg-type]
             dopant_mixture=dopant_mixture,
+            random_state=random_state,
+        )
+
+    @staticmethod
+    def generate_micro_doppler_analog(
+        duration: float = 30.0,
+        sampling_rate: float = 100.0,
+        n_channels: int = 3,
+        target_frequency_hz: float = 0.3,
+        clutter_frequency_hz: float = 0.02,
+        lag: int = 2,
+        regime_change_time: Optional[float] = None,
+        noise_scale: float = 0.05,
+        random_state: Optional[int] = 42,
+    ) -> Tuple[np.ndarray, np.ndarray, dict]:
+        """Generate micro-Doppler sensing analog benchmark data."""
+        logger.info("Generating Micro-Doppler sensing analog benchmark data")
+        return generate_micro_doppler_analog(
+            duration=duration,
+            sampling_rate=sampling_rate,
+            n_channels=n_channels,
+            target_frequency_hz=target_frequency_hz,
+            clutter_frequency_hz=clutter_frequency_hz,
+            lag=lag,
+            regime_change_time=regime_change_time,
+            noise_scale=noise_scale,
             random_state=random_state,
         )

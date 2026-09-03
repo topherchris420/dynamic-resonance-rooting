@@ -37,6 +37,16 @@ python examples/supervisory_policy_lab.py
 Builds an institution panel, compares institution and peer-group diagnostics,
 writes validation-readiness packets, and exports Tableau-ready CSVs.
 
+## Sensing Systems Resonance Depth Example
+
+```bash
+python examples/sensing_systems_resonance_depth.py
+```
+
+Generates multi-channel micro-Doppler radar DSP analog time series, runs DRR system
+analysis across all four diagnostic categories, plots multi-channel traces and
+regime shift onset, and exports JSON/CSV summary artifacts under `results/sensing_systems/`.
+
 ## Reproduction Harness
 
 ```bash
