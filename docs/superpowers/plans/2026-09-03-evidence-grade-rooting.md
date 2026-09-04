@@ -113,6 +113,7 @@ Run: `python -m pytest tests/test_drr_framework.py tests/test_audience_workflows
 ### Task 3: Documentation and end-to-end validation
 
 **Files:**
+- Modify: `src/drr_framework/analysis.py` (public method docstrings only)
 - Modify: `README.md`
 - Modify: `docs/api.md`
 - Modify: `docs/architecture.md`
@@ -123,9 +124,11 @@ Run: `python -m pytest tests/test_drr_framework.py tests/test_audience_workflows
 - Consumes: the final public signatures and result schema from Tasks 1 and 2.
 - Produces: accurate user guidance for backend selection, candidate versus significant edges, surrogate resolution, and reproducible configuration.
 
+Controller ruling from Task 2 review: documentation includes the `analyze_system` and `analyze_influence_network` docstrings so the public signatures are self-describing.
+
 - [ ] **Step 1: Update the quick-start and API documentation**
 
-Show a multivariate call that explicitly sets `rooting_method`, `rooting_n_surrogates`, and `rooting_random_state`. Document `score_matrix`, the legacy alias, raw and adjusted p-values, candidate edges, significant edges, and the zero-surrogate semantics.
+Document all seven rooting options in both public method docstrings. Show a multivariate call that explicitly sets `rooting_method`, `rooting_n_surrogates`, and `rooting_random_state`. Document `score_matrix`, the legacy alias, raw and adjusted p-values, candidate edges, significant edges, and the zero-surrogate semantics.
 
 - [ ] **Step 2: Update architecture and reproducibility guidance**
 
