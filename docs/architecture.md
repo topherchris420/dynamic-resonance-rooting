@@ -123,8 +123,9 @@ flowchart TD
 - The rooting result separates exploratory `candidate_edges` from
   `significant_edges`, and the public graph includes significant edges only.
 - Circular-shift surrogates are the default null model. They preserve each
-  series' marginal distribution and autocorrelation, but they are not a good
-  fit for strongly nonstationary series.
+  series' marginal distribution and cyclic ordering, and they approximately
+  preserve within-series dependence for reasonably stationary series. They are
+  not a good fit for strongly nonstationary series.
 - State-space diagnostics are Python-native and inspired by modeling discipline,
   not a copy of external DSGE implementations.
 - Supervisory workflows are validation-ready artifacts, not validated

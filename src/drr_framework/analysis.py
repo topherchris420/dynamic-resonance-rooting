@@ -199,8 +199,9 @@ class DynamicResonanceRooting:
 
         Args:
             rooting_method: Rooting backend to use. ``"lagged_correlation"`` is
-                the deterministic default, and ``"transfer_entropy"`` is still
-                accepted when ``pyinform`` is available.
+                the deterministic default. ``"transfer_entropy"`` requests
+                transfer entropy, uses it when ``pyinform`` is available, and
+                otherwise falls back to lagged correlation.
             rooting_max_lag: Maximum lag to search. ``None`` resolves to
                 ``max(1, tau)``.
             rooting_n_surrogates: Number of surrogate draws to use for
@@ -220,7 +221,8 @@ class DynamicResonanceRooting:
             compatibility alias ``transfer_entropy``, raw and adjusted p-values,
             exploratory ``candidate_edges``, selected ``significant_edges``, the
             effective correction, the surrogate method, and
-            ``minimum_attainable_p_value``. When ``n_surrogates == 0``, the
+            ``minimum_attainable_p_value``. The returned ``method`` names the
+            effective backend actually used. When ``n_surrogates == 0``, the
             off-diagonal p-values are ``NaN``, ``inference_available`` is false,
             and the graph may be empty even if candidate edges exist.
         """
@@ -297,7 +299,9 @@ class DynamicResonanceRooting:
                 ('fft', 'welch', 'wavelet', or 'markov')
             peak_height_ratio (float): Ratio of max power for peak detection
             rooting_method (str): Rooting backend to use for multivariate runs.
-                ``"lagged_correlation"`` is the default.
+                ``"lagged_correlation"`` is the default. ``"transfer_entropy"``
+                requests transfer entropy, uses it when ``pyinform`` is
+                available, and otherwise falls back to lagged correlation.
             rooting_max_lag (Optional[int]): Maximum lag to search for rooting
                 analysis. ``None`` resolves to ``max(1, tau)``.
             rooting_n_surrogates (int): Number of surrogate draws used for
@@ -328,9 +332,10 @@ class DynamicResonanceRooting:
             alias. It also includes raw and adjusted p-values, exploratory
             ``candidate_edges``, selected ``significant_edges``, the correction
             mode, surrogate method, surrogate count, and
-            ``minimum_attainable_p_value``. If rooting fails inside the facade,
-            ``rooting_analysis`` contains a structured error record instead of
-            being omitted.
+            ``minimum_attainable_p_value``. The returned ``method`` names the
+            effective backend actually used. If rooting fails inside the
+            facade, ``rooting_analysis`` contains a structured error record
+            instead of being omitted.
         """
         results: Dict[str, object] = {}
 

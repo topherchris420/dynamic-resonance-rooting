@@ -40,9 +40,10 @@ That configuration gives a minimum attainable p-value of `1 / 26`
 selected p-value test.
 
 Circular-shift surrogates preserve each series' marginal distribution and
-autocorrelation structure. They are a good default for the current fixture, but
-they are not a good null model for strongly nonstationary series. If your data
-drifts hard over time, use a different null model.
+cyclic ordering, and they approximately preserve within-series dependence for
+reasonably stationary series. They are a good default for the current fixture,
+but they are not a good null model for strongly nonstationary series. If your
+data drifts hard over time, use a different null model.
 
 ## Random Seeds
 
