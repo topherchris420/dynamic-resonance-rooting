@@ -312,3 +312,91 @@ def test_analyze_system_propagates_errors():
     drr = DynamicResonanceRooting(embedding_dim=3, tau=2)
     with pytest.raises(ValueError, match="too short"):
         drr.analyze_system(np.array([1.0, 2.0]))
+
+
+def test_analyze_system_exposes_public_rooting_configuration():
+    from drr_framework.analysis import DynamicResonanceRooting
+
+    rng = np.random.default_rng(11)
+    source = rng.normal(size=256)
+    target = np.zeros_like(source)
+    target[2:] = 0.9 * source[:-2] + 0.05 * rng.normal(size=254)
+    target[:2] = 0.05 * rng.normal(size=2)
+    nuisance = rng.normal(size=256)
+    data = np.column_stack([source, target, nuisance])
+
+    drr = DynamicResonanceRooting(embedding_dim=3, tau=2, sampling_rate=100.0)
+    results = drr.analyze_system(
+        data,
+        multivariate=True,
+        window_size=128,
+        state_space=False,
+        rooting_method="lagged_correlation",
+        rooting_max_lag=3,
+        rooting_n_surrogates=19,
+        rooting_random_state=17,
+        rooting_alpha=0.10,
+        rooting_surrogate_method="circular_shift",
+        rooting_correction="max_statistic",
+    )
+
+    rooting = results["rooting_analysis"]
+    assert rooting["method"] == "lagged_correlation"
+    assert rooting["n_surrogates"] == 19
+    assert rooting["alpha"] == pytest.approx(0.10)
+    assert rooting["surrogate_method"] == "circular_shift"
+    assert rooting["correction"] == "max_statistic"
+
+
+def test_analyze_influence_network_does_not_promote_candidate_edges(monkeypatch):
+    from drr_framework.analysis import DynamicResonanceRooting
+
+    drr = DynamicResonanceRooting()
+    drr.phase_space = np.column_stack([np.linspace(0.0, 1.0, 10), np.linspace(1.0, 0.0, 10)])
+
+    def fake_analyze(*args, **kwargs):
+        scores = np.array([[0.0, 0.8], [0.2, 0.0]])
+        return {
+            "method": "lagged_correlation",
+            "score_matrix": scores,
+            "transfer_entropy": scores,
+            "effective_lag": np.array([[0, 1], [1, 0]]),
+            "p_values": np.array([[1.0, 0.4], [0.6, 1.0]]),
+            "adjusted_p_values": np.array([[1.0, 0.4], [0.6, 1.0]]),
+            "alpha": 0.05,
+            "edge_threshold": 0.5,
+            "candidate_edges": [{"source": "dim_0", "target": "dim_1", "weight": 0.8, "lag": 1}],
+            "significant_edges": [],
+            "correction": "max_statistic",
+            "surrogate_method": "circular_shift",
+            "n_surrogates": 25,
+            "minimum_attainable_p_value": 1.0 / 26.0,
+            "inference_available": True,
+        }
+
+    monkeypatch.setattr(drr.rooting_analyzer, "analyze", fake_analyze)
+
+    network = drr.analyze_influence_network()
+
+    assert network is not None
+    assert network.number_of_edges() == 0
+
+
+def test_analyze_system_surfaces_rooting_failures(monkeypatch):
+    from drr_framework.analysis import DynamicResonanceRooting
+
+    rng = np.random.default_rng(5)
+    data = rng.normal(size=(128, 2))
+    drr = DynamicResonanceRooting()
+
+    def failing_analyze(*args, **kwargs):
+        raise ValueError("rooting failed")
+
+    monkeypatch.setattr(drr.rooting_analyzer, "analyze", failing_analyze)
+
+    results = drr.analyze_system(data, multivariate=True, state_space=False)
+
+    assert results["rooting_analysis"] == {
+        "error": "rooting failed",
+        "method": "lagged_correlation",
+    }

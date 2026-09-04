@@ -183,7 +183,17 @@ class DynamicResonanceRooting:
         self.resonance_depth_details = details
         return depths
 
-    def analyze_influence_network(self) -> Optional[nx.DiGraph]:
+    def analyze_influence_network(
+        self,
+        *,
+        rooting_method: str = "lagged_correlation",
+        rooting_max_lag: Optional[int] = None,
+        rooting_n_surrogates: int = 25,
+        rooting_random_state: Optional[int] = 0,
+        rooting_alpha: float = 0.05,
+        rooting_surrogate_method: str = "circular_shift",
+        rooting_correction: str = "max_statistic",
+    ) -> Optional[nx.DiGraph]:
         """
         Analyze directed relationships between system components.
 
@@ -195,43 +205,41 @@ class DynamicResonanceRooting:
             return None
 
         try:
+            max_lag = max(1, self.tau) if rooting_max_lag is None else rooting_max_lag
             rooting_results = self.rooting_analyzer.analyze(
                 self.phase_space,
-                max_lag=max(1, self.tau),
-                n_surrogates=25,
-                random_state=0,
+                max_lag=max_lag,
+                n_surrogates=rooting_n_surrogates,
+                random_state=rooting_random_state,
+                alpha=rooting_alpha,
+                method=rooting_method,
+                surrogate_method=rooting_surrogate_method,
+                correction=rooting_correction,
             )
             self.rooting_results = rooting_results
-            te_matrix = rooting_results["transfer_entropy"]
+            score_matrix = rooting_results["score_matrix"]
 
             G = nx.DiGraph()
-            n_dims = te_matrix.shape[0]
+            n_dims = score_matrix.shape[0]
 
             for i in range(n_dims):
                 G.add_node(f"dim_{i}")
 
-            if rooting_results.get("significant_edges"):
-                for edge in rooting_results["significant_edges"]:
-                    G.add_edge(
-                        edge["source"],
-                        edge["target"],
-                        weight=edge["weight"],
-                        p_value=edge["p_value"],
-                        lag=edge["lag"],
-                    )
-            else:
-                threshold = rooting_results.get(
-                    "edge_threshold", float(np.mean(te_matrix) + np.std(te_matrix))
+            for edge in rooting_results["significant_edges"]:
+                G.add_edge(
+                    edge["source"],
+                    edge["target"],
+                    weight=edge["weight"],
+                    p_value=edge["p_value"],
+                    adjusted_p_value=edge["adjusted_p_value"],
+                    lag=edge["lag"],
                 )
-                for i in range(n_dims):
-                    for j in range(n_dims):
-                        if i != j and te_matrix[i, j] > threshold:
-                            G.add_edge(f"dim_{i}", f"dim_{j}", weight=te_matrix[i, j])
 
             self.influence_network = G
             return G
 
         except Exception as e:
+            self.rooting_results = {"error": str(e), "method": rooting_method}
             logger.error("Error in influence network analysis: %s", e)
             return None
 
@@ -244,6 +252,13 @@ class DynamicResonanceRooting:
         state_space_horizon: int = 12,
         method: str = "fft",
         peak_height_ratio: float = 0.1,
+        rooting_method: str = "lagged_correlation",
+        rooting_max_lag: Optional[int] = None,
+        rooting_n_surrogates: int = 25,
+        rooting_random_state: Optional[int] = 0,
+        rooting_alpha: float = 0.05,
+        rooting_surrogate_method: str = "circular_shift",
+        rooting_correction: str = "max_statistic",
     ) -> Dict[str, object]:
         """
         Perform complete DRR analysis on system data.
@@ -285,9 +300,19 @@ class DynamicResonanceRooting:
             # Step 3: Analyze influence network (if multivariate)
             if multivariate and data.ndim > 1:
                 logger.info("Analyzing influence network...")
-                network = self.analyze_influence_network()
+                self.rooting_results = {}
+                network = self.analyze_influence_network(
+                    rooting_method=rooting_method,
+                    rooting_max_lag=rooting_max_lag,
+                    rooting_n_surrogates=rooting_n_surrogates,
+                    rooting_random_state=rooting_random_state,
+                    rooting_alpha=rooting_alpha,
+                    rooting_surrogate_method=rooting_surrogate_method,
+                    rooting_correction=rooting_correction,
+                )
                 if network is not None:
                     results["influence_network"] = network
+                if self.rooting_results:
                     results["rooting_analysis"] = self.rooting_results
 
             # Step 4: Fit DSGE-inspired state-space diagnostics
