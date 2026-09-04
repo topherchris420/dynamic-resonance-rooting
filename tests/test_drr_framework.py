@@ -70,6 +70,17 @@ def test_rooting_analyzer():
     assert result["transfer_entropy"].shape == (2, 2)
 
 
+def test_rooting_analyzer_validates_inference_configuration():
+    data = np.random.default_rng(0).normal(size=(50, 2))
+    analyzer = RootingAnalyzer()
+
+    with pytest.raises(ValueError, match="surrogate_method"):
+        analyzer.analyze(data, surrogate_method="bootstrap")
+
+    with pytest.raises(ValueError, match="correction"):
+        analyzer.analyze(data, correction="bonferroni")
+
+
 def test_lagged_correlation_matches_naive_reference():
     """
     The vectorized lagged-correlation scores must match a per-pair

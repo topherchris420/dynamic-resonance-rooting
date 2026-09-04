@@ -77,6 +77,63 @@ def test_rooting_analyzer_reports_method_lags_p_values_and_edges():
     )
 
 
+def test_rooting_without_surrogates_does_not_fabricate_significance():
+    rng = np.random.default_rng(11)
+    source = rng.normal(size=200)
+    target = np.roll(source, 2)
+    result = RootingAnalyzer().analyze(np.column_stack([source, target]), n_surrogates=0)
+
+    assert result["inference_available"] is False
+    assert np.isnan(result["p_values"][0, 1])
+    assert np.isnan(result["adjusted_p_values"][0, 1])
+    assert result["significant_edges"] == []
+    assert result["candidate_edges"]
+    assert result["score_matrix"] is result["transfer_entropy"]
+
+
+def test_rooting_analyzer_reports_corrected_surrogate_inference():
+    rng = np.random.default_rng(7)
+    n = 500
+    source = rng.normal(size=n)
+    target = np.roll(source, 2) + 0.15 * rng.normal(size=n)
+    target[:2] = rng.normal(size=2)
+    independent = rng.normal(size=n)
+    data = np.column_stack([source, target, independent])
+
+    result = RootingAnalyzer().analyze(
+        data,
+        max_lag=4,
+        n_surrogates=49,
+        random_state=7,
+        alpha=0.05,
+        surrogate_method="circular_shift",
+        correction="max_statistic",
+    )
+
+    assert result["method"] in {"transfer_entropy", "lagged_correlation"}
+    assert result["score_matrix"].shape == (3, 3)
+    assert result["transfer_entropy"].shape == (3, 3)
+    assert result["p_values"].shape == (3, 3)
+    assert result["adjusted_p_values"].shape == (3, 3)
+    assert result["effective_lag"].shape == (3, 3)
+    assert result["inference_available"] is True
+    assert result["surrogate_method"] == "circular_shift"
+    assert result["correction"] == "max_statistic"
+    assert result["n_surrogates"] == 49
+    assert result["minimum_attainable_p_value"] == 1.0 / 50.0
+    assert result["effective_lag"][0, 1] == 2
+
+    finite_off_diagonal = ~np.eye(3, dtype=bool) & np.isfinite(result["p_values"])
+    assert np.all(result["adjusted_p_values"][finite_off_diagonal] >= result["p_values"][finite_off_diagonal])
+    assert any(
+        edge["source"] == "dim_0"
+        and edge["target"] == "dim_1"
+        and edge["lag"] == 2
+        and edge["adjusted_p_value"] <= 0.05
+        for edge in result["significant_edges"]
+    )
+
+
 def test_reproduction_experiment_writes_research_artifacts(tmp_path):
     from drr_framework.validation import run_reproduction_experiment
 

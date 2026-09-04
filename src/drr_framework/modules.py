@@ -342,12 +342,19 @@ class RootingAnalyzer:
         random_state: Optional[int] = None,
         alpha: float = 0.05,
         method: str = "lagged_correlation",
+        surrogate_method: str = "circular_shift",
+        correction: str = "max_statistic",
     ) -> dict:
         """Estimate directed lead-lag rooting scores among variables.
 
         The default path uses deterministic lagged correlation. If ``method`` is
         ``transfer_entropy`` and ``pyinform`` is available, the analyzer uses that
         backend and otherwise reports the fallback method explicitly.
+
+        Surrogate inference uses either an independent circular-shift null
+        (default) or the legacy permutation null. Raw empirical p-values are
+        always reported, alongside max-statistic adjusted p-values for family-wise
+        control across all directed edges.
         """
 
         if data.ndim != 2 or data.shape[1] < 2:
@@ -358,43 +365,64 @@ class RootingAnalyzer:
             raise ValueError("n_surrogates must be non-negative")
         if not 0 < alpha < 1:
             raise ValueError("alpha must be in the interval (0, 1)")
+        if surrogate_method not in {"circular_shift", "permutation"}:
+            raise ValueError("surrogate_method must be 'circular_shift' or 'permutation'")
+        if correction not in {"max_statistic", "none"}:
+            raise ValueError("correction must be 'max_statistic' or 'none'")
 
         data = np.asarray(data, dtype=float)
         if not np.all(np.isfinite(data)):
             raise ValueError("data contains non-finite values")
 
-        if method == "transfer_entropy" and PYINFORM_AVAILABLE:
-            scores, effective_lag = self._transfer_entropy_scores(data, max_lag)
-            method_used = "transfer_entropy"
-        else:
-            if method == "transfer_entropy" and not PYINFORM_AVAILABLE:
-                logger.info("pyinform unavailable; using lagged correlation rooting")
-            scores, effective_lag = self._lagged_correlation_scores(data, max_lag)
-            method_used = "lagged_correlation"
+        scores, effective_lag, method_used = self._score_matrix(data, max_lag, method)
 
-        p_values = self._surrogate_p_values(
+        p_values, adjusted_p_values = self._surrogate_statistics(
             data=data,
             observed=scores,
             max_lag=max_lag,
             n_surrogates=n_surrogates,
             random_state=random_state,
             method_used=method_used,
+            surrogate_method=surrogate_method,
         )
         edge_threshold = float(np.mean(scores) + np.std(scores))
+        candidate_edges = self._candidate_edges(scores, effective_lag, edge_threshold)
         significant_edges = self._significant_edges(
-            scores, p_values, effective_lag, alpha, edge_threshold
+            candidate_edges=candidate_edges,
+            p_values=p_values,
+            adjusted_p_values=adjusted_p_values,
+            alpha=alpha,
+            correction=correction,
         )
 
         return {
             "method": method_used,
+            "score_matrix": scores,
             "transfer_entropy": scores,
             "effective_lag": effective_lag,
             "p_values": p_values,
+            "adjusted_p_values": adjusted_p_values,
             "alpha": alpha,
             "edge_threshold": edge_threshold,
+            "candidate_edges": candidate_edges,
             "significant_edges": significant_edges,
-            "correction": "uncorrected_surrogate_p_value",
+            "correction": correction,
+            "surrogate_method": surrogate_method,
+            "n_surrogates": n_surrogates,
+            "minimum_attainable_p_value": 1.0 / (n_surrogates + 1.0),
+            "inference_available": n_surrogates > 0,
         }
+
+    def _score_matrix(
+        self, data: np.ndarray, max_lag: int, method: str
+    ) -> Tuple[np.ndarray, np.ndarray, str]:
+        if method == "transfer_entropy" and PYINFORM_AVAILABLE:
+            scores, effective_lag = self._transfer_entropy_scores(data, max_lag)
+            return scores, effective_lag, "transfer_entropy"
+        if method == "transfer_entropy" and not PYINFORM_AVAILABLE:
+            logger.info("pyinform unavailable; using lagged correlation rooting")
+        scores, effective_lag = self._lagged_correlation_scores(data, max_lag)
+        return scores, effective_lag, "lagged_correlation"
 
     def _lagged_correlation_scores(
         self, data: np.ndarray, max_lag: int
@@ -456,7 +484,7 @@ class RootingAnalyzer:
                 effective_lag[source, target] = best_lag
         return scores, effective_lag
 
-    def _surrogate_p_values(
+    def _surrogate_statistics(
         self,
         data: np.ndarray,
         observed: np.ndarray,
@@ -464,39 +492,61 @@ class RootingAnalyzer:
         n_surrogates: int,
         random_state: Optional[int],
         method_used: str,
-    ) -> np.ndarray:
-        p_values = np.ones_like(observed, dtype=float)
+        surrogate_method: str,
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        p_values = np.full_like(observed, np.nan, dtype=float)
+        adjusted_p_values = np.full_like(observed, np.nan, dtype=float)
+        np.fill_diagonal(p_values, 1.0)
+        np.fill_diagonal(adjusted_p_values, 1.0)
         if n_surrogates == 0:
-            off_diag = observed[~np.eye(observed.shape[0], dtype=bool)]
-            threshold = float(np.mean(off_diag) + np.std(off_diag)) if off_diag.size else 0.0
-            p_values[(observed > threshold) & (observed > 0)] = 0.0
-            return p_values
+            return p_values, adjusted_p_values
 
         rng = np.random.default_rng(random_state)
-        n_variables = data.shape[1]
         exceedances = np.zeros_like(observed, dtype=float)
+        max_exceedances = np.zeros_like(observed, dtype=float)
+        off_diagonal = ~np.eye(observed.shape[0], dtype=bool)
 
         for _ in range(n_surrogates):
-            surrogate = data.copy()
-            for source in range(n_variables):
-                surrogate[:, source] = rng.permutation(surrogate[:, source])
-            if method_used == "transfer_entropy" and PYINFORM_AVAILABLE:
-                surrogate_scores, _ = self._transfer_entropy_scores(surrogate, max_lag)
-            else:
-                surrogate_scores, _ = self._lagged_correlation_scores(surrogate, max_lag)
+            surrogate = self._generate_surrogate(data, max_lag, rng, surrogate_method)
+            surrogate_scores, _, _ = self._score_matrix(surrogate, max_lag, method_used)
             exceedances += surrogate_scores >= observed
+            family_max = float(np.max(surrogate_scores[off_diagonal])) if np.any(off_diagonal) else 0.0
+            max_exceedances += family_max >= observed
 
         p_values = (exceedances + 1.0) / (n_surrogates + 1.0)
+        adjusted_p_values = (max_exceedances + 1.0) / (n_surrogates + 1.0)
         np.fill_diagonal(p_values, 1.0)
-        return p_values
+        np.fill_diagonal(adjusted_p_values, 1.0)
+        return p_values, adjusted_p_values
 
-    def _significant_edges(
+    def _generate_surrogate(
         self,
-        scores: np.ndarray,
-        p_values: np.ndarray,
-        effective_lag: np.ndarray,
-        alpha: float,
-        edge_threshold: float,
+        data: np.ndarray,
+        max_lag: int,
+        rng: np.random.Generator,
+        surrogate_method: str,
+    ) -> np.ndarray:
+        surrogate = data.copy()
+        n_samples, n_variables = surrogate.shape
+
+        if surrogate_method == "permutation":
+            for index in range(n_variables):
+                surrogate[:, index] = rng.permutation(surrogate[:, index])
+            return surrogate
+
+        valid_offsets = np.arange(max_lag + 1, max(n_samples - max_lag, max_lag + 1), dtype=int)
+        if valid_offsets.size == 0:
+            valid_offsets = np.arange(1, n_samples, dtype=int)
+        if valid_offsets.size == 0:
+            return surrogate
+
+        for index in range(n_variables):
+            shift = int(rng.choice(valid_offsets))
+            surrogate[:, index] = np.roll(surrogate[:, index], shift)
+        return surrogate
+
+    def _candidate_edges(
+        self, scores: np.ndarray, effective_lag: np.ndarray, edge_threshold: float
     ) -> List[Dict[str, object]]:
         edges: List[Dict[str, object]] = []
         n_variables = scores.shape[0]
@@ -505,18 +555,44 @@ class RootingAnalyzer:
                 if source == target:
                     continue
                 score = float(scores[source, target])
-                p_value = float(p_values[source, target])
-                if score > edge_threshold and p_value <= alpha:
+                if score > edge_threshold:
                     edges.append(
                         {
                             "source": f"dim_{source}",
                             "target": f"dim_{target}",
                             "weight": score,
-                            "p_value": p_value,
                             "lag": int(effective_lag[source, target]),
                         }
                     )
         edges.sort(key=lambda edge: float(cast(float, edge["weight"])), reverse=True)
+        return edges
+
+    def _significant_edges(
+        self,
+        candidate_edges: List[Dict[str, object]],
+        p_values: np.ndarray,
+        adjusted_p_values: np.ndarray,
+        alpha: float,
+        correction: str,
+    ) -> List[Dict[str, object]]:
+        edges: List[Dict[str, object]] = []
+        for edge in candidate_edges:
+            source = int(str(cast(str, edge["source"])).split("_")[1])
+            target = int(str(cast(str, edge["target"])).split("_")[1])
+            p_value = float(p_values[source, target])
+            adjusted_p_value = float(adjusted_p_values[source, target])
+            selected_p_value = adjusted_p_value if correction == "max_statistic" else p_value
+            if np.isfinite(selected_p_value) and selected_p_value <= alpha:
+                edges.append(
+                    {
+                        "source": edge["source"],
+                        "target": edge["target"],
+                        "weight": edge["weight"],
+                        "p_value": p_value,
+                        "adjusted_p_value": adjusted_p_value,
+                        "lag": edge["lag"],
+                    }
+                )
         return edges
 
     def _discretize_data(self, data: np.ndarray, n_bins: int = 10) -> np.ndarray:
