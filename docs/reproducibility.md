@@ -9,6 +9,10 @@ compare a clean checkout against expected artifacts.
 python -m drr_framework.experiments --output-dir results/reproduction
 ```
 
+For a smoke run that prints the summary without writing artifacts, add
+`--no-artifacts`. When you do want files, point `--output-dir` at a temporary
+directory so the run stays isolated from the working tree.
+
 Expected files:
 
 - `results/reproduction/drr_reproduction_summary.json`
@@ -19,6 +23,26 @@ The harness uses a synthetic coupled oscillator with:
 - Known dominant frequency: `12.5 Hz`
 - Known directed edge: `dim_0 -> dim_1`
 - Expected lag: `2` samples
+
+## Rooting Configuration
+
+The public rooting path is deterministic when you keep the default settings:
+
+- `rooting_method="lagged_correlation"`
+- `rooting_n_surrogates=25`
+- `rooting_random_state=0`
+- `rooting_surrogate_method="circular_shift"`
+- `rooting_correction="max_statistic"`
+
+That configuration gives a minimum attainable p-value of `1 / 26`
+(`~0.0385`). The returned `candidate_edges` list is exploratory, while
+`significant_edges` and the influence graph only include edges that survive the
+selected p-value test.
+
+Circular-shift surrogates preserve each series' marginal distribution and
+autocorrelation structure. They are a good default for the current fixture, but
+they are not a good null model for strongly nonstationary series. If your data
+drifts hard over time, use a different null model.
 
 ## Random Seeds
 

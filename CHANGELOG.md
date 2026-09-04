@@ -49,6 +49,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Vectorized lagged-correlation rooting scores (one cross-correlation matrix per
   lag instead of a `corrcoef` call per variable pair), speeding up
   `RootingAnalyzer.analyze` and its surrogate testing by ~6x on typical panels
+- Rooting now separates exploratory `candidate_edges` from statistically
+  significant edges, exposes `score_matrix` as the canonical rooting matrix
+  with `transfer_entropy` as a compatibility alias, and defaults to
+  circular-shift surrogates with max-statistic correction so the graph only
+  shows edges that survive the stated test
 - Recalibrated the QBist agent likelihood: the logistic is now centered at a
   resonance depth of 0.5 (depth 0 → 0.1, depth 1 → 0.9), so shallow resonances
   lower the belief instead of leaving it stuck at or above the prior

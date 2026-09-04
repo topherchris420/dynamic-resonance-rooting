@@ -22,11 +22,39 @@ Important methods:
   `"wavelet"`, or `"markov"`.
 - `calculate_resonance_depths(window_size=100)`: compute scalar depth values and
   store component details.
-- `analyze_influence_network()`: build a directed NetworkX graph from rooting
-  scores for multivariate data.
+- `analyze_influence_network(... rooting_method="lagged_correlation",
+  rooting_max_lag=None, rooting_n_surrogates=25, rooting_random_state=0,
+  rooting_alpha=0.05, rooting_surrogate_method="circular_shift",
+  rooting_correction="max_statistic")`: build a directed NetworkX graph from
+  significant rooting edges only. The full rooting payload remains in
+  `self.rooting_results`.
 - `analyze_system(data, multivariate=False, window_size=100, state_space=True,
-  method="fft", peak_height_ratio=0.1)`: run the end-to-end DRR workflow with
-  the chosen spectral method.
+  method="fft", peak_height_ratio=0.1, rooting_method="lagged_correlation",
+  rooting_max_lag=None, rooting_n_surrogates=25, rooting_random_state=0,
+  rooting_alpha=0.05, rooting_surrogate_method="circular_shift",
+  rooting_correction="max_statistic")`: run the end-to-end DRR workflow with
+  the chosen spectral method and rooting configuration. For multivariate
+  inputs, the returned `rooting_analysis` includes `score_matrix`, the
+  compatibility alias `transfer_entropy`, raw and adjusted p-values,
+  `candidate_edges`, `significant_edges`, `minimum_attainable_p_value`, and
+  `inference_available`. If rooting fails, the facade stores a structured error
+  record instead of omitting the section.
+
+```python
+from drr_framework import DynamicResonanceRooting
+
+drr = DynamicResonanceRooting(embedding_dim=3, tau=2, sampling_rate=200.0)
+results = drr.analyze_system(
+    data,
+    multivariate=True,
+    window_size=256,
+    rooting_method="lagged_correlation",
+    rooting_n_surrogates=25,
+    rooting_random_state=42,
+)
+print(results["rooting_analysis"]["candidate_edges"])
+print(results["rooting_analysis"]["significant_edges"])
+```
 
 ## Resonance Modules
 
@@ -84,11 +112,21 @@ rooting = RootingAnalyzer().analyze(
     max_lag=4,
     n_surrogates=25,
     random_state=42,
+    method="lagged_correlation",
+    surrogate_method="circular_shift",
+    correction="max_statistic",
 )
 ```
 
-Returns directed score matrices, effective lags, p-values, edge threshold, and
-significant-edge records.
+Returns the canonical `score_matrix` plus the legacy `transfer_entropy` alias,
+effective lags, raw and adjusted p-values, the exploratory `candidate_edges`
+list, selected `significant_edges`, the selected correction rule, surrogate
+method, inference flag, and the minimum attainable p-value. With
+`n_surrogates=0`, off-diagonal p-values are `NaN`, `inference_available` is
+`False`, and `significant_edges` is empty.
+
+Rooting graphs use `significant_edges` only. `candidate_edges` are retained for
+inspection, but they do not enter the NetworkX graph.
 
 ## Dataset Adapters
 

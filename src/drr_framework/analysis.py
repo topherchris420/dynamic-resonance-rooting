@@ -197,8 +197,32 @@ class DynamicResonanceRooting:
         """
         Analyze directed relationships between system components.
 
+        Args:
+            rooting_method: Rooting backend to use. ``"lagged_correlation"`` is
+                the deterministic default, and ``"transfer_entropy"`` is still
+                accepted when ``pyinform`` is available.
+            rooting_max_lag: Maximum lag to search. ``None`` resolves to
+                ``max(1, tau)``.
+            rooting_n_surrogates: Number of surrogate draws to use for
+                significance testing. Set to ``0`` to disable inference.
+            rooting_random_state: Seed for reproducible surrogate generation.
+            rooting_alpha: Threshold applied to the selected p-value.
+            rooting_surrogate_method: Null model for surrogate generation,
+                either ``"circular_shift"`` or ``"permutation"``.
+            rooting_correction: P-value selection rule, either
+                ``"max_statistic"`` for adjusted p-values or ``"none"`` for raw
+                p-values.
+
         Returns:
-            Optional[nx.DiGraph]: Directed graph representing significant influence edges.
+            Optional[nx.DiGraph]: Directed graph representing significant
+            influence edges only. The full rooting result remains available in
+            ``self.rooting_results`` and includes ``score_matrix`` with the
+            compatibility alias ``transfer_entropy``, raw and adjusted p-values,
+            exploratory ``candidate_edges``, selected ``significant_edges``, the
+            effective correction, the surrogate method, and
+            ``minimum_attainable_p_value``. When ``n_surrogates == 0``, the
+            off-diagonal p-values are ``NaN``, ``inference_available`` is false,
+            and the graph may be empty even if candidate edges exist.
         """
         if self.phase_space is None or self.phase_space.shape[1] < 2:
             logger.warning("Multivariate data required for influence network analysis")
@@ -272,9 +296,41 @@ class DynamicResonanceRooting:
             method (str): Spectral method for resonance detection
                 ('fft', 'welch', 'wavelet', or 'markov')
             peak_height_ratio (float): Ratio of max power for peak detection
+            rooting_method (str): Rooting backend to use for multivariate runs.
+                ``"lagged_correlation"`` is the default.
+            rooting_max_lag (Optional[int]): Maximum lag to search for rooting
+                analysis. ``None`` resolves to ``max(1, tau)``.
+            rooting_n_surrogates (int): Number of surrogate draws used for
+                significance testing. ``0`` disables inference.
+            rooting_random_state (Optional[int]): Seed for reproducible
+                surrogate generation.
+            rooting_alpha (float): Threshold applied to the selected p-value.
+            rooting_surrogate_method (str): Surrogate null model, either
+                ``"circular_shift"`` or ``"permutation"``.
+            rooting_correction (str): P-value selection rule, either
+                ``"max_statistic"`` for adjusted p-values or ``"none"`` for raw
+                p-values.
+
+        Example:
+            >>> results = drr.analyze_system(
+            ...     data,
+            ...     multivariate=True,
+            ...     window_size=256,
+            ...     rooting_method="lagged_correlation",
+            ...     rooting_n_surrogates=25,
+            ...     rooting_random_state=42,
+            ... )
 
         Returns:
-            Dict: Complete analysis results
+            Dict: Complete analysis results. For multivariate inputs, the
+            returned ``rooting_analysis`` payload exposes ``score_matrix`` as
+            the canonical matrix and preserves ``transfer_entropy`` as a legacy
+            alias. It also includes raw and adjusted p-values, exploratory
+            ``candidate_edges``, selected ``significant_edges``, the correction
+            mode, surrogate method, surrogate count, and
+            ``minimum_attainable_p_value``. If rooting fails inside the facade,
+            ``rooting_analysis`` contains a structured error record instead of
+            being omitted.
         """
         results: Dict[str, object] = {}
 

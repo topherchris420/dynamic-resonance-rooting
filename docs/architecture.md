@@ -68,9 +68,11 @@ flowchart TD
     Backend --> TE[Transfer entropy if pyinform is available]
     Corr --> Scores[Directed score matrix]
     TE --> Scores
-    Scores --> Surrogates[Optional surrogate p-values]
-    Surrogates --> Threshold[Edge threshold and alpha filter]
-    Threshold --> Edges[Significant rooting edges]
+    Scores --> Surrogates[Circular-shift or permutation surrogates]
+    Surrogates --> PValues[Raw and max-statistic p-values]
+    PValues --> Candidates[Candidate edges from effect size]
+    Candidates --> Threshold[Selected p-value and alpha filter]
+    Threshold --> Graph[Significant-edge graph]
 ```
 
 ## Phase Transition Detection
@@ -118,6 +120,11 @@ flowchart TD
 - DRR outputs are diagnostics for research and review, not causal proof.
 - Transfer entropy is optional; lagged correlation remains the deterministic
   fallback and is reported explicitly.
+- The rooting result separates exploratory `candidate_edges` from
+  `significant_edges`, and the public graph includes significant edges only.
+- Circular-shift surrogates are the default null model. They preserve each
+  series' marginal distribution and autocorrelation, but they are not a good
+  fit for strongly nonstationary series.
 - State-space diagnostics are Python-native and inspired by modeling discipline,
   not a copy of external DSGE implementations.
 - Supervisory workflows are validation-ready artifacts, not validated

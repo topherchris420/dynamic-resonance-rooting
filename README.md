@@ -44,7 +44,7 @@ DRR combines spectral analysis (FFT, Welch PSD, Morlet wavelet scalograms), caus
 | Capability | Description |
 |------------|-------------|
 | **Resonance Detection** | Identifies oscillatory patterns via FFT, Welch power spectral density, or Morlet wavelet scalograms (time-localized, for nonstationary signals) |
-| **Causal Rooting** | Maps directional lead-lag relationships using transfer entropy or lagged correlation |
+| **Causal Rooting** | Maps directional lead-lag relationships using transfer entropy or lagged correlation, with candidate edges, significant edges, and surrogate-tested p-values |
 | **Resonance Depth** | Composite scoring combining spectral concentration, temporal persistence, phase coherence, and amplitude stability |
 | **State-Space Diagnostics** | Transition, measurement, and stability analysis with a Kalman filter |
 | **State-Space Smoothing** | Retrospective states and structural shocks via Hamilton (RTS) and Koopman disturbance smoothers, plus Durbin–Koopman and Carter–Kohn posterior draws |
@@ -107,11 +107,23 @@ _, data = generate_coupled_oscillator(
 )
 
 drr = DynamicResonanceRooting(embedding_dim=3, tau=2, sampling_rate=sampling_rate)
-results = drr.analyze_system(data, multivariate=True, window_size=256)
+results = drr.analyze_system(
+    data,
+    multivariate=True,
+    window_size=256,
+    rooting_method="lagged_correlation",
+    rooting_n_surrogates=25,
+    rooting_random_state=42,
+)
 
 print(results["resonance_depths"])
+print(results["rooting_analysis"]["candidate_edges"])
 print(results["rooting_analysis"]["significant_edges"])
 ```
+
+The rooting graph only includes significant edges. Use
+`results["rooting_analysis"]["candidate_edges"]` when you want the exploratory
+effect-size list without the surrogate test.
 
 ---
 
@@ -315,7 +327,7 @@ dynamic-resonance-rooting/
 | `resonances` | Dominant frequencies and spectral evidence |
 | `resonance_depths` | Scalar persistence/stability scores by dimension |
 | `resonance_depth_details` | Component-level scores and confidence intervals |
-| `rooting_analysis` | Directed lagged relationships and edge metadata |
+| `rooting_analysis` | Directed lagged relationships, `score_matrix`/`transfer_entropy`, raw and adjusted p-values, and candidate/significant edge metadata |
 | `state_space_analysis` | Transition, measurement, likelihood, stability, impulse-response |
 
 **Important:** DRR outputs are research diagnostics. Domain conclusions require separate validation, calibration, and review.
