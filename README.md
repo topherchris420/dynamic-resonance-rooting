@@ -133,10 +133,10 @@ effect-size list without the surrogate test.
 **File:** `examples/sonoluminescence_lab.py`
 
 Multimodal coupled resonant system benchmark spanning acoustic, cavitation, optical, and electrical domains:
-- Ultrasonic acoustic driver ($f_a \sim 25\text{ kHz}$)
+- Ultrasonic acoustic driver ($f_a \approx 25\text{ kHz}$)
 - Acoustic waveguide horn resonator & impedance concentration
 - Rayleigh-Plesset nonlinear bubble oscillator & Blake cavitation threshold
-- Ultrafast UV-blue sonoluminescence flash emission ($\lambda_{EM} \sim 350\text{ nm}$)
+- Ultrafast UV-blue sonoluminescence flash emission ($\lambda_{\text{EM}} \approx 350\text{ nm}$)
 - Downstream optical/electrical transduction & energy bookkeeping
 - Resonant Transduction Efficiency Index (RTEI) metric
 
@@ -208,17 +208,17 @@ The framework includes a research-grade physical benchmark modeling multi-stage 
 
 | Domain | Governing Physics / Formulation | Status |
 |--------|----------------------------------|--------|
-| **Acoustic Driver** | Acoustic wave speed $c_s = 1482\text{ m/s}$, ultrasonic frequency $f_a \approx 25\text{ kHz}$, wavelength $\lambda_a = c_s / f_a \approx 5.93\text{ cm}$ | Physically motivated |
-| **Waveguide Metallurgy** | Solid acoustic horn materials (OFHC Copper, Copper-Boron alloy $\text{Cu}_{0.98}\text{B}_{0.02}$, $\text{CuBe}$, Titanium) with impedance matching $Z_{solid} = \rho c$ and interface transmission $T = \frac{4 Z_{solid} Z_{fluid}}{(Z_{solid} + Z_{fluid})^2}$ | Physically motivated |
-| **Acoustic Waveguide / Resonator** | Geometric area concentration $(d_{in}/d_{out})$, half-wave standing-wave cavity response with quality factor $Q$ and detuning $\delta$. *Waveguide is an acoustic impedance structure, not an electrical transformer.* | Idealized 1D acoustic approximation |
-| **Bubble Cavitation Dynamics** | Modified Rayleigh-Plesset equation with van der Waals excluded volume core ($R_{core} \approx R_0 / 8.5$), liquid viscosity $\mu_L$, surface tension $\sigma$, and Blake cavitation threshold | Physically motivated |
-| **Fluid & Solute Doping** | Dissolved gas doping (Argon, Xenon, Helium) modifying $\gamma_{mix}$, plus dissolved/colloidal Copper (Cu), Boron (B), and Alkali salts altering fluid density, viscosity, and surface tension | Physically motivated |
-| **Sonoluminescent Emission** | Ultrafast flash pulses ($\tau \sim 200\text{ ps}$) triggered during violent collapse rebounds ($R \to R_{min}$), multispectral continuum + atomic lines (Cu I at 324.7/327.4 nm, $\text{BO}^*$ excimer at 518 nm) | Phenomenological model |
-| **Electrical Transduction** | Downstream photodetector responsivity, collection factor $\eta_{col}$, RC low-pass filter, and energy accounting | Downstream detector model |
+| **Acoustic Driver** | Acoustic wave speed $c_s = 1482\text{ m/s}$, ultrasonic frequency $f_a \approx 25\text{ kHz}$, wavelength $\lambda_a = \frac{c_s}{f_a} \approx 5.93\text{ cm}$ | Physically motivated |
+| **Waveguide Metallurgy** | Solid acoustic horn materials (OFHC Copper, Copper-Boron alloy $\text{Cu}_{0.98}\text{B}_{0.02}$, $\text{CuBe}$, Titanium) with impedance matching $Z_{\text{solid}} = \rho c$ and interface transmission $T = \frac{4 Z_{\text{solid}} Z_{\text{fluid}}}{(Z_{\text{solid}} + Z_{\text{fluid}})^2}$ | Physically motivated |
+| **Acoustic Waveguide / Resonator** | Geometric area concentration $\left(\frac{d_{\text{in}}}{d_{\text{out}}}\right)$, half-wave standing-wave cavity response with quality factor $Q$ and detuning $\delta$. *Waveguide is an acoustic impedance structure, not an electrical transformer.* | Idealized 1D acoustic approximation |
+| **Bubble Cavitation Dynamics** | Modified Rayleigh-Plesset equation $R \ddot{R} + \frac{3}{2}\dot{R}^2 = \frac{1}{\rho}\left(P_{\text{bubble}} - P_\infty(t) - \frac{2\sigma}{R} - \frac{4\mu_L \dot{R}}{R}\right)$ with van der Waals excluded volume core ($R_{\text{core}} \approx \frac{R_0}{8.5}$), liquid viscosity $\mu_L$, surface tension $\sigma$, and Blake cavitation threshold | Physically motivated |
+| **Fluid & Solute Doping** | Dissolved gas doping (Argon, Xenon, Helium) modifying $\gamma_{\text{mix}}$, plus dissolved/colloidal Copper ($\text{Cu}$), Boron ($\text{B}$), and Alkali salts altering fluid density, viscosity, and surface tension | Physically motivated |
+| **Sonoluminescent Emission** | Ultrafast flash pulses ($\tau \sim 200\text{ ps}$) triggered during violent collapse rebounds ($R \to R_{\text{min}}$), multispectral continuum + atomic lines ($\text{Cu I}$ at $324.7 / 327.4\text{ nm}$, $\text{BO}^*$ excimer at $518\text{ nm}$) | Phenomenological model |
+| **Electrical Transduction** | Downstream photodetector responsivity, collection factor $\eta_{\text{col}}$, RC low-pass filter, and energy accounting | Downstream detector model |
 | **DRR Metrics (RTEI)** | Resonant Transduction Efficiency Index quantifying multimodal coherence across the 8-channel time series | Proposed DRR research metric |
 
 > [!IMPORTANT]
-> **No Net Energy Amplification Claimed**: The benchmark explicitly accounts for total acoustic input energy versus electrical output energy ($E_{elec} / E_{acoustic} \ll 1$). The purpose is computational study of nonlinear resonance, modal concentration, phase coherence, and causal lead-lag rooting across multimodal physics.
+> **No Net Energy Amplification Claimed**: The benchmark explicitly accounts for total acoustic input energy versus electrical output energy ($\frac{E_{\text{elec}}}{E_{\text{acoustic}}} \ll 1$). The purpose is computational study of nonlinear resonance, modal concentration, phase coherence, and causal lead-lag rooting across multimodal physics.
 
 ### Benchmark Usage Example (With Copper-Boron Metallurgy & Solute Doping)
 
@@ -269,7 +269,7 @@ Real-time early-warning system for detecting non-linear liquidity panics ("Dash 
 1. **Resonance Detection** — Identifies hidden cyclical funding stress via Welch/FFT
 2. **Rooting Analysis** — Maps lead-lag structures between Treasury shocks and bank liquidity drains
 3. **Composite Scoring** — Resonance Depth combining spectral concentration, temporal persistence, phase coherence, amplitude stability
-4. **Stress Simulation** — 200 bps parallel rate shift (Full AOCI vs. Opt-Out)
+4. **Stress Simulation** — $200\text{ bps}$ parallel rate shift (Full AOCI vs. Opt-Out)
 
 ### Files
 - `layer1_regulatory_backend.py` — Python/SQL regulatory backend
