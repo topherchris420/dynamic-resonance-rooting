@@ -124,6 +124,10 @@ def __getattr__(name):
         from . import validation_readiness
 
         return getattr(validation_readiness, name)
+    if name == "finance":
+        from . import finance
+
+        return finance
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 

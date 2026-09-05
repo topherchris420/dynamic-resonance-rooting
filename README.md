@@ -173,6 +173,24 @@ End-to-end state-space workflow — fit, Kalman filter, Koopman smooth (with
 structural shocks), Durbin–Koopman posterior bands, Chandrasekhar likelihood,
 and a tempered particle filter on a nonlinear observation.
 
+### Quant Macro Lab
+**File:** `examples/quant_macro_lab.py`
+
+DRR can also be applied to multivariate financial systems as a structural regime-detection layer conditioning downstream portfolio risk decisions:
+
+```text
+Market Data → DRR Structural State Inference → Portfolio Policy → Walk-Forward Evaluation
+```
+
+```bash
+python examples/quant_macro_lab.py --offline --rebalance monthly
+```
+
+The Quant Macro Lab infers cross-asset structural regimes (mean depth, network density, depth dispersion) to condition policy choices between portfolio risk models (e.g., Mean-Variance vs. CVaR optimization) in a strict walk-forward evaluation pipeline with zero lookahead bias.
+
+> [!NOTE]
+> **Research & Scientific Disclaimer**: DRR structural resonance is an empirical complex-systems state metric, not a guaranteed profitable trading strategy or direct alpha signal. High structural resonance measures strong persistent structured dynamics across assets, which must be evaluated empirically.
+
 ### Quick Start
 **File:** `examples/quickstart_resonance_export.py`
 

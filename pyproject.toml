@@ -52,6 +52,10 @@ dev = [
   "mypy>=1.10,<1.15",
   "pre-commit>=3.5,<4",
 ]
+quant = [
+  "openbb",
+  "riskfolio-lib",
+]
 
 [project.scripts]
 drr-reproduce = "drr_framework.experiments:main"
