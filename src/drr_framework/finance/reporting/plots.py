@@ -41,7 +41,12 @@ def plot_quant_lab_summary(
 
     # 2. Network Density
     if "network_density" in drr_states.columns:
-        axes[1].plot(drr_states.index, drr_states["network_density"], color="darkgreen", label="Network Density")
+        axes[1].plot(
+            drr_states.index,
+            drr_states["network_density"],
+            color="darkgreen",
+            label="Network Density",
+        )
         axes[1].set_ylabel("Density")
         axes[1].set_title("Causal Network Topology Density")
         axes[1].grid(True, alpha=0.3)

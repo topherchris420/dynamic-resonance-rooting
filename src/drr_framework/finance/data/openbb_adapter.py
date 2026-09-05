@@ -30,7 +30,7 @@ class OpenBBMarketDataProvider:
         except ImportError as exc:
             raise ImportError(
                 "OpenBB package is not installed. "
-                "Please install via `pip install \"drr-framework[quant-data]\"` or `pip install openbb`."
+                'Please install via `pip install "drr-framework[quant-data]"` or `pip install openbb`.'
             ) from exc
 
         price_dict = {}

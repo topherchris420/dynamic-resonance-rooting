@@ -66,9 +66,7 @@ class DRRMarketFeatureGenerator:
 
         n_samples, n_vars = data_matrix.shape
         if n_samples < 20:
-            raise ValueError(
-                f"Insufficient market history for DRR analysis ({n_samples} samples)."
-            )
+            raise ValueError(f"Insufficient market history for DRR analysis ({n_samples} samples).")
 
         drr = DynamicResonanceRooting(
             embedding_dim=self.embedding_dim,

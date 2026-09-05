@@ -124,14 +124,19 @@ class RiskfolioAllocator:
                 tail_losses = -port_rets[port_rets <= var_thresh]
                 return float(np.mean(tail_losses)) if len(tail_losses) > 0 else -var_thresh
 
-            res = minimize(cvar_obj, init_weights, method="SLSQP", bounds=bounds, constraints=constraints)
+            res = minimize(
+                cvar_obj, init_weights, method="SLSQP", bounds=bounds, constraints=constraints
+            )
         else:
+
             def neg_sharpe_obj(w):
                 p_ret = np.sum(mean_returns * w) - self.daily_rf
                 p_vol = np.sqrt(w.T @ cov_matrix @ w)
                 return -p_ret / p_vol if p_vol > 1e-8 else 0.0
 
-            res = minimize(neg_sharpe_obj, init_weights, method="SLSQP", bounds=bounds, constraints=constraints)
+            res = minimize(
+                neg_sharpe_obj, init_weights, method="SLSQP", bounds=bounds, constraints=constraints
+            )
 
         if res.success and res.x is not None:
             return pd.Series(res.x, index=symbols)

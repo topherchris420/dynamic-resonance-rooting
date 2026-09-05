@@ -53,10 +53,14 @@ def assert_no_lookahead_leakage(
     if isinstance(sig_full.iloc[0], (float, int, np.number)):
         diff = (sig_full - sig_trunc).abs().max()
         if diff > 1e-6:
-            raise AssertionError(f"Lookahead leakage detected! Max numerical difference: {diff:.8f}")
+            raise AssertionError(
+                f"Lookahead leakage detected! Max numerical difference: {diff:.8f}"
+            )
     else:
         mismatches = (sig_full != sig_trunc).sum()
         if mismatches > 0:
-            raise AssertionError(f"Lookahead leakage detected! {mismatches} mismatching signal decisions.")
+            raise AssertionError(
+                f"Lookahead leakage detected! {mismatches} mismatching signal decisions."
+            )
 
     logger.info("Anti-leakage invariant test PASSED. Zero lookahead leakage detected.")

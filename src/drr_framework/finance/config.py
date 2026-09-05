@@ -44,7 +44,9 @@ class QuantResearchConfig:
     annual_rf: float = 0.04
     max_weight: float = 0.50
     min_weight: float = 0.0
-    threshold_type: str = "expanding_percentile"  # 'expanding_percentile', 'rolling_percentile', 'fixed', 'z_score'
+    threshold_type: str = (
+        "expanding_percentile"  # 'expanding_percentile', 'rolling_percentile', 'fixed', 'z_score'
+    )
     percentile: float = 80.0
     fixed_threshold: float = 0.70
 

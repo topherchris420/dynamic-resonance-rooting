@@ -38,7 +38,9 @@ def main() -> None:
 
     print("\nPORTFOLIO POLICY COMPARISON")
     print("-----------------------------------------------------------------------------------")
-    print(f"{'Policy':<20} | {'Sharpe':<8} | {'Max DD (%)':<10} | {'CVaR 95% (%)':<12} | {'CAGR (%)':<10}")
+    print(
+        f"{'Policy':<20} | {'Sharpe':<8} | {'Max DD (%)':<10} | {'CVaR 95% (%)':<12} | {'CAGR (%)':<10}"
+    )
     print("-" * 70)
 
     for name, res in results.items():
