@@ -31,7 +31,9 @@ class QlibDatasetAdapter:
         Label defined as forward target_symbol return over forward_horizon.
         """
         if self.target_symbol not in returns_df.columns:
-            raise ValueError(f"Target symbol '{self.target_symbol}' not found in returns DataFrame.")
+            raise ValueError(
+                f"Target symbol '{self.target_symbol}' not found in returns DataFrame."
+            )
 
         # Compute forward return target label
         fwd_return = (
@@ -43,7 +45,9 @@ class QlibDatasetAdapter:
 
         common_idx = features_df.index.intersection(fwd_return.dropna().index)
         if common_idx.empty:
-            raise ValueError("No overlapping dates for Qlib feature matrix and forward target label.")
+            raise ValueError(
+                "No overlapping dates for Qlib feature matrix and forward target label."
+            )
 
         X = features_df.loc[common_idx].copy()
         y = fwd_return.loc[common_idx].rename("LABEL0")

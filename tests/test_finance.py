@@ -312,7 +312,9 @@ class TestAdaptersAndAntiLeakage(unittest.TestCase):
         self.assertTrue(sig[0])
 
         # Negative Controls
-        states = pd.DataFrame({"mean_depth": np.random.uniform(0.2, 0.8, 100)}, index=self.mdata.returns.index[:100])
+        states = pd.DataFrame(
+            {"mean_depth": np.random.uniform(0.2, 0.8, 100)}, index=self.mdata.returns.index[:100]
+        )
         res = run_negative_controls(states, self.mdata.returns.iloc[:100], n_shuffles=20)
         self.assertIn("empirical_p_value", res)
 

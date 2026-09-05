@@ -53,7 +53,9 @@ def calculate_hac_standard_errors(
     return float(beta[1]), float(hac_se), float(t_stat)
 
 
-def benjamini_hochberg_fdr(p_values: Sequence[float], alpha: float = 0.05) -> Tuple[np.ndarray, np.ndarray]:
+def benjamini_hochberg_fdr(
+    p_values: Sequence[float], alpha: float = 0.05
+) -> Tuple[np.ndarray, np.ndarray]:
     """
     Apply Benjamini-Hochberg False Discovery Rate (FDR) procedure to control for multiple hypothesis testing.
 

@@ -22,8 +22,12 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Qlib + DRR Matched Experiment Engine")
     parser.add_argument("--start", type=str, default="2015-01-01", help="Start date")
     parser.add_argument("--end", type=str, default="2023-12-31", help="End date")
-    parser.add_argument("--model", type=str, default="linear", choices=["linear", "lightgbm", "mlp"])
-    parser.add_argument("--provider", type=str, default="synthetic", choices=["synthetic", "openbb"])
+    parser.add_argument(
+        "--model", type=str, default="linear", choices=["linear", "lightgbm", "mlp"]
+    )
+    parser.add_argument(
+        "--provider", type=str, default="synthetic", choices=["synthetic", "openbb"]
+    )
     parser.add_argument("--offline", action="store_true", help="Force offline synthetic data")
 
     args = parser.parse_args()
@@ -57,7 +61,9 @@ def main() -> None:
     print(f"{'Variant':<25} | {'IC':<8} | {'Rank IC':<8} | {'RMSE':<8}")
     print("-" * 55)
     for variant, metrics in ablation.items():
-        print(f"{variant:<25} | {metrics['ic']:>8.4f} | {metrics['rank_ic']:>8.4f} | {metrics['rmse']:>8.4f}")
+        print(
+            f"{variant:<25} | {metrics['ic']:>8.4f} | {metrics['rank_ic']:>8.4f} | {metrics['rmse']:>8.4f}"
+        )
 
 
 if __name__ == "__main__":

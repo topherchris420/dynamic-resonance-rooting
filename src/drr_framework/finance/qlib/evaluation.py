@@ -39,18 +39,26 @@ def calculate_ic_metrics(
     # Calculate rolling or grouped ICs for ICIR if time series indexed
     if isinstance(pred_clean.index, pd.DatetimeIndex):
         df_eval = pd.DataFrame({"pred": pred_clean, "label": label_clean})
-        grouped_ic = df_eval.groupby(df_eval.index.to_period("M")).apply(
-            lambda g: stats.pearsonr(g["pred"], g["label"])[0] if len(g) > 3 else np.nan
-        ).dropna()
+        grouped_ic = (
+            df_eval.groupby(df_eval.index.to_period("M"))
+            .apply(lambda g: stats.pearsonr(g["pred"], g["label"])[0] if len(g) > 3 else np.nan)
+            .dropna()
+        )
         ic_mean = float(grouped_ic.mean()) if len(grouped_ic) > 0 else ic
         ic_std = float(grouped_ic.std()) if len(grouped_ic) > 1 and grouped_ic.std() > 1e-8 else 1.0
         icir = float(ic_mean / ic_std) if ic_std > 1e-8 else 0.0
 
-        grouped_rank_ic = df_eval.groupby(df_eval.index.to_period("M")).apply(
-            lambda g: stats.spearmanr(g["pred"], g["label"])[0] if len(g) > 3 else np.nan
-        ).dropna()
+        grouped_rank_ic = (
+            df_eval.groupby(df_eval.index.to_period("M"))
+            .apply(lambda g: stats.spearmanr(g["pred"], g["label"])[0] if len(g) > 3 else np.nan)
+            .dropna()
+        )
         rank_ic_mean = float(grouped_rank_ic.mean()) if len(grouped_rank_ic) > 0 else rank_ic
-        rank_ic_std = float(grouped_rank_ic.std()) if len(grouped_rank_ic) > 1 and grouped_rank_ic.std() > 1e-8 else 1.0
+        rank_ic_std = (
+            float(grouped_rank_ic.std())
+            if len(grouped_rank_ic) > 1 and grouped_rank_ic.std() > 1e-8
+            else 1.0
+        )
         rank_icir = float(rank_ic_mean / rank_ic_std) if rank_ic_std > 1e-8 else 0.0
     else:
         icir = float(ic)

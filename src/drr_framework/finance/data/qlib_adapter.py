@@ -31,7 +31,7 @@ class QlibMarketDataProvider:
         except ImportError as exc:
             raise ImportError(
                 "Microsoft Qlib (pyqlib) package is not installed. "
-                "Please install via `pip install \"drr-framework[quant-ml]\"` or `pip install pyqlib`."
+                'Please install via `pip install "drr-framework[quant-ml]"` or `pip install pyqlib`.'
             ) from exc
 
         if not getattr(qlib, "_initialized", False):

@@ -60,7 +60,9 @@ class VectorBTAdapter:
             }
 
         except ImportError:
-            logger.info("vectorbt package not installed; running vectorized Pandas backtest validation fallback.")
+            logger.info(
+                "vectorbt package not installed; running vectorized Pandas backtest validation fallback."
+            )
             return self._pandas_vectorized_validation(prices, weights)
 
     def run_parameter_robustness_sweep(
@@ -131,7 +133,11 @@ class VectorBTAdapter:
 
         cum_ret = float((1.0 + net_rets).prod() - 1.0)
         ann_vol = float(net_rets.std() * np.sqrt(252))
-        sharpe = float((net_rets.mean() / net_rets.std()) * np.sqrt(252)) if net_rets.std() > 1e-8 else 0.0
+        sharpe = (
+            float((net_rets.mean() / net_rets.std()) * np.sqrt(252))
+            if net_rets.std() > 1e-8
+            else 0.0
+        )
 
         wealth = (1.0 + net_rets).cumprod()
         peak = wealth.cummax()

@@ -213,6 +213,8 @@ class QlibDRRMatchedExperiment:
         elif model_family in ("lightgbm", "tree", "gradient_boosting"):
             return HistGradientBoostingRegressor(random_state=self.config.random_state, max_iter=50)
         elif model_family == "mlp":
-            return MLPRegressor(hidden_layer_sizes=(32, 16), max_iter=200, random_state=self.config.random_state)
+            return MLPRegressor(
+                hidden_layer_sizes=(32, 16), max_iter=200, random_state=self.config.random_state
+            )
         else:
             raise ValueError(f"Unknown model_family: {model_family}")
