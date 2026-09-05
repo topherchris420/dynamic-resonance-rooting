@@ -3,51 +3,90 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#08111f" />
-    <meta name="description" content="Dynamic Resonance Rooting — a visual field for finding signal in complex systems." />
-    <title>Dynamic Resonance Rooting | Find the signal</title>
+    <meta name="theme-color" content="#050807" />
+    <meta name="description" content="Dynamic Resonance Rooting — reveal the hidden structure inside complex systems." />
+    <title>DRR — Signal has a shape</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Manrope:wght@400;500;600&family=Syne:wght@500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="assets/web-demo/style.css" />
   </head>
   <body>
-    <div class="ambient-grid" aria-hidden="true"></div>
+    <canvas id="noise-canvas" aria-hidden="true"></canvas>
+    <div class="grain" aria-hidden="true"></div>
+
     <header class="site-header">
-      <a class="brand" href="#top" aria-label="Dynamic Resonance Rooting home">
-        <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
-        <span>DRR<span class="brand-dot">.</span></span>
+      <a class="brand" href="#top" aria-label="DRR home">
+        <svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="4"/><path d="M20 2a18 18 0 0 1 18 18M20 38A18 18 0 0 1 2 20M9 9a15.5 15.5 0 0 1 22 22"/></svg>
+        <span>DRR</span>
       </a>
-      <div class="header-status"><span class="status-dot"></span><span>System online</span></div>
+      <nav aria-label="Main navigation">
+        <a href="#method">Method</a><a href="#field">Live field</a><a href="https://github.com/topherchris420/dynamic-resonance-rooting">GitHub <span>↗</span></a>
+      </nav>
+      <div class="system-status"><i></i><span>Field online</span><b id="clock">00:00:00</b></div>
     </header>
 
-    <main id="top" class="layout">
-      <section class="intro" aria-labelledby="page-title">
-        <p class="eyebrow"><span class="eyebrow-line"></span>Signal mapping / 01</p>
-        <h1 id="page-title">Find the signal<br /><em>inside the noise.</em></h1>
-        <p class="lede">Dynamic Resonance Rooting is a visual field for locating the patterns that hold a complex system together.</p>
-        <div class="actions">
-          <button class="primary-action" id="focus-button" type="button"><span>Enter the field</span><span class="arrow" aria-hidden="true">↗</span></button>
-          <button class="text-action" id="pulse-button" type="button" aria-pressed="false">Pause resonance</button>
+    <main id="top">
+      <section class="hero" aria-labelledby="page-title">
+        <div class="hero-copy">
+          <p class="overline"><span>01</span> Intelligence for complex systems</p>
+          <h1 id="page-title">Signal has<br />a <em>shape.</em></h1>
+          <p class="lede">Dynamic Resonance Rooting reveals the forces, feedback loops, and critical thresholds that conventional analysis leaves invisible.</p>
+          <div class="hero-actions">
+            <button class="magnetic-button" id="enter-button" type="button"><span>Explore the field</span><i>↘</i></button>
+            <button class="sound-button" id="motion-button" type="button" aria-pressed="false"><span class="sound-bars"><i></i><i></i><i></i><i></i></span><span>Pause motion</span></button>
+          </div>
         </div>
-        <div class="metrics" aria-label="Field metrics">
-          <div><strong>02</strong><span>active axes</span></div>
-          <div><strong>∞</strong><span>possible patterns</span></div>
+
+        <div class="hero-index" aria-label="Current field reading">
+          <span>Resonance index</span><strong id="hero-index">0.847</strong><small>Stable coupling</small>
+        </div>
+
+        <div class="scroll-cue" aria-hidden="true"><span>Scroll to decode</span><i></i></div>
+      </section>
+
+      <section class="field-section" id="field" aria-labelledby="field-title">
+        <div class="section-heading">
+          <div><p class="overline"><span>02</span> Live resonance engine</p><h2 id="field-title">Touch the system.<br /><em>Watch it answer.</em></h2></div>
+          <p>Move through the field to disturb its equilibrium. Every point is connected; every input leaves a trace.</p>
+        </div>
+
+        <div class="field-shell">
+          <div class="field-toolbar">
+            <div><i class="live-dot"></i><span>DRR / FIELD—001</span></div>
+            <p><span id="pointer-readout">X 50.0&nbsp;&nbsp;Y 50.0</span><b>● LIVE</b></p>
+          </div>
+          <div class="field-stage" id="field-stage" tabindex="0" role="application" aria-label="Interactive resonance particle field. Move the pointer to influence nearby particles.">
+            <canvas id="field-canvas"></canvas>
+            <div class="field-reticle" id="reticle" aria-hidden="true"><i></i><i></i><span></span></div>
+            <p class="field-instruction">MOVE TO INFLUENCE / CLICK TO PULSE</p>
+            <div class="field-scale"><span>+1.0</span><i></i><span>0.0</span><i></i><span>−1.0</span></div>
+          </div>
+          <div class="field-data" aria-live="polite">
+            <div><span>Coupling strength</span><strong id="coupling-value">84.7%</strong><i><b id="coupling-bar"></b></i></div>
+            <div><span>Phase coherence</span><strong id="coherence-value">0.921</strong><i><b id="coherence-bar"></b></i></div>
+            <div><span>Root depth</span><strong id="depth-value">6.42</strong><i><b id="depth-bar"></b></i></div>
+            <div class="field-state"><span>System state</span><strong><i></i> Resonant</strong><small>Δ +0.024</small></div>
+          </div>
         </div>
       </section>
 
-      <section class="field-card" id="field" aria-labelledby="field-title">
-        <div class="field-header"><div><p class="field-kicker">Live visualization</p><h2 id="field-title">Resonance field</h2></div><span class="field-code">DRR / 001</span></div>
-        <div class="field-visual" role="img" aria-label="An animated cyan resonance crosshair on a dark grid">
-          <div class="field-orbit orbit-one"></div><div class="field-orbit orbit-two"></div>
-          <div class="axis x-axis"></div><div class="axis y-axis"></div><div class="signal-point"></div>
-          <span class="axis-label axis-label-x">X / relation</span><span class="axis-label axis-label-y">Y / time</span>
-          <span class="coordinate">0.00 <span>/</span> 0.00</span>
-        </div>
-        <div class="field-footer"><span><span class="legend-swatch"></span>Core frequency</span><span class="mono" id="field-state" aria-live="polite">tracking · 60 fps</span></div>
+      <section class="method" id="method" aria-labelledby="method-title">
+        <div class="method-intro"><p class="overline"><span>03</span> The method</p><h2 id="method-title">From noise<br />to <em>knowing.</em></h2></div>
+        <ol class="method-list">
+          <li><span>01</span><div><h3>Detect</h3><p>Map recurring frequencies and relationships across time.</p></div><b>⌁</b></li>
+          <li><span>02</span><div><h3>Root</h3><p>Trace observed patterns back to their structural origins.</p></div><b>⌖</b></li>
+          <li><span>03</span><div><h3>Anticipate</h3><p>Identify thresholds before the system changes state.</p></div><b>⟶</b></li>
+        </ol>
+      </section>
+
+      <section class="closing">
+        <p>The system is already speaking.</p><h2>Are you<br /><em>listening?</em></h2>
+        <a href="https://github.com/topherchris420/dynamic-resonance-rooting">Explore the research <span>↗</span></a>
       </section>
     </main>
-    <footer class="site-footer"><span>Dynamic Resonance Rooting</span><span>Observe. Orient. Act.</span></footer>
+
+    <footer><a class="brand" href="#top"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="4"/><path d="M20 2a18 18 0 0 1 18 18M20 38A18 18 0 0 1 2 20M9 9a15.5 15.5 0 0 1 22 22"/></svg><span>DRR</span></a><p>Dynamic Resonance Rooting<br /><span>Open-source research framework</span></p><p>Observe / Root / Anticipate<br /><span>Built for complex realities</span></p></footer>
     <script src="assets/web-demo/script.js"></script>
   </body>
 </html>

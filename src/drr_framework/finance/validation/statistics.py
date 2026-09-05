@@ -41,9 +41,9 @@ def calculate_hac_standard_errors(
     xtx_inv = np.linalg.inv(X.T @ X)
     S = (X.T * residuals) @ (X * residuals[:, None]) / n
 
-    for l in range(1, max_lag + 1):
-        weight = 1.0 - l / (max_lag + 1.0)
-        gamma = (X[l:].T * residuals[l:]) @ (X[:-l] * residuals[:-l, None]) / n
+    for lag in range(1, max_lag + 1):
+        weight = 1.0 - lag / (max_lag + 1.0)
+        gamma = (X[lag:].T * residuals[lag:]) @ (X[:-lag] * residuals[:-lag, None]) / n
         S += weight * (gamma + gamma.T)
 
     hac_cov = n * (xtx_inv @ S @ xtx_inv)
