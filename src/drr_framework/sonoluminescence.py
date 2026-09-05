@@ -1015,14 +1015,12 @@ class OpticalElectricalTransducer:
         )
 
         # 2. Modeled optical emission energy proxy (scaled for consistency)
-        optical_energy_joules = float(
-            1e-10
-            * (
-                np.trapezoid(emission_intensity, time)
-                if hasattr(np, "trapezoid")
-                else np.trapz(emission_intensity, time)
-            )
+        integrated_emission = (
+            float(np.trapezoid(emission_intensity, time))
+            if hasattr(np, "trapezoid")
+            else float(np.trapz(emission_intensity, time))
         )
+        optical_energy_joules = 1e-10 * integrated_emission
 
         # 3. Modeled electrical energy
         electrical_energy_joules = (

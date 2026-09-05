@@ -183,55 +183,89 @@ class DynamicResonanceRooting:
         self.resonance_depth_details = details
         return depths
 
-    def analyze_influence_network(self) -> Optional[nx.DiGraph]:
+    def analyze_influence_network(
+        self,
+        *,
+        rooting_method: str = "lagged_correlation",
+        rooting_max_lag: Optional[int] = None,
+        rooting_n_surrogates: int = 25,
+        rooting_random_state: Optional[int] = 0,
+        rooting_alpha: float = 0.05,
+        rooting_surrogate_method: str = "circular_shift",
+        rooting_correction: str = "max_statistic",
+    ) -> Optional[nx.DiGraph]:
         """
         Analyze directed relationships between system components.
 
+        Args:
+            rooting_method: Rooting backend to use. ``"lagged_correlation"`` is
+                the deterministic default. ``"transfer_entropy"`` requests
+                transfer entropy, uses it when ``pyinform`` is available, and
+                otherwise falls back to lagged correlation.
+            rooting_max_lag: Maximum lag to search. ``None`` resolves to
+                ``max(1, tau)``.
+            rooting_n_surrogates: Number of surrogate draws to use for
+                significance testing. Set to ``0`` to disable inference.
+            rooting_random_state: Seed for reproducible surrogate generation.
+            rooting_alpha: Threshold applied to the selected p-value.
+            rooting_surrogate_method: Null model for surrogate generation,
+                either ``"circular_shift"`` or ``"permutation"``.
+            rooting_correction: P-value selection rule, either
+                ``"max_statistic"`` for adjusted p-values or ``"none"`` for raw
+                p-values.
+
         Returns:
-            Optional[nx.DiGraph]: Directed graph representing significant influence edges.
+            Optional[nx.DiGraph]: Directed graph representing significant
+            influence edges only. The full rooting result remains available in
+            ``self.rooting_results`` and includes ``score_matrix`` with the
+            compatibility alias ``transfer_entropy``, raw and adjusted p-values,
+            exploratory ``candidate_edges``, selected ``significant_edges``, the
+            effective correction, the surrogate method, and
+            ``minimum_attainable_p_value``. The returned ``method`` names the
+            effective backend actually used. When ``n_surrogates == 0``, the
+            off-diagonal p-values are ``NaN``, ``inference_available`` is false,
+            and the graph may be empty even if candidate edges exist.
         """
         if self.phase_space is None or self.phase_space.shape[1] < 2:
             logger.warning("Multivariate data required for influence network analysis")
             return None
 
         try:
+            max_lag = max(1, self.tau) if rooting_max_lag is None else rooting_max_lag
             rooting_results = self.rooting_analyzer.analyze(
                 self.phase_space,
-                max_lag=max(1, self.tau),
-                n_surrogates=25,
-                random_state=0,
+                max_lag=max_lag,
+                n_surrogates=rooting_n_surrogates,
+                random_state=rooting_random_state,
+                alpha=rooting_alpha,
+                method=rooting_method,
+                surrogate_method=rooting_surrogate_method,
+                correction=rooting_correction,
             )
             self.rooting_results = rooting_results
-            te_matrix = rooting_results["transfer_entropy"]
+            score_matrix = rooting_results["score_matrix"]
 
             G = nx.DiGraph()
-            n_dims = te_matrix.shape[0]
+            n_dims = score_matrix.shape[0]
 
             for i in range(n_dims):
                 G.add_node(f"dim_{i}")
 
-            if rooting_results.get("significant_edges"):
-                for edge in rooting_results["significant_edges"]:
-                    G.add_edge(
-                        edge["source"],
-                        edge["target"],
-                        weight=edge["weight"],
-                        p_value=edge["p_value"],
-                        lag=edge["lag"],
-                    )
-            else:
-                threshold = rooting_results.get(
-                    "edge_threshold", float(np.mean(te_matrix) + np.std(te_matrix))
+            for edge in rooting_results["significant_edges"]:
+                G.add_edge(
+                    edge["source"],
+                    edge["target"],
+                    weight=edge["weight"],
+                    p_value=edge["p_value"],
+                    adjusted_p_value=edge["adjusted_p_value"],
+                    lag=edge["lag"],
                 )
-                for i in range(n_dims):
-                    for j in range(n_dims):
-                        if i != j and te_matrix[i, j] > threshold:
-                            G.add_edge(f"dim_{i}", f"dim_{j}", weight=te_matrix[i, j])
 
             self.influence_network = G
             return G
 
         except Exception as e:
+            self.rooting_results = {"error": str(e), "method": rooting_method}
             logger.error("Error in influence network analysis: %s", e)
             return None
 
@@ -244,6 +278,13 @@ class DynamicResonanceRooting:
         state_space_horizon: int = 12,
         method: str = "fft",
         peak_height_ratio: float = 0.1,
+        rooting_method: str = "lagged_correlation",
+        rooting_max_lag: Optional[int] = None,
+        rooting_n_surrogates: int = 25,
+        rooting_random_state: Optional[int] = 0,
+        rooting_alpha: float = 0.05,
+        rooting_surrogate_method: str = "circular_shift",
+        rooting_correction: str = "max_statistic",
     ) -> Dict[str, object]:
         """
         Perform complete DRR analysis on system data.
@@ -257,9 +298,44 @@ class DynamicResonanceRooting:
             method (str): Spectral method for resonance detection
                 ('fft', 'welch', 'wavelet', or 'markov')
             peak_height_ratio (float): Ratio of max power for peak detection
+            rooting_method (str): Rooting backend to use for multivariate runs.
+                ``"lagged_correlation"`` is the default. ``"transfer_entropy"``
+                requests transfer entropy, uses it when ``pyinform`` is
+                available, and otherwise falls back to lagged correlation.
+            rooting_max_lag (Optional[int]): Maximum lag to search for rooting
+                analysis. ``None`` resolves to ``max(1, tau)``.
+            rooting_n_surrogates (int): Number of surrogate draws used for
+                significance testing. ``0`` disables inference.
+            rooting_random_state (Optional[int]): Seed for reproducible
+                surrogate generation.
+            rooting_alpha (float): Threshold applied to the selected p-value.
+            rooting_surrogate_method (str): Surrogate null model, either
+                ``"circular_shift"`` or ``"permutation"``.
+            rooting_correction (str): P-value selection rule, either
+                ``"max_statistic"`` for adjusted p-values or ``"none"`` for raw
+                p-values.
+
+        Example:
+            >>> results = drr.analyze_system(
+            ...     data,
+            ...     multivariate=True,
+            ...     window_size=256,
+            ...     rooting_method="lagged_correlation",
+            ...     rooting_n_surrogates=25,
+            ...     rooting_random_state=42,
+            ... )
 
         Returns:
-            Dict: Complete analysis results
+            Dict: Complete analysis results. For multivariate inputs, the
+            returned ``rooting_analysis`` payload exposes ``score_matrix`` as
+            the canonical matrix and preserves ``transfer_entropy`` as a legacy
+            alias. It also includes raw and adjusted p-values, exploratory
+            ``candidate_edges``, selected ``significant_edges``, the correction
+            mode, surrogate method, surrogate count, and
+            ``minimum_attainable_p_value``. The returned ``method`` names the
+            effective backend actually used. If rooting fails inside the
+            facade, ``rooting_analysis`` contains a structured error record
+            instead of being omitted.
         """
         results: Dict[str, object] = {}
 
@@ -285,9 +361,19 @@ class DynamicResonanceRooting:
             # Step 3: Analyze influence network (if multivariate)
             if multivariate and data.ndim > 1:
                 logger.info("Analyzing influence network...")
-                network = self.analyze_influence_network()
+                self.rooting_results = {}
+                network = self.analyze_influence_network(
+                    rooting_method=rooting_method,
+                    rooting_max_lag=rooting_max_lag,
+                    rooting_n_surrogates=rooting_n_surrogates,
+                    rooting_random_state=rooting_random_state,
+                    rooting_alpha=rooting_alpha,
+                    rooting_surrogate_method=rooting_surrogate_method,
+                    rooting_correction=rooting_correction,
+                )
                 if network is not None:
                     results["influence_network"] = network
+                if self.rooting_results:
                     results["rooting_analysis"] = self.rooting_results
 
             # Step 4: Fit DSGE-inspired state-space diagnostics
