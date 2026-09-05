@@ -1,8 +1,19 @@
 import json
 
 import numpy as np
+import pytest
 
 from drr_framework.modules import DepthCalculator, ResonanceDetector, RootingAnalyzer
+
+
+def _infer_circular_offset(original: np.ndarray, shifted: np.ndarray) -> int:
+    matches = np.flatnonzero(shifted == original[0])
+    assert matches.size == 1
+    return int(matches[0])
+
+
+def _circular_distance(offset_a: int, offset_b: int, n_samples: int) -> int:
+    return min((offset_a - offset_b) % n_samples, (offset_b - offset_a) % n_samples)
 
 
 def test_welch_detector_identifies_noisy_dominant_frequency_with_confidence():
@@ -124,7 +135,9 @@ def test_rooting_analyzer_reports_corrected_surrogate_inference():
     assert result["effective_lag"][0, 1] == 2
 
     finite_off_diagonal = ~np.eye(3, dtype=bool) & np.isfinite(result["p_values"])
-    assert np.all(result["adjusted_p_values"][finite_off_diagonal] >= result["p_values"][finite_off_diagonal])
+    assert np.all(
+        result["adjusted_p_values"][finite_off_diagonal] >= result["p_values"][finite_off_diagonal]
+    )
     assert any(
         edge["source"] == "dim_0"
         and edge["target"] == "dim_1"
@@ -132,6 +145,46 @@ def test_rooting_analyzer_reports_corrected_surrogate_inference():
         and edge["adjusted_p_value"] <= 0.05
         for edge in result["significant_edges"]
     )
+
+
+def test_circular_shift_surrogates_keep_all_column_offsets_farther_than_max_lag():
+    analyzer = RootingAnalyzer()
+    n_samples = 30
+    max_lag = 4
+    data = np.column_stack([np.arange(n_samples) + (1000 * index) for index in range(4)])
+
+    surrogate = analyzer._generate_surrogate(
+        data,
+        max_lag=max_lag,
+        rng=np.random.default_rng(0),
+        surrogate_method="circular_shift",
+    )
+
+    offsets = [
+        _infer_circular_offset(data[:, index], surrogate[:, index])
+        for index in range(data.shape[1])
+    ]
+
+    for left in range(len(offsets)):
+        for right in range(left + 1, len(offsets)):
+            assert _circular_distance(offsets[left], offsets[right], n_samples) > max_lag
+
+
+def test_rooting_analyzer_rejects_impossible_circular_shift_configuration():
+    analyzer = RootingAnalyzer()
+    data = np.column_stack([np.arange(3, dtype=float), np.arange(10.0, 13.0)])
+
+    with pytest.raises(
+        ValueError,
+        match="more samples, fewer variables, or surrogate_method='permutation'",
+    ):
+        analyzer.analyze(
+            data,
+            max_lag=1,
+            n_surrogates=1,
+            random_state=0,
+            surrogate_method="circular_shift",
+        )
 
 
 def test_reproduction_experiment_writes_research_artifacts(tmp_path):

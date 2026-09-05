@@ -510,7 +510,9 @@ class RootingAnalyzer:
             surrogate = self._generate_surrogate(data, max_lag, rng, surrogate_method)
             surrogate_scores, _, _ = self._score_matrix(surrogate, max_lag, method_used)
             exceedances += surrogate_scores >= observed
-            family_max = float(np.max(surrogate_scores[off_diagonal])) if np.any(off_diagonal) else 0.0
+            family_max = (
+                float(np.max(surrogate_scores[off_diagonal])) if np.any(off_diagonal) else 0.0
+            )
             max_exceedances += family_max >= observed
 
         p_values = (exceedances + 1.0) / (n_surrogates + 1.0)
@@ -534,15 +536,25 @@ class RootingAnalyzer:
                 surrogate[:, index] = rng.permutation(surrogate[:, index])
             return surrogate
 
-        valid_offsets = np.arange(max_lag + 1, max(n_samples - max_lag, max_lag + 1), dtype=int)
-        if valid_offsets.size == 0:
-            valid_offsets = np.arange(1, n_samples, dtype=int)
-        if valid_offsets.size == 0:
-            return surrogate
+        minimum_separation = max_lag + 1
+        required_samples = n_variables * minimum_separation
+        if n_samples < required_samples:
+            raise ValueError(
+                "Circular-shift surrogate assignment is impossible; use more "
+                "samples, fewer variables, or surrogate_method='permutation'."
+            )
 
-        for index in range(n_variables):
-            shift = int(rng.choice(valid_offsets))
-            surrogate[:, index] = np.roll(surrogate[:, index], shift)
+        # Anchor the first series, then distribute the remaining samples among
+        # the circular gaps. Every adjacent gap is at least minimum_separation,
+        # so every pair of offsets is farther apart than max_lag.
+        gap_slack = rng.multinomial(
+            n_samples - required_samples,
+            np.full(n_variables, 1.0 / n_variables),
+        )
+        gaps = minimum_separation + gap_slack
+        offsets = np.concatenate(([0], np.cumsum(gaps[:-1])))
+        for index, shift in enumerate(offsets):
+            surrogate[:, index] = np.roll(surrogate[:, index], int(shift))
         return surrogate
 
     def _candidate_edges(
