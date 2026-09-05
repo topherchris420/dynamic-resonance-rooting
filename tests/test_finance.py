@@ -110,7 +110,12 @@ class TestFinanceRegimes(unittest.TestCase):
                 timestamp=None,
                 mean_depth=0.1 * i,
                 max_depth=0.1 * i,
+                min_depth=0.01,
                 depth_dispersion=0.01,
+                spectral_concentration=0.5,
+                temporal_persistence=0.5,
+                phase_coherence=0.5,
+                amplitude_stability=0.5,
                 network_density=0.1,
                 significant_edge_count=1,
                 effective_rooting_method="lagged_correlation",
@@ -218,6 +223,98 @@ class TestMetricsAndBacktest(unittest.TestCase):
             self.assertTrue(os.path.exists(os.path.join(tmpdir, "weights.csv")))
             self.assertTrue(os.path.exists(os.path.join(tmpdir, "drr_states.csv")))
             self.assertTrue(os.path.exists(os.path.join(tmpdir, "summary.json")))
+
+
+class TestAdaptersAndAntiLeakage(unittest.TestCase):
+    """Test Qlib, Riskfolio, VectorBT adapters, negative controls, and anti-leakage invariant."""
+
+    def setUp(self):
+        self.mdata = generate_synthetic_market_data(
+            symbols=["SPY", "TLT", "GLD", "HYG", "VIXY"],
+            start_date="2018-01-01",
+            end_date="2021-06-30",
+            seed=42,
+            portfolio_symbols=["SPY", "TLT", "GLD", "HYG"],
+        )
+
+    def test_anti_leakage_invariant(self):
+        from drr_framework.finance.validation import assert_no_lookahead_leakage
+
+        def run_pipeline(prices_df):
+            rets = calculate_returns(prices_df)
+            mdata = MarketData(
+                prices=prices_df,
+                returns=rets,
+                observation_symbols=list(prices_df.columns),
+                portfolio_symbols=list(prices_df.columns[:4]),
+            )
+            cfg = QuantMacroConfig(lookback=126, depth_window=63, rooting_surrogates=10)
+            backtester = WalkForwardBacktester(config=cfg)
+            res = backtester.run(mdata)
+            return res.regimes
+
+        # Verify running pipeline on truncated vs full data produces identical OOS signals
+        assert_no_lookahead_leakage(
+            run_pipeline_fn=run_pipeline,
+            full_dataset=self.mdata.prices,
+            cutoff_date="2020-06-30",
+        )
+
+    def test_qlib_matched_experiment(self):
+        from drr_framework.finance.qlib import QlibDRRMatchedExperiment
+        from drr_framework.finance.config import QuantResearchConfig
+
+        cfg = QuantResearchConfig(depth_window=63, rooting_surrogates=10)
+        exp = QlibDRRMatchedExperiment(config=cfg, target_symbol="SPY")
+        res = exp.run_matched_experiment(self.mdata, model_family="linear")
+
+        self.assertIn("control", res)
+        self.assertIn("experiment", res)
+        self.assertIn("ic", res["control"]["metrics"])
+        self.assertIn("ic", res["experiment"]["metrics"])
+        self.assertIn("ic_delta", res["summary_deltas"])
+
+        ablation = exp.run_feature_ablation_study(self.mdata, model_family="linear")
+        self.assertIn("Baseline", ablation)
+        self.assertIn("Baseline + All DRR", ablation)
+
+    def test_vectorbt_adapter_and_parameter_sweep(self):
+        from drr_framework.finance.validation import VectorBTAdapter
+
+        adapter = VectorBTAdapter(transaction_cost_bps=5.0)
+        sweep_df = adapter.run_parameter_robustness_sweep(
+            self.mdata,
+            lookbacks=(126,),
+            percentiles=(80.0,),
+            depth_windows=(63,),
+        )
+        self.assertEqual(len(sweep_df), 1)
+        self.assertIn("sharpe", sweep_df.columns)
+
+    def test_negative_controls_and_hac(self):
+        from drr_framework.finance.validation import (
+            calculate_hac_standard_errors,
+            benjamini_hochberg_fdr,
+            run_negative_controls,
+        )
+
+        # HAC SE
+        x = pd.Series(np.random.normal(0, 1, 100))
+        y = pd.Series(np.random.normal(0, 1, 100))
+        beta, se, t_stat = calculate_hac_standard_errors(x, y)
+        self.assertIsInstance(beta, float)
+        self.assertGreater(se, 0.0)
+
+        # FDR
+        pvals = [0.001, 0.01, 0.04, 0.20, 0.50]
+        sig, adj = benjamini_hochberg_fdr(pvals)
+        self.assertEqual(len(sig), 5)
+        self.assertTrue(sig[0])
+
+        # Negative Controls
+        states = pd.DataFrame({"mean_depth": np.random.uniform(0.2, 0.8, 100)}, index=self.mdata.returns.index[:100])
+        res = run_negative_controls(states, self.mdata.returns.iloc[:100], n_shuffles=20)
+        self.assertIn("empirical_p_value", res)
 
 
 if __name__ == "__main__":

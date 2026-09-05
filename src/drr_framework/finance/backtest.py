@@ -14,7 +14,8 @@ from typing import Dict, Any, List, Optional, Sequence, Union
 import numpy as np
 import pandas as pd
 
-from .features import MarketData, DEFAULT_OBSERVATION_UNIVERSE, DEFAULT_PORTFOLIO_UNIVERSE
+from .types import MarketData
+from .data.base import DEFAULT_OBSERVATION_UNIVERSE, DEFAULT_PORTFOLIO_UNIVERSE
 from .regimes import analyze_market_regime, PortfolioRegimePolicy, MarketResonanceState
 from .portfolio import optimize_portfolio
 from .metrics import calculate_performance_metrics, validate_drr_predictive_signal

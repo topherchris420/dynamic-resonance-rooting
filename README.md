@@ -58,14 +58,15 @@ DRR combines spectral analysis (FFT, Welch PSD, Morlet wavelet scalograms), caus
 | **Physics Systems** | Coupled oscillators, Lorenz, Rössler, Heston, FitzHugh-Nagumo benchmarks |
 | **Policy Data** | Tabular time-series from FRED, policy observables |
 | **Supervisory Panels** | Banking data (FFIEC 002, FR Y-9C), institutional metrics |
+| **Financial Markets** | Multi-asset macro panels (SPY, TLT, GLD, HYG, VIXY) via OpenBB / Qlib / DataFrame providers |
 | **Custom Time-Series** | Any multivariate numerical array |
 
 ### Export Formats
 
 - **JSON** — Structured analysis results
-- **CSV** — Tableau-ready artifacts
+- **CSV** — Tableau-ready artifacts & walk-forward results
 - **Markdown** — Human-readable reports
-- **Plots** — Visualization of resonance, rooting graphs, state-space
+- **Plots** — Visualization of resonance, rooting graphs, state-space, strategy drawdowns
 
 ---
 
@@ -75,6 +76,25 @@ DRR combines spectral analysis (FFT, Welch PSD, Morlet wavelet scalograms), caus
 
 ```bash
 pip install drr-framework
+```
+
+### Optional Extras
+
+```bash
+# Data Infrastructure (OpenBB)
+pip install "drr-framework[quant-data]"
+
+# Portfolio & Risk Engine (Riskfolio-Lib)
+pip install "drr-framework[quant-risk]"
+
+# Machine Learning Research (Microsoft Qlib)
+pip install "drr-framework[quant-ml]"
+
+# Robustness & Validation Engine (VectorBT)
+pip install "drr-framework[quant-validation]"
+
+# Full Quantitative Research Suite
+pip install "drr-framework[quant]"
 ```
 
 ### From Source
@@ -127,6 +147,50 @@ effect-size list without the surrogate test.
 
 ---
 
+## DRR Quant Research Lab
+
+DRR can be evaluated as a structural market-state representation using established open-source quantitative research infrastructure:
+
+```text
+Market Data (OpenBB / Qlib / DataFrame)
+        ↓
+   DRR Framework
+        ↓
+Structural Market State (MarketResonanceState)
+        ↓
+ ┌──────┼───────────────┐
+ ▼      ▼               ▼
+Qlib  Riskfolio      VectorBT
+ML    Portfolio      Validation
+```
+
+Its purpose is to test whether Dynamic Resonance Rooting produces useful, reproducible structural representations of financial markets and whether those representations contain incremental information beyond conventional financial features out of sample.
+
+### Key Capabilities
+
+1. **Microsoft Qlib ML Integration** (`drr_framework.finance.qlib`):
+   - Combines conventional market factors with DRR state features.
+   - Evaluates Matched Experiments: Control (Qlib model + conventional features) vs. Experiment (Qlib model + conventional + DRR features).
+   - Computes Information Coefficient (IC), Rank IC, ICIR, Rank ICIR, and conducts feature ablation studies.
+
+2. **Riskfolio-Lib Integration** (`drr_framework.finance.portfolio`):
+   - DRR-conditioned dynamic portfolio regime switching (Mean-Variance vs. CVaR 95% tail risk).
+   - SciPy SLSQP optimization fallback.
+   - Strictly causal no-lookahead expanding/rolling percentile regime policies.
+
+3. **VectorBT Validation Adapter** (`drr_framework.finance.validation`):
+   - Independent backtest reconstruction and multi-parameter robustness sweeps (lookbacks, quantiles, horizons, time-delays).
+
+4. **Strict Anti-Leakage & Statistical Rigor**:
+   - Automated lookahead invariant verification (`assert_no_lookahead_leakage`).
+   - Newey-West HAC standard errors and Benjamini-Hochberg FDR corrections.
+   - Date-shuffled negative controls.
+
+> [!NOTE]
+> **Research & Scientific Disclaimer**: DRR structural resonance is an empirical complex-systems state metric, not a guaranteed profitable trading strategy or direct alpha signal. High structural resonance measures strong persistent structured dynamics across assets, which must be evaluated empirically. A null result is scientifically acceptable.
+
+---
+
 ## Use Cases
 
 ### Sonoluminescence Lab
@@ -176,127 +240,34 @@ and a tempered particle filter on a nonlinear observation.
 ### Quant Macro Lab
 **File:** `examples/quant_macro_lab.py`
 
-DRR can also be applied to multivariate financial systems as a structural regime-detection layer conditioning downstream portfolio risk decisions:
-
-```text
-Market Data → DRR Structural State Inference → Portfolio Policy → Walk-Forward Evaluation
-```
+Run full DRR Quant Research Lab walk-forward portfolio evaluation:
 
 ```bash
 python examples/quant_macro_lab.py --offline --rebalance monthly
 ```
 
-The Quant Macro Lab infers cross-asset structural regimes (mean depth, network density, depth dispersion) to condition policy choices between portfolio risk models (e.g., Mean-Variance vs. CVaR optimization) in a strict walk-forward evaluation pipeline with zero lookahead bias.
+Runs matched strategy evaluations (Equal Weight, Mean-Variance, Static CVaR, DRR Conditioned, SPY Buy-Hold) and exports structured research reports and summary plots.
 
-> [!NOTE]
-> **Research & Scientific Disclaimer**: DRR structural resonance is an empirical complex-systems state metric, not a guaranteed profitable trading strategy or direct alpha signal. High structural resonance measures strong persistent structured dynamics across assets, which must be evaluated empirically.
+### Primary Qlib Matched Experiment Example
+**File:** `examples/qlib_drr_experiment.py`
 
-### Quick Start
-**File:** `examples/quickstart_resonance_export.py`
-
-Compact load-detect-export demonstration
-
----
-
-## Sonoluminescence / Resonant Transduction Benchmark
-
-The framework includes a research-grade physical benchmark modeling multi-stage coupled energy transduction across distinct physical domains:
-
-```
-    Acoustic Excitation
-           ↓
-    Acoustic Resonator
-           ↓
-    Impedance Transformation
-           ↓
-    Cavitation
-           ↓
-    Bubble Collapse
-           ↓
-    Sonoluminescence
-           ↓
-    Optical/EM Coupling
-           ↓
-    Electrical Transduction
-           ↓
-    DRR Analysis
+```bash
+python examples/qlib_drr_experiment.py --offline --model linear
 ```
 
-### Physical vs. Phenomenological Modeling Disclosures
+### DRR Riskfolio Portfolio Example
+**File:** `examples/drr_riskfolio_portfolio.py`
 
-| Domain | Governing Physics / Formulation | Status |
-|--------|----------------------------------|--------|
-| **Acoustic Driver** | Acoustic wave speed $c_s = 1482\text{ m/s}$, ultrasonic frequency $f_a \approx 25\text{ kHz}$, wavelength $\lambda_a = \frac{c_s}{f_a} \approx 5.93\text{ cm}$ | Physically motivated |
-| **Waveguide Metallurgy** | Solid acoustic horn materials (OFHC Copper, Copper-Boron alloy $\text{Cu}_{0.98}\text{B}_{0.02}$, $\text{CuBe}$, Titanium) with impedance matching $Z_{\text{solid}} = \rho c$ and interface transmission $T = \frac{4 Z_{\text{solid}} Z_{\text{fluid}}}{(Z_{\text{solid}} + Z_{\text{fluid}})^2}$ | Physically motivated |
-| **Acoustic Waveguide / Resonator** | Geometric area concentration $\left(\frac{d_{\text{in}}}{d_{\text{out}}}\right)$, half-wave standing-wave cavity response with quality factor $Q$ and detuning $\delta$. *Waveguide is an acoustic impedance structure, not an electrical transformer.* | Idealized 1D acoustic approximation |
-| **Bubble Cavitation Dynamics** | Modified Rayleigh-Plesset equation $R \ddot{R} + \frac{3}{2}\dot{R}^2 = \frac{1}{\rho}\left(P_{\text{bubble}} - P_\infty(t) - \frac{2\sigma}{R} - \frac{4\mu_L \dot{R}}{R}\right)$ with van der Waals excluded volume core ($R_{\text{core}} \approx \frac{R_0}{8.5}$), liquid viscosity $\mu_L$, surface tension $\sigma$, and Blake cavitation threshold | Physically motivated |
-| **Fluid & Solute Doping** | Dissolved gas doping (Argon, Xenon, Helium) modifying $\gamma_{\text{mix}}$, plus dissolved/colloidal Copper ($\text{Cu}$), Boron ($\text{B}$), and Alkali salts altering fluid density, viscosity, and surface tension | Physically motivated |
-| **Sonoluminescent Emission** | Ultrafast flash pulses ($\tau \sim 200\text{ ps}$) triggered during violent collapse rebounds ($R \to R_{\text{min}}$), multispectral continuum + atomic lines ($\text{Cu I}$ at $324.7 / 327.4\text{ nm}$, $\text{BO}^*$ excimer at $518\text{ nm}$) | Phenomenological model |
-| **Electrical Transduction** | Downstream photodetector responsivity, collection factor $\eta_{\text{col}}$, RC low-pass filter, and energy accounting | Downstream detector model |
-| **DRR Metrics (RTEI)** | Resonant Transduction Efficiency Index quantifying multimodal coherence across the 8-channel time series | Proposed DRR research metric |
-
-> [!IMPORTANT]
-> **No Net Energy Amplification Claimed**: The benchmark explicitly accounts for total acoustic input energy versus electrical output energy ($\frac{E_{\text{elec}}}{E_{\text{acoustic}}} \ll 1$). The purpose is computational study of nonlinear resonance, modal concentration, phase coherence, and causal lead-lag rooting across multimodal physics.
-
-### Benchmark Usage Example (With Copper-Boron Metallurgy & Solute Doping)
-
-```python
-from drr_framework import (
-    DynamicResonanceRooting,
-    calculate_resonant_transduction_efficiency_index,
-    generate_sonoluminescence_system,
-)
-
-# 1. Generate 8-channel multivariate acousto-opto-electrical benchmark
-#    with Copper-Boron alloy waveguide and Argon/Cu/B fluid doping
-time, data, metadata = generate_sonoluminescence_system(
-    sampling_rate=100_000,
-    duration=0.002,
-    acoustic_frequency_hz=25_000,
-    input_pressure_pa=60_000,
-    waveguide_input_diameter_m=0.020,
-    waveguide_output_diameter_m=0.004,
-    waveguide_material="copper_boron_alloy",
-    noble_gas_species="argon",
-    noble_gas_fraction=0.01,
-    copper_solute_fraction=0.001,
-    boron_solute_fraction=0.001,
-    random_state=42,
-)
-
-# 2. Analyze multi-channel resonance and directed rooting with DRR
-drr = DynamicResonanceRooting(sampling_rate=100_000)
-results = drr.analyze_system(data, multivariate=True)
-
-# 3. Compute the Resonant Transduction Efficiency Index (RTEI)
-rtei = calculate_resonant_transduction_efficiency_index(results, metadata)
-print(f"RTEI: {rtei['rtei']:.5f}")
+```bash
+python examples/drr_riskfolio_portfolio.py --offline
 ```
 
+### VectorBT Robustness Sweeps Example
+**File:** `examples/drr_vectorbt_robustness.py`
 
----
-
-## Macro Stability & Banking Skin Cockpit
-
-The framework includes a specialized supervisory application for Federal Reserve oversight:
-
-### Purpose
-Real-time early-warning system for detecting non-linear liquidity panics ("Dash for Cash" loop) across Large Foreign Banking Organizations (LFBOs).
-
-### Key Capabilities
-1. **Resonance Detection** — Identifies hidden cyclical funding stress via Welch/FFT
-2. **Rooting Analysis** — Maps lead-lag structures between Treasury shocks and bank liquidity drains
-3. **Composite Scoring** — Resonance Depth combining spectral concentration, temporal persistence, phase coherence, amplitude stability
-4. **Stress Simulation** — $200\text{ bps}$ parallel rate shift (Full AOCI vs. Opt-Out)
-
-### Files
-- `layer1_regulatory_backend.py` — Python/SQL regulatory backend
-- `layer2_tableau_blueprint.twb` — Tableau dashboard blueprint
-- `tableau_calculated_fields.py` — Tableau calculated fields
-- `tableau_output/` — Generated CSV exports
-
-### Compliance
-Implements **SR 11-7 Model Risk Management** guidelines from the Federal Reserve.
+```bash
+python examples/drr_vectorbt_robustness.py --offline
+```
 
 ---
 
@@ -308,31 +279,24 @@ dynamic-resonance-rooting/
 │   ├── analysis.py             # DynamicResonanceRooting class
 │   ├── _spectral.py            # Spectral analysis
 │   ├── benchmarks.py           # Benchmark generators
-│   ├── sonoluminescence.py     # Sonoluminescence & acousto-opto-electrical benchmark
+│   ├── sonoluminescence.py     # Sonoluminescence benchmark
 │   ├── datasets.py              # Data adapters
-│   ├── reporting.py            # Export utilities
-│   ├── state_space.py          # State-space filter, Chandrasekhar recursions
+│   ├── finance/                # DRR Quant Research Lab
+│   │   ├── config.py           # Experiment configuration
+│   │   ├── types.py            # MarketResonanceState & result containers
+│   │   ├── data/               # Data adapters (OpenBB, Qlib, DataFrame)
+│   │   ├── features/           # DRR & conventional feature engineering
+│   │   ├── qlib/               # Qlib dataset & matched experiment engine
+│   │   ├── portfolio/          # Riskfolio adapter & regime policies
+│   │   ├── validation/         # VectorBT adapter, walk-forward & anti-leakage
+│   │   └── reporting/          # Metrics, plots & Markdown research reports
+│   ├── state_space.py          # State-space filter
 │   ├── smoothers.py            # Kalman & simulation smoothers
-│   ├── particle_filter.py      # Tempered particle filter (nonlinear)
-│   ├── supervision.py           # Supervisory components
-│   └── validation_readiness.py # Validation packets
+│   └── particle_filter.py      # Tempered particle filter
 ├── examples/                    # Usage examples
-│   ├── sonoluminescence_lab.py
-│   ├── physics_lab.py
-│   ├── policy_lab.py
-│   ├── supervisory_policy_lab.py
-│   └── quickstart_resonance_export.py
 ├── tests/                       # Test suite
-│   ├── test_sonoluminescence.py
-
 ├── docs/                        # Documentation
-│   ├── architecture.md
-│   ├── user-guide.md
-│   ├── developer-guide.md
-│   ├── api.md
-│   └── faq.md
-├── data/                        # Datasets
-├── results/                     # Output artifacts
+│   ├── quant-research.md       # Quant Research Lab architecture guide
 └── pyproject.toml              # Package config
 ```
 
@@ -345,7 +309,7 @@ dynamic-resonance-rooting/
 | `resonances` | Dominant frequencies and spectral evidence |
 | `resonance_depths` | Scalar persistence/stability scores by dimension |
 | `resonance_depth_details` | Component-level scores and confidence intervals |
-| `rooting_analysis` | Directed lagged relationships, `score_matrix`/`transfer_entropy`, raw and adjusted p-values, and candidate/significant edge metadata |
+| `rooting_analysis` | Directed lagged relationships, `score_matrix`/`transfer_entropy`, raw/adjusted p-values, candidate/significant edges |
 | `state_space_analysis` | Transition, measurement, likelihood, stability, impulse-response |
 
 **Important:** DRR outputs are research diagnostics. Domain conclusions require separate validation, calibration, and review.
@@ -354,13 +318,13 @@ dynamic-resonance-rooting/
 
 ## Documentation
 
+- [Quant Research Lab Architecture](docs/quant-research.md) — Quantitative finance integration guide
 - [User Guide](docs/user-guide.md) — Getting started
 - [Architecture](docs/architecture.md) — System design
 - [API Reference](docs/api.md) — Function documentation
 - [Developer Guide](docs/developer-guide.md) — Contributing
 - [FAQ](docs/faq.md) — Common questions
 - [Reproducibility](docs/reproducibility.md) — Ensuring reproducible results
-- [Validation Readiness](docs/validation-readiness-guide.md) — Model validation
 
 ---
 
@@ -383,26 +347,3 @@ If you use DRR in your research, please cite:
 ## License
 
 MIT License — see LICENSE file for details.
-
----
-
-## Acknowledgments
-
-The state-space filtering and smoothing routines (`state_space.py`,
-`smoothers.py`, `particle_filter.py`) are dependency-free NumPy ports of the
-algorithms in the New York Fed's
-[`StateSpaceRoutines.jl`](https://github.com/FRBNY-DSGE/StateSpaceRoutines.jl):
-the Kalman filter and Chandrasekhar recursions, the Hamilton and Koopman
-smoothers, the Durbin–Koopman and Carter–Kohn simulation smoothers, and the
-tempered particle filter (Herbst & Schorfheide, 2019). DRR does not depend on
-Julia; the ports let DRR use these methods natively in Python.
-
-## References
-
-- Herbst, E. & Schorfheide, F. (2019). *Tempered Particle Filtering.* Journal of Econometrics.
-- Durbin, J. & Koopman, S. J. (2012). *Time Series Analysis by State Space Methods.*
-- Herbst, E. (2015). *Using the "Chandrasekhar Recursions" for Likelihood Evaluation of DSGE Models.*
-- [StateSpaceRoutines.jl](https://github.com/FRBNY-DSGE/StateSpaceRoutines.jl)
-- [FFIEC 002 Reports](https://www.ffiec.gov/NPW)
-- [Federal Reserve Supervision](https://www.federalreserve.gov/supervisionreg.htm)
-- [SR 11-7: Model Risk Management](https://www.federalreserve.gov/supervisionreg/srletters/sr1107.htm)
