@@ -5,33 +5,16 @@ Interfaces rolling market-return windows with Dynamic Resonance Rooting (DRR),
 aggregates structural metrics into MarketResonanceState, and defines no-lookahead regime policies.
 """
 
-from dataclasses import dataclass, field
 import logging
 from typing import Dict, Any, Optional, Sequence, Union
 
 import numpy as np
 import pandas as pd
 
-from ..analysis import DynamicResonanceRooting
+from .types import MarketResonanceState
+from .features.drr_features import DRRMarketFeatureGenerator
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class MarketResonanceState:
-    """Summary dataclass representing the structural state inferred by DRR for a market window."""
-
-    timestamp: Optional[pd.Timestamp]
-    mean_depth: float
-    max_depth: float
-    depth_dispersion: float
-    network_density: float
-    significant_edge_count: int
-    effective_rooting_method: str
-    agent_belief: float
-    is_rooted: bool
-    resonance_depths: Dict[str, float] = field(default_factory=dict)
-    state_space_diagnostics: Optional[Dict[str, Any]] = None
 
 
 def analyze_market_regime(
@@ -49,99 +32,19 @@ def analyze_market_regime(
 ) -> MarketResonanceState:
     """
     Adapter that takes a rolling window of market returns and executes DRR system analysis.
-
-    Args:
-        returns_window: Returns data (DataFrame or 2D NumPy array)
-        sampling_rate: Sampling rate in Hz (1.0 for daily market data)
-        embedding_dim: Embedding dimension
-        tau: Time delay
-        spectral_method: Spectral method ('welch', 'fft', 'wavelet', 'markov')
-        rooting_method: 'transfer_entropy' or 'lagged_correlation'
-        rooting_n_surrogates: Number of surrogates for rooting significance
-        rooting_random_state: Random seed for surrogates
-        rooting_alpha: Significance threshold
-        state_space: Whether to run DSGE state-space diagnostics
-        timestamp: Optional timestamp corresponding to the end of the window
-
-    Returns:
-        MarketResonanceState summarizing system-level resonance metrics.
     """
-    if isinstance(returns_window, pd.DataFrame):
-        data_matrix = returns_window.to_numpy()
-        if timestamp is None and isinstance(returns_window.index, pd.DatetimeIndex):
-            timestamp = returns_window.index[-1]
-    else:
-        data_matrix = np.asarray(returns_window)
-
-    if data_matrix.ndim != 2:
-        raise ValueError(f"returns_window must be 2D, got shape {data_matrix.shape}")
-
-    n_samples, n_vars = data_matrix.shape
-    if n_samples < 20:
-        raise ValueError(f"Insufficient window length for DRR analysis ({n_samples} samples).")
-
-    drr = DynamicResonanceRooting(
+    generator = DRRMarketFeatureGenerator(
         embedding_dim=embedding_dim,
         tau=tau,
         sampling_rate=sampling_rate,
-    )
-
-    is_multivariate = n_vars > 1
-    analysis_results = drr.analyze_system(
-        data=data_matrix,
-        multivariate=is_multivariate,
-        window_size=min(100, n_samples // 2),
-        state_space=state_space,
-        method=spectral_method,
+        spectral_method=spectral_method,
         rooting_method=rooting_method,
         rooting_n_surrogates=rooting_n_surrogates,
         rooting_random_state=rooting_random_state,
         rooting_alpha=rooting_alpha,
+        state_space=state_space,
     )
-
-    resonance_depths = analysis_results.get("resonance_depths", {})
-    depth_vals = list(resonance_depths.values())
-
-    if depth_vals:
-        mean_depth = float(np.mean(depth_vals))
-        max_depth = float(np.max(depth_vals))
-        depth_dispersion = float(np.std(depth_vals))
-    else:
-        mean_depth, max_depth, depth_dispersion = 0.0, 0.0, 0.0
-
-    # Network density calculation E / [N * (N - 1)] for directed graphs
-    rooting_analysis = analysis_results.get("rooting_analysis", {})
-    sig_edges = rooting_analysis.get("significant_edges", [])
-    sig_edge_count = len(sig_edges)
-    effective_method = rooting_analysis.get("method", rooting_method)
-
-    if is_multivariate and n_vars > 1:
-        max_possible_edges = n_vars * (n_vars - 1)
-        network_density = (
-            float(sig_edge_count / max_possible_edges) if max_possible_edges > 0 else 0.0
-        )
-    else:
-        network_density = 0.0
-
-    agent_beliefs = analysis_results.get("agent_belief", {})
-    agent_belief = float(np.mean(list(agent_beliefs.values()))) if agent_beliefs else 0.5
-    is_rooted = bool(analysis_results.get("is_rooted", False))
-
-    state_space_diag = analysis_results.get("state_space_analysis", None)
-
-    return MarketResonanceState(
-        timestamp=timestamp,
-        mean_depth=mean_depth,
-        max_depth=max_depth,
-        depth_dispersion=depth_dispersion,
-        network_density=network_density,
-        significant_edge_count=sig_edge_count,
-        effective_rooting_method=effective_method,
-        agent_belief=agent_belief,
-        is_rooted=is_rooted,
-        resonance_depths=resonance_depths,
-        state_space_diagnostics=state_space_diag,
-    )
+    return generator.transform(returns_window, as_of=timestamp)
 
 
 class PortfolioRegimePolicy:
