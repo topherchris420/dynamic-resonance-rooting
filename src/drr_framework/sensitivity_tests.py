@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, cast
 
 import numpy as np
 
@@ -39,7 +39,7 @@ def run_parameter_sensitivity_experiment(
                     res = drr.analyze_system(
                         data, multivariate=(data.ndim > 1), window_size=w, method=m
                     )
-                    depths = res.get("resonance_depths", {})
+                    depths = cast(Dict[str, float], res.get("resonance_depths", {}))
                     avg_depth = float(np.mean(list(depths.values()))) if depths else 0.0
                     base_depths.append(avg_depth)
                     results.append(

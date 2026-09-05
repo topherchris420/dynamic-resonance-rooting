@@ -33,7 +33,7 @@ matches the exact Kalman value up to Monte Carlo error.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, Dict, List, Optional, Sequence, Union
+from typing import Callable, Dict, List, Optional, Sequence, Union, cast
 
 import numpy as np
 
@@ -192,7 +192,7 @@ def _resample_indices(weights: np.ndarray, method: str, rng: np.random.Generator
     if method == "systematic":
         return _systematic_resample(weights, rng)
     if method == "multinomial":
-        return rng.choice(weights.shape[0], size=weights.shape[0], p=weights)
+        return cast(np.ndarray, rng.choice(weights.shape[0], size=weights.shape[0], p=weights))
     raise ValueError("resampling must be 'systematic' or 'multinomial'")
 
 
