@@ -1,0 +1,54 @@
+[
+  {
+    "name": "collective_mode_strength",
+    "definition": "largest eigenvalue share of trace-normalized band coupling",
+    "units": "unitless",
+    "range": [0, 1],
+    "causal_availability": "at trailing-window endpoint",
+    "input_requirements": "finite multivariate time series",
+    "lookback": "configured analysis window",
+    "level": "system",
+    "interpretation": "concentration in the leading resonance mode",
+    "known_limitations": "Welch finite-sample bias and band sensitivity",
+    "version": "1.0.0"
+  },
+  {
+    "name": "effective_resonance_rank",
+    "definition": "exponential entropy of normalized coupling eigenvalues",
+    "units": "effective modes",
+    "range": [1, "number_of_dimensions"],
+    "causal_availability": "at trailing-window endpoint",
+    "input_requirements": "PSD resonance coupling",
+    "lookback": "configured analysis window",
+    "level": "system",
+    "interpretation": "number of materially occupied collective modes",
+    "known_limitations": "not intrinsically beneficial or harmful",
+    "version": "1.0.0"
+  },
+  {
+    "name": "root_migration",
+    "definition": "base-2 Jensen-Shannon divergence of consecutive root shares",
+    "units": "unitless",
+    "range": [0, 1],
+    "causal_availability": "after two trailing rooting windows",
+    "input_requirements": "nonnegative equal-size directed score matrices",
+    "lookback": "two rooting endpoints",
+    "level": "system",
+    "interpretation": "migration of outgoing influence distribution",
+    "known_limitations": "inherits rooting backend semantics",
+    "version": "1.0.0"
+  },
+  {
+    "name": "topology_drift",
+    "definition": "one minus angular similarity of consecutive adjacencies",
+    "units": "unitless",
+    "range": [0, 1],
+    "causal_availability": "after two trailing rooting windows",
+    "input_requirements": "nonnegative equal-size directed score matrices",
+    "lookback": "two rooting endpoints",
+    "level": "system",
+    "interpretation": "full weighted topology change",
+    "known_limitations": "scale invariant and label-order dependent",
+    "version": "1.0.0"
+  }
+]

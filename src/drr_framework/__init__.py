@@ -49,6 +49,15 @@ from .particle_filter import (
     linear_gaussian_model,
     tempered_particle_filter,
 )
+from .resonance_kernel import resonance_regularized_covariance, resonance_risk_kernel
+from .structural_surprise import StructuralSurpriseResult, structural_surprise
+from .topology_dynamics import (
+    RootingTopologySummary,
+    root_distribution,
+    root_migration,
+    summarize_topology,
+    topology_drift,
+)
 from .sonoluminescence import (
     DEFAULT_AMBIENT_PRESSURE,
     DEFAULT_LIQUID_VISCOSITY,
@@ -76,6 +85,23 @@ from .sonoluminescence import (
 
 # Lazy imports for modules with heavy optional dependencies
 def __getattr__(name):
+    if name in (
+        "CollectiveResonanceModes",
+        "CrossResonanceTensor",
+        "collective_modes",
+        "estimate_cross_resonance",
+    ):
+        from . import cross_resonance
+
+        return getattr(cross_resonance, name)
+    if name in (
+        "DynamicResonanceGeometry",
+        "ResonanceGeometryResult",
+        "StructuralResonanceFingerprint",
+    ):
+        from . import resonance_geometry
+
+        return getattr(resonance_geometry, name)
     if name in (
         "render_markdown_report",
         "serialize_analysis_results",
@@ -190,6 +216,22 @@ __all__ = [
     "ParticleFilterResult",
     "tempered_particle_filter",
     "linear_gaussian_model",
+    "CrossResonanceTensor",
+    "CollectiveResonanceModes",
+    "estimate_cross_resonance",
+    "collective_modes",
+    "DynamicResonanceGeometry",
+    "ResonanceGeometryResult",
+    "StructuralResonanceFingerprint",
+    "RootingTopologySummary",
+    "root_distribution",
+    "root_migration",
+    "topology_drift",
+    "summarize_topology",
+    "StructuralSurpriseResult",
+    "structural_surprise",
+    "resonance_risk_kernel",
+    "resonance_regularized_covariance",
     "serialize_analysis_results",
     "summarize_analysis_results",
     "render_markdown_report",
