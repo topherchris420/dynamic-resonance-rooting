@@ -86,6 +86,17 @@ from .sonoluminescence import (
 # Lazy imports for modules with heavy optional dependencies
 def __getattr__(name):
     if name in (
+        "ControlIntervention",
+        "NavigationMetrics",
+        "ResonanceControlExperimentSuite",
+        "ResonanceNavigationEngine",
+        "ResonanceState",
+        "ResonanceTarget",
+    ):
+        from . import control_engine
+
+        return getattr(control_engine, name)
+    if name in (
         "CollectiveResonanceModes",
         "CrossResonanceTensor",
         "collective_modes",
@@ -270,4 +281,10 @@ __all__ = [
     "SonoluminescenceSystem",
     "generate_sonoluminescence_system",
     "calculate_resonant_transduction_efficiency_index",
+    "ResonanceState",
+    "ResonanceTarget",
+    "ControlIntervention",
+    "NavigationMetrics",
+    "ResonanceNavigationEngine",
+    "ResonanceControlExperimentSuite",
 ]
