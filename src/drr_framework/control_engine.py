@@ -20,12 +20,9 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
-from .analysis import DynamicResonanceRooting
 from .cross_resonance import CrossResonanceTensor, estimate_cross_resonance
 from .evidence_card import DRREvidenceCard, create_drr_evidence_card
 from .modules import DepthCalculator, ResonanceDetector, RootingAnalyzer
-from .particle_filter import NonlinearStateSpaceModel, tempered_particle_filter
-from .state_space import kalman_filter
 from .topology_dynamics import (
     root_distribution,
     root_migration,
@@ -158,9 +155,7 @@ class ResonanceNavigationEngine:
 
         for d in range(dim):
             series = data[:, d]
-            det_res = self.detector.detect(
-                series, method="fft", sampling_rate=self.sampling_rate
-            )
+            det_res = self.detector.detect(series, method="fft", sampling_rate=self.sampling_rate)
             freqs = det_res.get("dominant_freq", np.array([]))
             powers = det_res.get("peak_magnitude", np.array([]))
             dominant_freqs[d] = freqs[0] if len(freqs) > 0 else 0.0
@@ -170,7 +165,9 @@ class ResonanceNavigationEngine:
                 series,
                 window_size=min(128, max(16, N // 2)),
                 sampling_rate=self.sampling_rate,
-                resonance_frequencies=np.array([dominant_freqs[d]]) if dominant_freqs[d] > 0 else None,
+                resonance_frequencies=(
+                    np.array([dominant_freqs[d]]) if dominant_freqs[d] > 0 else None
+                ),
             )
             depths[f"dim_{d}"] = float(depth_res.get("resonance_depth", 0.0))
 
@@ -222,9 +219,7 @@ class ResonanceNavigationEngine:
             rooting_adjacency=adjacency,
         )
 
-    def estimate_controllability_and_sensitivity(
-        self, state: ResonanceState
-    ) -> Dict[str, Any]:
+    def estimate_controllability_and_sensitivity(self, state: ResonanceState) -> Dict[str, Any]:
         """Identify statistically supported control roots and estimate intervention sensitivity.
 
         Returns root rank, primary control root, response sensitivities, and controllability score.
@@ -245,15 +240,24 @@ class ResonanceNavigationEngine:
                     sensitivities[i, j] = 1.0 + root_shares[i]
                 else:
                     # Influence of root i on target j
-                    coh = state.coherence_matrix[i, j] if i < state.coherence_matrix.shape[0] and j < state.coherence_matrix.shape[1] else 0.0
-                    phase = state.phase_matrix[i, j] if i < state.phase_matrix.shape[0] and j < state.phase_matrix.shape[1] else 0.0
+                    coh = (
+                        state.coherence_matrix[i, j]
+                        if i < state.coherence_matrix.shape[0]
+                        and j < state.coherence_matrix.shape[1]
+                        else 0.0
+                    )
+                    phase = (
+                        state.phase_matrix[i, j]
+                        if i < state.phase_matrix.shape[0] and j < state.phase_matrix.shape[1]
+                        else 0.0
+                    )
                     sensitivities[i, j] = root_shares[i] * (1.0 + coh) * np.cos(phase)
 
         # Controllability score based on spectral energy, root concentration, and rank
         topo_summary = summarize_topology(state.rooting_adjacency)
-        controllability_score = float(
-            np.max(root_shares) * (1.0 - topo_summary.rooting_entropy)
-        ) if dim > 1 else 1.0
+        controllability_score = (
+            float(np.max(root_shares) * (1.0 - topo_summary.rooting_entropy)) if dim > 1 else 1.0
+        )
 
         return {
             "primary_root": primary_root,
@@ -329,7 +333,13 @@ class ResonanceNavigationEngine:
                 mode="state_only",
             )
 
-        if strategy in ("root_aware_drr", "root_aware", "ablation_no_rooting", "ablation_no_spectral", "ablation_no_state_filter"):
+        if strategy in (
+            "root_aware_drr",
+            "root_aware",
+            "ablation_no_rooting",
+            "ablation_no_spectral",
+            "ablation_no_state_filter",
+        ):
             # Root-aware DRR Controller
             analysis_ctrl = self.estimate_controllability_and_sensitivity(current_state)
 
@@ -358,7 +368,11 @@ class ResonanceNavigationEngine:
 
                 # Resonance-selective excitation and entrainment harmonic drive
                 if target_freq > 0:
-                    phase_adj = current_state.phase_matrix[target_root, (target_root + 1) % dim] if dim > 1 else 0.0
+                    phase_adj = (
+                        current_state.phase_matrix[target_root, (target_root + 1) % dim]
+                        if dim > 1
+                        else 0.0
+                    )
                     modulation = np.sin(2.0 * np.pi * target_freq * t + phase_adj)
                     spectral_u[target_root] = target.frequency_weight * modulation
 
@@ -379,7 +393,9 @@ class ResonanceNavigationEngine:
                 # Distribute remainder based on root shares
                 other_mask = np.ones(dim, dtype=bool)
                 other_mask[target_root] = False
-                root_allocated_u[other_mask] = combined_u[other_mask] * analysis_ctrl["root_shares"][other_mask]
+                root_allocated_u[other_mask] = (
+                    combined_u[other_mask] * analysis_ctrl["root_shares"][other_mask]
+                )
 
             norm = np.linalg.norm(root_allocated_u)
             if norm > self.u_max and norm > 0:
@@ -387,7 +403,11 @@ class ResonanceNavigationEngine:
             else:
                 u = root_allocated_u
 
-            target_freq_val = float(target.target_frequencies[target_root]) if target.target_frequencies is not None else 0.0
+            target_freq_val = (
+                float(target.target_frequencies[target_root])
+                if target.target_frequencies is not None
+                else 0.0
+            )
             return ControlIntervention(
                 u=u,
                 magnitude=float(np.linalg.norm(u)),
@@ -454,8 +474,12 @@ class ResonanceNavigationEngine:
 
             # Track root migration & topology drift
             if prev_adjacency is not None:
-                cumulative_root_migration += root_migration(prev_adjacency, obs_state.rooting_adjacency)
-                cumulative_topology_drift += topology_drift(prev_adjacency, obs_state.rooting_adjacency)
+                cumulative_root_migration += root_migration(
+                    prev_adjacency, obs_state.rooting_adjacency
+                )
+                cumulative_topology_drift += topology_drift(
+                    prev_adjacency, obs_state.rooting_adjacency
+                )
 
             # Track root split / merge events
             if prev_root_dist is not None:
@@ -488,7 +512,13 @@ class ResonanceNavigationEngine:
             if target.target_basin_center is not None:
                 dist = float(np.linalg.norm(curr_x - target.target_basin_center))
             else:
-                dist = float(np.linalg.norm(obs_state.dominant_frequencies - target.target_frequencies)) if target.target_frequencies is not None else 0.0
+                dist = (
+                    float(
+                        np.linalg.norm(obs_state.dominant_frequencies - target.target_frequencies)
+                    )
+                    if target.target_frequencies is not None
+                    else 0.0
+                )
 
             target_distance_history[t_step] = dist
 
@@ -521,7 +551,9 @@ class ResonanceNavigationEngine:
             x_traj = trajectory[:, 0]
             u_traj = control_history[:, 0]
             # Polygon area approximation via Shoelace formula
-            hysteresis_area = float(0.5 * np.abs(np.dot(x_traj[:-1], u_traj[1:]) - np.dot(x_traj[1:], u_traj[:-1])))
+            hysteresis_area = float(
+                0.5 * np.abs(np.dot(x_traj[:-1], u_traj[1:]) - np.dot(x_traj[1:], u_traj[:-1]))
+            )
         else:
             hysteresis_area = 0.0
 
@@ -570,7 +602,9 @@ class ResonanceControlExperimentSuite:
                 dx = np.zeros(3)
                 # dim_0: forced non-linear Duffing oscillator
                 dx[0] = x[1] + u[0]
-                dx[1] = -0.1 * x[1] - x[0] - 0.5 * x[0] ** 3 + 0.3 * np.cos(2 * np.pi * 1.5 * t) + u[1]
+                dx[1] = (
+                    -0.1 * x[1] - x[0] - 0.5 * x[0] ** 3 + 0.3 * np.cos(2 * np.pi * 1.5 * t) + u[1]
+                )
                 # dim_2: uncoupled noise/distractor
                 dx[2] = -0.2 * x[2] + u[2] + 0.05 * np.sin(2 * np.pi * 3.0 * t)
                 return x + dx * dt
@@ -722,7 +756,9 @@ class ResonanceControlExperimentSuite:
         surrogate_final_errors = []
 
         for s in range(n_surrogates):
-            engine_surr = ResonanceNavigationEngine(n_dimensions=dim, random_state=self.random_state + s + 1)
+            engine_surr = ResonanceNavigationEngine(
+                n_dimensions=dim, random_state=self.random_state + s + 1
+            )
             # Surrogate controller uses randomized non-root selection
             surr_metrics = engine_surr.simulate_closed_loop(
                 system_dynamics_fn=dynamics_fn,
@@ -734,8 +770,12 @@ class ResonanceControlExperimentSuite:
             surrogate_costs.append(surr_metrics.normalized_control_cost)
             surrogate_final_errors.append(surr_metrics.target_distance_history[-1])
 
-        p_val_cost = float(np.mean(np.array(surrogate_costs) <= real_metrics.normalized_control_cost))
-        p_val_error = float(np.mean(np.array(surrogate_final_errors) <= real_metrics.target_distance_history[-1]))
+        p_val_cost = float(
+            np.mean(np.array(surrogate_costs) <= real_metrics.normalized_control_cost)
+        )
+        p_val_error = float(
+            np.mean(np.array(surrogate_final_errors) <= real_metrics.target_distance_history[-1])
+        )
 
         return {
             "real_cost": real_metrics.normalized_control_cost,
@@ -747,9 +787,7 @@ class ResonanceControlExperimentSuite:
             "statistically_significant": p_val_error <= 0.10,
         }
 
-    def run_negative_control(
-        self, n_steps: int = 120
-    ) -> Dict[str, Any]:
+    def run_negative_control(self, n_steps: int = 120) -> Dict[str, Any]:
         """Run on uncoupled symmetric system where DRR root information offers no advantage.
 
         Verifies honest reporting of null results when DRR provides no incremental control value.
@@ -767,7 +805,11 @@ class ResonanceControlExperimentSuite:
         state_error = results["state_only"].target_distance_history[-1]
         delta_error = abs(drr_error - state_error)
 
-        incremental_value = delta_error > 0.05 and results["root_aware_drr"].normalized_control_cost < results["state_only"].normalized_control_cost
+        incremental_value = (
+            delta_error > 0.05
+            and results["root_aware_drr"].normalized_control_cost
+            < results["state_only"].normalized_control_cost
+        )
 
         return {
             "benchmark": "uncoupled_symmetric_negative_control",

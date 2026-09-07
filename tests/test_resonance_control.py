@@ -66,7 +66,14 @@ def test_compute_intervention_bounds_and_modes():
     state = engine.observe_state(data_window)
     target = ResonanceTarget(target_basin_center=np.zeros(3))
 
-    for strategy in ["root_aware_drr", "state_only", "naive", "random", "ablation_no_rooting", "ablation_no_spectral"]:
+    for strategy in [
+        "root_aware_drr",
+        "state_only",
+        "naive",
+        "random",
+        "ablation_no_rooting",
+        "ablation_no_spectral",
+    ]:
         intervention = engine.compute_intervention(state, target, step_idx=10, strategy=strategy)
         assert isinstance(intervention, ControlIntervention)
         assert intervention.magnitude <= u_max + 1e-6
@@ -127,7 +134,9 @@ def test_ablation_and_surrogate_studies():
     assert "ablation_no_rooting" in ablations
     assert "ablation_no_spectral" in ablations
 
-    surrogate_res = suite.run_surrogate_test(benchmark_system="coupled_oscillator", n_surrogates=5, n_steps=60)
+    surrogate_res = suite.run_surrogate_test(
+        benchmark_system="coupled_oscillator", n_surrogates=5, n_steps=60
+    )
     assert "p_value_error_reduction" in surrogate_res
     assert "p_value_control_efficiency" in surrogate_res
 
@@ -146,7 +155,9 @@ def test_negative_control_and_honest_null_reporting():
 def test_evidence_card_generation():
     """Test automated creation of immutable DRR evidence card for control experiments."""
     suite = ResonanceControlExperimentSuite(random_state=42)
-    surr_res = suite.run_surrogate_test(benchmark_system="coupled_oscillator", n_surrogates=3, n_steps=50)
+    surr_res = suite.run_surrogate_test(
+        benchmark_system="coupled_oscillator", n_surrogates=3, n_steps=50
+    )
     card = suite.generate_control_evidence_card(surr_res)
 
     assert card.signal_id == "resonance_navigation_control_001"
