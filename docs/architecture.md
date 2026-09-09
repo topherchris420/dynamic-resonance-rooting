@@ -130,3 +130,35 @@ flowchart TD
   not a copy of external DSGE implementations.
 - Supervisory workflows are validation-ready artifacts, not validated
   supervisory methodology.
+
+## Analysis and visualization
+
+The numerical workflow lives in `analysis.py`, composed from resonance detection,
+rooting, depth calculation, and state-space modules. Rendering belongs in
+`visualizations.py` and consumes results and explicit plotting context; it must
+not import or mutate the analysis object.
+
+`DynamicResonanceRooting.plot_results(results, data, save_plots=False, show=True)`
+remains the compatibility entry point. It loads the renderer only when requested.
+The renderer receives sampling rate, embedding dimension, time delay, and phase
+space explicitly. Numerical analysis therefore does not initialize Matplotlib.
+Matplotlib remains an installation dependency; this change isolates its runtime
+use without changing package requirements.
+
+The compact `visualizations.plot_results(results, data)` notebook helper retains
+its existing behavior. The comprehensive renderer is `plot_analysis_results`.
+
+### Refactoring plan
+
+1. Lock current plotting behavior: panel contents, phase-space fallback, network
+   summaries, save filename, display/close semantics, and empty results.
+2. Add a subprocess regression that blocks Matplotlib imports and exercises the
+   numerical workflow. Confirm that it fails before extraction.
+3. Move the comprehensive renderer into the existing visualization module and
+   replace the class implementation with a lazy delegation using explicit context.
+   Preserve numerical code, plotting calculations, and public method arguments.
+4. Run regression and full tests, Ruff, Black, mypy, and source compilation.
+
+This extraction avoids both a new rendering class and a renderer that receives
+the entire mutable analysis object. New presentation formats should consume
+analysis outputs rather than add presentation dependencies to numerical modules.
