@@ -170,14 +170,22 @@ def validate_drr_predictive_signal(
             valid_mask_dd = x.notna() & fwd_dd.notna()
 
             # Volatility relationships
-            if valid_mask_vol.sum() > 10:
+            if (
+                valid_mask_vol.sum() > 10
+                and float(x[valid_mask_vol].std()) >= 1e-12
+                and float(fwd_vol[valid_mask_vol].std()) >= 1e-12
+            ):
                 p_corr, p_pval = stats.pearsonr(x[valid_mask_vol], fwd_vol[valid_mask_vol])
                 s_corr, s_pval = stats.spearmanr(x[valid_mask_vol], fwd_vol[valid_mask_vol])
             else:
                 p_corr, p_pval, s_corr, s_pval = 0.0, 1.0, 0.0, 1.0
 
             # Drawdown relationships
-            if valid_mask_dd.sum() > 10:
+            if (
+                valid_mask_dd.sum() > 10
+                and float(x[valid_mask_dd].std()) >= 1e-12
+                and float(fwd_dd[valid_mask_dd].std()) >= 1e-12
+            ):
                 dd_p_corr, dd_p_pval = stats.pearsonr(x[valid_mask_dd], fwd_dd[valid_mask_dd])
             else:
                 dd_p_corr, dd_p_pval = 0.0, 1.0

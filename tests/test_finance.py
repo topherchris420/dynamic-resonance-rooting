@@ -199,6 +199,31 @@ class TestMetricsAndBacktest(unittest.TestCase):
         self.assertIn("max_drawdown", metrics)
         self.assertIn("historical_cvar_95", metrics)
 
+    def test_validate_drr_predictive_signal_constant_inputs(self):
+        dates = pd.date_range("2020-01-01", periods=50, freq="B")
+        # Constant feature
+        drr_states = pd.DataFrame(
+            {
+                "mean_depth": np.ones(50),
+                "network_density": np.ones(50),
+                "depth_dispersion": np.ones(50),
+            },
+            index=dates,
+        )
+        # Non-constant market returns
+        market_returns = pd.DataFrame(
+            {"SPY": np.random.normal(0.001, 0.01, 50)},
+            index=dates,
+        )
+
+        results = validate_drr_predictive_signal(drr_states, market_returns, horizons=(5,))
+        self.assertIn("horizon_5d", results)
+        res_5d = results["horizon_5d"]["mean_depth"]
+        self.assertEqual(res_5d["fwd_vol_pearson_corr"], 0.0)
+        self.assertEqual(res_5d["fwd_vol_pearson_pvalue"], 1.0)
+        self.assertEqual(res_5d["fwd_drawdown_pearson_corr"], 0.0)
+        self.assertEqual(res_5d["fwd_drawdown_pvalue"], 1.0)
+
     def test_walk_forward_backtest_execution_and_export(self):
         config = QuantMacroConfig(
             lookback=126,
