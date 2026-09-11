@@ -224,6 +224,30 @@ class TestMetricsAndBacktest(unittest.TestCase):
         self.assertEqual(res_5d["fwd_drawdown_pearson_corr"], 0.0)
         self.assertEqual(res_5d["fwd_drawdown_pvalue"], 1.0)
 
+    def test_validate_drr_predictive_signal_small_scale_inputs(self):
+        dates = pd.date_range("2020-01-01", periods=50, freq="B")
+        # Extremely small scale (1e-15 magnitude) zero-mean varying inputs
+        feature = np.linspace(-1e-15, 1e-15, 50)
+        drr_states = pd.DataFrame(
+            {
+                "mean_depth": feature,
+                "network_density": feature,
+                "depth_dispersion": feature,
+            },
+            index=dates,
+        )
+        # Varying market returns (quadratic to ensure non-constant rolling std)
+        market_returns = pd.DataFrame(
+            {"SPY": np.linspace(0.01, 0.5, 50) ** 2},
+            index=dates,
+        )
+
+        results = validate_drr_predictive_signal(drr_states, market_returns, horizons=(5,))
+        self.assertIn("horizon_5d", results)
+        res_5d = results["horizon_5d"]["mean_depth"]
+        # Small scale varying series should correctly compute non-zero correlation
+        self.assertAlmostEqual(res_5d["fwd_vol_pearson_corr"], 1.0, places=4)
+
     def test_walk_forward_backtest_execution_and_export(self):
         config = QuantMacroConfig(
             lookback=126,

@@ -116,6 +116,21 @@ def calculate_performance_metrics(
     }
 
 
+def _is_constant_series(s: pd.Series) -> bool:
+    """Check if a series is constant or near-constant using scale-independent criteria."""
+    if len(s) <= 1:
+        return True
+    s_min = float(s.min())
+    s_max = float(s.max())
+    if s_min == s_max or bool(np.isclose(s_min, s_max, rtol=1e-14, atol=0.0)):
+        return True
+    ptp = s_max - s_min
+    s_mean = float(s.mean())
+    if abs(s_mean) > 0 and (ptp / abs(s_mean)) < 1e-12:
+        return True
+    return False
+
+
 def validate_drr_predictive_signal(
     drr_states: pd.DataFrame,
     market_returns: pd.DataFrame,
@@ -172,8 +187,8 @@ def validate_drr_predictive_signal(
             # Volatility relationships
             if (
                 valid_mask_vol.sum() > 10
-                and float(x[valid_mask_vol].std()) >= 1e-12
-                and float(fwd_vol[valid_mask_vol].std()) >= 1e-12
+                and not _is_constant_series(x[valid_mask_vol])
+                and not _is_constant_series(fwd_vol[valid_mask_vol])
             ):
                 p_corr, p_pval = stats.pearsonr(x[valid_mask_vol], fwd_vol[valid_mask_vol])
                 s_corr, s_pval = stats.spearmanr(x[valid_mask_vol], fwd_vol[valid_mask_vol])
@@ -183,8 +198,8 @@ def validate_drr_predictive_signal(
             # Drawdown relationships
             if (
                 valid_mask_dd.sum() > 10
-                and float(x[valid_mask_dd].std()) >= 1e-12
-                and float(fwd_dd[valid_mask_dd].std()) >= 1e-12
+                and not _is_constant_series(x[valid_mask_dd])
+                and not _is_constant_series(fwd_dd[valid_mask_dd])
             ):
                 dd_p_corr, dd_p_pval = stats.pearsonr(x[valid_mask_dd], fwd_dd[valid_mask_dd])
             else:
