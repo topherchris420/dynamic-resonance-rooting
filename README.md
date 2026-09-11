@@ -49,6 +49,9 @@ DRR combines spectral analysis (FFT, Welch PSD, Morlet wavelet scalograms), caus
 | **State-Space Diagnostics** | Transition, measurement, and stability analysis with a Kalman filter |
 | **State-Space Smoothing** | Retrospective states and structural shocks via Hamilton (RTS) and Koopman disturbance smoothers, plus Durbin–Koopman and Carter–Kohn posterior draws |
 | **Nonlinear Filtering** | Tempered particle filter (Herbst–Schorfheide) for likelihood evaluation of nonlinear resonance systems, plus fast Chandrasekhar recursions for linear ones |
+| **Closed-Loop Control** | State observation, sensitivity estimation, and bounded intervention targeting via `ResonanceNavigationEngine` |
+| **Real-Time Streaming** | Pre-allocated circular buffer O(1) rolling DRR updates via `RealTimeDRR` for low-latency streaming data |
+| **Validation Readiness** | Model risk cards, shadow review records, supervisory profiles, and event backtesting via `validation_readiness` |
 | **Phase-Transition Detection** | Evidence for drift or abrupt changes in system behavior |
 
 ### Supported Data Sources
@@ -56,6 +59,8 @@ DRR combines spectral analysis (FFT, Welch PSD, Morlet wavelet scalograms), caus
 | Source | Description |
 |--------|-------------|
 | **Physics Systems** | Coupled oscillators, Lorenz, Rössler, Heston, FitzHugh-Nagumo benchmarks |
+| **Sonoluminescence** | Multimodal acoustic driver, cavitation bubble dynamics, optical flash emission, and electrical transduction |
+| **Sensing Systems** | Multi-channel radar micro-Doppler DSP analog time series |
 | **Policy Data** | Tabular time-series from FRED, policy observables |
 | **Supervisory Panels** | Banking data (FFIEC 002, FR Y-9C), institutional metrics |
 | **Financial Markets** | Multi-asset macro panels (SPY, TLT, GLD, HYG, VIXY) via OpenBB / Qlib / DataFrame providers |
@@ -204,6 +209,15 @@ Multimodal coupled resonant system benchmark spanning acoustic, cavitation, opti
 - Downstream optical/electrical transduction & energy bookkeeping
 - Resonant Transduction Efficiency Index (RTEI) metric
 
+### Sensing Systems Lab
+**File:** `examples/sensing_systems_resonance_depth.py`
+
+Cross-domain micro-Doppler radar DSP analog time-series benchmark evaluating:
+- Multi-channel radar returns with regime transition (standing to walking)
+- Coherent change detection proxy and high-pass state innovation
+- Resonance depth stability of low-frequency target mode against clutter
+- State-space Kalman filter tracking and change detection
+
 ### Physics Lab
 **File:** `examples/physics_lab.py`
 
@@ -248,6 +262,11 @@ python examples/quant_macro_lab.py --offline --rebalance monthly
 
 Runs matched strategy evaluations (Equal Weight, Mean-Variance, Static CVaR, DRR Conditioned, SPY Buy-Hold) and exports structured research reports and summary plots.
 
+### Quickstart Export Example
+**File:** `examples/quickstart_resonance_export.py`
+
+Compact workflow demonstrating sample dataset loading, resonance detection, depth calculation, rooting analysis, and export of JSON, CSV, and trace figures.
+
 ### Primary Qlib Matched Experiment Example
 **File:** `examples/qlib_drr_experiment.py`
 
@@ -276,11 +295,23 @@ python examples/drr_vectorbt_robustness.py --offline
 ```
 dynamic-resonance-rooting/
 ├── src/drr_framework/          # Core package
-│   ├── analysis.py             # DynamicResonanceRooting class
-│   ├── _spectral.py            # Spectral analysis
-│   ├── benchmarks.py           # Benchmark generators
-│   ├── sonoluminescence.py     # Sonoluminescence benchmark
-│   ├── datasets.py              # Data adapters
+│   ├── analysis.py             # DynamicResonanceRooting orchestration class
+│   ├── modules.py              # ResonanceDetector, RootingAnalyzer, DepthCalculator
+│   ├── _spectral.py            # Spectral analysis utilities
+│   ├── benchmarks.py           # Physics & radar benchmark generators
+│   ├── sonoluminescence.py     # Sonoluminescence multimodal benchmark
+│   ├── control_engine.py       # Closed-loop ResonanceNavigationEngine
+│   ├── realtime.py             # Circular buffer RealTimeDRR streaming
+│   ├── state_space.py          # State-space modeling & Kalman filter
+│   ├── smoothers.py            # Hamilton, Koopman & simulation smoothers
+│   ├── particle_filter.py      # Tempered particle filter
+│   ├── resonance_geometry.py   # Differential geometry & manifold dynamics
+│   ├── cross_resonance.py      # Cross-resonance tensor & collective modes
+│   ├── topology_dynamics.py    # Rooting topology drift & migration
+│   ├── structural_surprise.py  # Information-theoretic structural surprise
+│   ├── datasets.py              # Data adapters for policy & supervisory data
+│   ├── supervision.py          # Regulatory profiles & supervisory risk domains
+│   ├── validation_readiness.py # Model risk cards & validation packets
 │   ├── finance/                # DRR Quant Research Lab
 │   │   ├── config.py           # Experiment configuration
 │   │   ├── types.py            # MarketResonanceState & result containers
@@ -290,14 +321,15 @@ dynamic-resonance-rooting/
 │   │   ├── portfolio/          # Riskfolio adapter & regime policies
 │   │   ├── validation/         # VectorBT adapter, walk-forward & anti-leakage
 │   │   └── reporting/          # Metrics, plots & Markdown research reports
-│   ├── state_space.py          # State-space filter
-│   ├── smoothers.py            # Kalman & simulation smoothers
-│   └── particle_filter.py      # Tempered particle filter
-├── examples/                    # Usage examples
-├── tests/                       # Test suite
-├── docs/                        # Documentation
+│   └── visualizations.py       # Plotting utilities
+├── examples/                    # Usage examples & lab scripts
+├── tests/                       # Unit and integration test suite
+├── docs/                        # Framework documentation
 │   ├── quant-research.md       # Quant Research Lab architecture guide
-└── pyproject.toml              # Package config
+│   ├── validation-readiness-guide.md # Model risk & supervisory guide
+│   ├── resonance-geometry.md   # Differential geometry guide
+│   └── user-guide.md            # Getting started user guide
+└── pyproject.toml              # Package configuration
 ```
 
 ---
@@ -319,6 +351,10 @@ dynamic-resonance-rooting/
 ## Documentation
 
 - [Quant Research Lab Architecture](docs/quant-research.md) — Quantitative finance integration guide
+- [Validation Readiness Guide](docs/validation-readiness-guide.md) — Model risk management and supervisory compliance
+- [Resonance Geometry](docs/resonance-geometry.md) — Differential geometry and state space manifold dynamics
+- [Method Crosswalk](docs/method-crosswalk.md) — Cross-walk comparison with traditional time-series methods
+- [Audience Guide](docs/audience-guide.md) — Guidance for researchers, quants, and risk managers
 - [User Guide](docs/user-guide.md) — Getting started
 - [Architecture](docs/architecture.md) — System design
 - [API Reference](docs/api.md) — Function documentation
