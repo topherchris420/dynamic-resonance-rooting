@@ -3,7 +3,7 @@
 ================================================================================
 MACRO STABILITY & BANKING SKIN COCKPIT - LAYER 1: REGULATORY BACKEND BRIDGE
 ================================================================================
-Federal Reserve Model Risk Management (SR 11-7) Compliant Implementation
+LEGACY SYNTHETIC PROTOTYPE — unverified schema, no compliance status
 
 Project: Dynamic Resonance Rooting (DRR) Framework Integration
 Purpose: Real-time early-warning system for detecting non-linear liquidity
@@ -11,7 +11,7 @@ Purpose: Real-time early-warning system for detecting non-linear liquidity
 
 Author: Principal Financial Systems Architect & Federal Reserve Data Engineering Lead
 Date: 2025-07-09
-Compliance: SR 11-7 Model Risk Management Guidelines
+Historical prototype; use drr_framework.supervisory for regulatory research.
 ================================================================================
 """
 
@@ -22,6 +22,12 @@ from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple, Any
 from pathlib import Path
 import warnings
+
+warnings.warn(
+    "Legacy synthetic prototype with unverified field mappings and zero-fill assumptions. "
+    "Use RegulatoryAnalysisDataset and drr_framework.supervisory for regulatory analysis.",
+    FutureWarning, stacklevel=2,
+)
 
 # DRR Framework Imports
 from drr_framework import DynamicResonanceRooting
@@ -34,7 +40,7 @@ from drr_framework.reporting import write_tableau_artifacts
 # Federal Reserve PCA Well-Capitalized Thresholds (12 CFR Part 225)
 PCA_WELL_CAPITALIZED_THRESHOLD = 0.065  # 6.5% CET1
 
-# DRR Confidence Threshold (SR 11-7 requires documented confidence levels)
+# Historical demonstration threshold; not a regulatory requirement
 DEFAULT_DRR_CONFIDENCE_THRESHOLD = 0.65
 
 # Rate Shock Parameters (in basis points)
@@ -85,7 +91,7 @@ class FFIEC002_FR_Y9C_Extractor:
     - FR Y-9C Schedule HC-B: Securities Portfolios (AFS/HTM)
     - FR Y-9C Schedule HC-R: Capital Ratios & CET1
 
-    Compliance: SR 11-7 requires documented data lineage and validation.
+    Demo-only SQL schema; these labels are not verified MDRM mappings.
     """
 
     # SQL Query for FFIEC 002 Schedule RAL/P (Liquidity Risk)
@@ -779,7 +785,7 @@ if __name__ == "__main__":
 
     print("=" * 80)
     print("MACRO STABILITY & BANKING SKIN COCKPIT - LAYER 1")
-    print("Regulatory Backend Bridge | SR 11-7 Compliant")
+    print("Legacy Regulatory Demo | Unverified, not for analytical use")
     print("=" * 80)
 
     # Run orchestration

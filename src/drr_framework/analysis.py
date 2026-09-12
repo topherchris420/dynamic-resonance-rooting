@@ -22,7 +22,7 @@ class DynamicResonanceRooting:
 
     This framework integrates three core modules:
     1. Dynamic Resonance Detection: Identifies dominant oscillatory patterns
-    2. Rooting Analysis: Maps causal dependencies using transfer entropy
+    2. Rooting Analysis: Maps directional temporal dependencies using transfer entropy
     3. Resonance Depth Calculation: Quantifies the stability of resonances
     """
 

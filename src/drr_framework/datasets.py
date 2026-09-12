@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, replace, field
 from pathlib import Path
-from typing import Dict, Optional, Sequence, Tuple
+from typing import Any, Dict, Optional, Sequence, Tuple
 
 import numpy as np
 import pandas as pd
@@ -370,6 +370,71 @@ class SupervisoryPanelDataset:
             var_name="metric",
             value_name="value",
         )
+
+
+@dataclass(frozen=True)
+class RegulatoryAnalysisDataset(PolicyResonanceDataset):
+    """Canonical quarterly regulatory view, with rows=time and columns=metrics.
+
+    Unlike the retrospective policy adapter, this view preserves missing quarters
+    and missing values. Construction requires explicit semantics and an as-of store.
+    Legacy policy/panel APIs remain available for their original research workflows.
+    """
+
+    institution_id: str = ""
+    institution_name: str = ""
+    filing_type: str = ""
+    reporting_period: str = ""
+    filing_vintage: Tuple[str, ...] = ()
+    retrieved_at: str = ""
+    available_as_of: str = ""
+    peer_group: Optional[str] = None
+    provenance: Dict[str, str] = field(default_factory=dict)
+    source_citations: Tuple[str, ...] = ()
+    metric_metadata: Dict[str, Any] = field(default_factory=dict)
+    institution_metadata: Dict[str, Any] = field(default_factory=dict)
+    data_quality_flags: Tuple[str, ...] = ()
+    imputation_metadata: Tuple[Any, ...] = ()
+    reporting_definition_version: Tuple[str, ...] = ()
+    observations: Tuple[Any, ...] = ()
+    _store: Any = field(default=None, repr=False, compare=False)
+    _registry: Any = field(default=None, repr=False, compare=False)
+
+    @classmethod
+    def from_vintage_store(cls, store, registry, **kwargs):
+        from .supervisory.vintage import build_regulatory_dataset
+
+        return build_regulatory_dataset(cls, store, registry, **kwargs)
+
+    @classmethod
+    def from_frame(cls, *args, **kwargs):
+        raise TypeError(
+            "Use from_vintage_store: regulatory data require provenance and as-of semantics"
+        )
+
+    def as_of(self, date):
+        return type(self).from_vintage_store(
+            self._store,
+            self._registry,
+            institution_id=self.institution_id,
+            form=self.filing_type,
+            as_of=date,
+            metrics=self.variable_names,
+            peer_group=self.peer_group,
+            allow_synthetic=self.metadata.get("allow_synthetic", False),
+        )
+
+    def to_drr_input(self) -> np.ndarray:
+        # Reconstruct from immutable observations, not a potentially edited display frame.
+        frame = pd.DataFrame(index=self.dates, columns=self.variable_names, dtype=float)
+        for observation in self.observations:
+            frame.loc[observation.reporting_period, observation.metric] = observation.value
+        values = frame.to_numpy(dtype=float)
+        if not np.isfinite(values).all():
+            raise ValueError(
+                "DRR requires complete observations; missing regulatory data were preserved"
+            )
+        return values
 
 
 def load_policy_dataset(

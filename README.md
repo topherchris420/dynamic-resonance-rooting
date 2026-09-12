@@ -3,7 +3,7 @@
 [![CI](https://github.com/topherchris420/dynamic-resonance-rooting/actions/workflows/python-app.yml/badge.svg)](https://github.com/topherchris420/dynamic-resonance-rooting/actions/workflows/python-app.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A research framework for studying complex adaptive systems through resonance detection, causal rooting analysis, and stability diagnostics.
+A research framework for studying complex adaptive systems through resonance detection, directional rooting analysis, and stability diagnostics.
 
 **Version:** 4.3.0  
 **License:** MIT  
@@ -17,7 +17,7 @@ A one-page overview of DRR — what it detects, who it's for, and how to get sta
 
 <p align="center">
   <a href="docs/assets/drr-flier.png">
-    <img src="docs/assets/drr-flier.png" alt="Dynamic Resonance Rooting flier — resonance detection, causal rooting, stability diagnostics" width="600">
+    <img src="docs/assets/drr-flier.png" alt="Dynamic Resonance Rooting flier — resonance detection, directional rooting, stability diagnostics" width="600">
   </a>
 </p>
 
@@ -33,7 +33,7 @@ The **Dynamic Resonance Rooting (DRR) Framework** is a computational pipeline th
 2. **Rooting Analysis** — What are the directional lead-lag relationships between variables?
 3. **Stability Assessment** — How stable are the resonance structures over time?
 
-DRR combines spectral analysis (FFT, Welch PSD, Morlet wavelet scalograms), causal rooting (transfer entropy, lagged correlation), and state-space diagnostics to provide evidence for hypothesis generation about system behavior.
+DRR combines spectral analysis (FFT, Welch PSD, Morlet wavelet scalograms), directional rooting (transfer entropy, lagged correlation), and state-space diagnostics to provide evidence for hypothesis generation about system behavior.
 
 ---
 
@@ -44,7 +44,7 @@ DRR combines spectral analysis (FFT, Welch PSD, Morlet wavelet scalograms), caus
 | Capability | Description |
 |------------|-------------|
 | **Resonance Detection** | Identifies oscillatory patterns via FFT, Welch power spectral density, or Morlet wavelet scalograms (time-localized, for nonstationary signals) |
-| **Causal Rooting** | Maps directional lead-lag relationships using transfer entropy or lagged correlation, with candidate edges, significant edges, and surrogate-tested p-values |
+| **Directional Rooting** | Maps directional lead-lag relationships using transfer entropy or lagged correlation, with candidate edges, significant edges, and surrogate-tested p-values |
 | **Resonance Depth** | Composite scoring combining spectral concentration, temporal persistence, phase coherence, and amplitude stability |
 | **State-Space Diagnostics** | Transition, measurement, and stability analysis with a Kalman filter |
 | **State-Space Smoothing** | Retrospective states and structural shocks via Hamilton (RTS) and Koopman disturbance smoothers, plus Durbin–Koopman and Carter–Kohn posterior draws |

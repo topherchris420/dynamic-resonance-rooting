@@ -41,7 +41,7 @@ class ResonanceState:
     spectral_power: np.ndarray  # Shape (dim,) peak power per channel
     coherence_matrix: np.ndarray  # Shape (dim, dim) pairwise max coherence
     phase_matrix: np.ndarray  # Shape (dim, dim) pairwise phase relationship
-    root_distribution: np.ndarray  # Shape (dim,) normalized causal outflow share
+    root_distribution: np.ndarray  # Shape (dim,) normalized directional outflow share
     state_estimate: np.ndarray  # Shape (dim,) current state position estimate
     state_uncertainty: np.ndarray  # Shape (dim,) standard deviation / variance estimate
     resonance_depths: Dict[str, float]  # Resonance depth per dimension
@@ -185,7 +185,7 @@ class ResonanceNavigationEngine:
             coh_matrix = np.eye(dim)
             phase_matrix = np.zeros((dim, dim))
 
-        # 3. Rooting analysis (causal directed graph)
+        # 3. Rooting analysis (directed temporal graph)
         if dim >= 2 and N >= 10:
             try:
                 root_res = self.rooting_analyzer.analyze(
@@ -227,12 +227,12 @@ class ResonanceNavigationEngine:
         dim = self.n_dimensions
         root_shares = state.root_distribution
 
-        # Control roots are channels sorted by causal outflow share
+        # Control roots are channels sorted by directional outflow share
         root_rank = np.argsort(root_shares)[::-1]
         primary_root = int(root_rank[0])
 
         # Estimate response sensitivity matrix: d(Resonance)/d(u_i)
-        # Higher causal outflow & higher coherence -> higher control sensitivity
+        # Higher directional outflow & higher coherence -> higher control sensitivity
         sensitivities = np.zeros((dim, dim))
         for i in range(dim):
             for j in range(dim):
@@ -344,7 +344,7 @@ class ResonanceNavigationEngine:
             analysis_ctrl = self.estimate_controllability_and_sensitivity(current_state)
 
             if strategy == "ablation_no_rooting":
-                # Override root selection with non-root (least causal channel)
+                # Override root selection with non-root (lowest-outflow channel)
                 target_root = int(analysis_ctrl["root_rank"][-1])
             else:
                 target_root = int(analysis_ctrl["primary_root"])
@@ -821,7 +821,7 @@ class ResonanceControlExperimentSuite:
             "incremental_drr_value_proven": bool(incremental_value),
             "null_result_reported": not incremental_value,
             "honest_reporting_statement": (
-                "For uncoupled symmetric systems lacking dominant causal roots or cross-resonance coupling, "
+                "For uncoupled symmetric systems lacking dominant directional roots or cross-resonance coupling, "
                 "DRR root-targeting provides no incremental control advantage over conventional state-feedback."
             ),
         }
@@ -857,5 +857,5 @@ class ResonanceControlExperimentSuite:
                 "system": experiment_summary.get("benchmark", "coupled_oscillator"),
             },
             detection_statement="Detected statistically supported control roots via transfer entropy / lagged correlation outflow share.",
-            interpretation_statement="Resonance-selective excitation applied through causal roots successfully navigated nonlinear state space.",
+            interpretation_statement="Resonance-selective excitation applied through directional roots successfully navigated nonlinear state space.",
         )

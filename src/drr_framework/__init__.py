@@ -15,6 +15,7 @@ from .benchmarks import BenchmarkSystems, generate_micro_doppler_analog
 from .datasets import (
     PolicyResonanceDataset,
     SupervisoryPanelDataset,
+    RegulatoryAnalysisDataset,
     load_policy_dataset,
     load_policy_dataset_from_sql,
     load_supervisory_panel,

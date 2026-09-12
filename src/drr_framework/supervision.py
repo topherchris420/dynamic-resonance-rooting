@@ -191,8 +191,8 @@ FED_SUPERVISORY_REFERENCE_BASIS: Tuple[Dict[str, str], ...] = (
         "url": "https://www.ffiec.gov/NPW",
     },
     {
-        "label": "SR 11-7 model risk management guidance",
-        "url": "https://www.federalreserve.gov/supervisionreg/srletters/sr1107.htm",
+        "label": "SR 26-2 Revised Guidance on Model Risk Management",
+        "url": "https://www.federalreserve.gov/supervisionreg/srletters/SR2602.htm",
     },
 )
 

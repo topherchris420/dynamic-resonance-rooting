@@ -409,7 +409,7 @@ def _validation_readiness_section(metadata: Dict[str, Any], audience: Audience) 
         f"| Intended use | {_format_value(model_card.get('intended_use'))} |",
         f"| Prohibited uses | {_format_metadata_value(model_card.get('prohibited_uses', []))} |",
         "",
-        "### SR 11-7 Readiness Checklist",
+        "### Selected SR 26-2 Model-Risk Principles",
         "",
         "| Area | Evidence Needed |",
         "| --- | --- |",

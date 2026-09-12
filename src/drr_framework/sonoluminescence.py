@@ -1281,7 +1281,7 @@ class SonoluminescenceSystem:
             },
             "notes": (
                 "Sonoluminescence computational benchmark for DRR multimodal resonance "
-                "and causal rooting analysis with copper/boron waveguide metallurgy and fluid doping. "
+                "and directional rooting analysis with copper/boron waveguide metallurgy and fluid doping. "
                 "No net energy amplification is claimed."
             ),
         }

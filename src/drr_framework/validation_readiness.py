@@ -10,11 +10,18 @@ from typing import Any, Dict, Mapping, Optional, Sequence
 import numpy as np
 import pandas as pd
 
-VALIDATION_REFERENCE_BASIS = (
-    {
-        "label": "SR 11-7 model risk management guidance",
-        "url": "https://www.federalreserve.gov/supervisionreg/srletters/sr1107.htm",
-    },
+from .supervisory.model_risk import (
+    MODEL_RISK_REFERENCE_BASIS,
+    MODEL_RISK_SECTIONS,
+    ModelRiskProfile,
+    ValidationEvidence,
+    ModelUseClassification,
+    ModelRiskTier,
+    ValidationStatus,
+)
+from .supervisory.common import canonical
+
+VALIDATION_REFERENCE_BASIS = MODEL_RISK_REFERENCE_BASIS + (
     {
         "label": "Federal Reserve supervision and regulation",
         "url": "https://www.federalreserve.gov/supervisionreg.htm",
@@ -25,6 +32,7 @@ VALIDATION_REFERENCE_BASIS = (
     },
 )
 
+# Historical schema alias for old consumers; superseded, not the current basis.
 SR_11_7_SECTIONS = (
     "intended_use",
     "conceptual_soundness",
@@ -35,6 +43,12 @@ SR_11_7_SECTIONS = (
 )
 
 VALIDATION_READINESS_CHECKLIST = {
+    "scope_and_use_classification": "Distinguish complex quantitative models from simple arithmetic and deterministic tools (SR 26-2 II).",
+    "inherent_risk": "Assess complexity, assumptions, input quality and data constraints (III).",
+    "exposure_and_purpose": "Record exposure and purpose separately; use them to assess materiality (III).",
+    "effective_challenge": "Record objective expertise, independence and ability to effect change (III, V).",
+    "aggregate_model_dependencies": "Assess shared data, assumptions and model dependencies (III).",
+    "third_party_products": "Understand, monitor and document vendor model limitations and customization (VII).",
     "intended_use": "Document approved use, users, data population, and prohibited uses.",
     "conceptual_soundness": "Document theory, assumptions, limitations, and why DRR is appropriate for the monitoring use case.",
     "implementation_verification": "Independently review code, tests, reproducibility, numerical stability, and release controls.",
@@ -84,6 +98,7 @@ def build_validation_readiness_packet(
     benchmark_results: Optional[Mapping[str, Any]] = None,
     shadow_mode_summary: Optional[Mapping[str, Any]] = None,
     explanations: Optional[Mapping[str, Any]] = None,
+    model_risk_profile: Optional[ModelRiskProfile] = None,
 ) -> Dict[str, Any]:
     """Assemble a validation-readiness packet for model-risk review."""
 
@@ -93,6 +108,11 @@ def build_validation_readiness_packet(
         "model_card": dict(model_card),
         "analysis_summary": summary,
         "sr_11_7_sections": list(SR_11_7_SECTIONS),
+        "historical_schema_note": "sr_11_7_sections is a compatibility field; SR 11-7 was superseded by SR 26-2 on April 17, 2026.",
+        "model_risk_sections": list(MODEL_RISK_SECTIONS),
+        "model_risk_profile": canonical(model_risk_profile) if model_risk_profile else None,
+        "alignment_statement": "Validation-readiness artifact aligned with selected SR 26-2 model-risk principles; no compliance certification.",
+        "scope_note": "SR 26-2 describes nonbinding, risk-based guidance; expected most relevant above $30 billion in assets. Tool policy requirements below are project use boundaries, not universal legal mandates.",
         "checklist": dict(VALIDATION_READINESS_CHECKLIST),
         "benchmark_results": dict(benchmark_results or {}),
         "shadow_mode_summary": dict(shadow_mode_summary or {}),
