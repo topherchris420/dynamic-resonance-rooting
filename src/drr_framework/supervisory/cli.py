@@ -52,10 +52,13 @@ def export_run(result, state, passport, ledger, directory):
         # No analyst-supplied identifier is interpreted as a filesystem path.
         name = "institution-" + stable_id(institution)[:16] + ".md"
         write_immutable(directory / name, generate_lfbo_monitoring_brief(result, institution))
+    evidence_ids = set(result.get("evidence", {}))
+    for perspective in result.get("perspectives", {}).get("perspectives", []):
+        evidence_ids.update(perspective["evidence_ids"])
     ledger.export(
         directory / "evidence",
         as_of=result["as_of"],
-        evidence_ids=tuple(result.get("evidence", {})),
+        evidence_ids=tuple(sorted(evidence_ids)),
     )
     passport.export(directory)
     write_immutable(

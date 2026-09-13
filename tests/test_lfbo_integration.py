@@ -203,3 +203,28 @@ def test_review_state_export_envelope_is_verified(lab, tmp_path):
     envelope["state"]["as_of"] = "2026-08-11T00:00:00+00:00"
     with pytest.raises(ValueError, match="integrity"):
         review_state_from_dict(envelope)
+
+
+def test_export_preserves_ledger_evidence_referenced_only_by_perspectives(lab, tmp_path):
+    from test_lfbo_evidence_workflow import entry
+    from drr_framework.supervisory.demo import synthetic_perspectives
+    from drr_framework.supervisory import PerspectiveInventory, EvidenceEntry
+
+    cited = entry()
+    lab.ledger.append(cited)
+    unrelated = EvidenceEntry.create(**dict(cited.payload, claim="Unrelated evidence"))
+    lab.ledger.append(unrelated)
+    rows = synthetic_perspectives(lab.store).snapshot(
+        as_of=CURRENT_REVIEW, observations=lab.store.known_records(CURRENT_REVIEW)
+    )["perspectives"]
+    from drr_framework.supervisory import ScopedPerspective
+
+    values = dict(rows[0])
+    values.pop("perspective_id")
+    values["evidence_ids"] = (cited.evidence_id,)
+    lab.perspectives = PerspectiveInventory((ScopedPerspective(**values),))
+    result, state, passport = lab.run(CURRENT_REVIEW)
+    assert cited.evidence_id not in result["evidence"]
+    path = export_run(result, state, passport, lab.ledger, tmp_path / "export")
+    assert (path / "evidence" / f"{cited.evidence_id}.md").is_file()
+    assert not (path / "evidence" / f"{unrelated.evidence_id}.md").exists()
