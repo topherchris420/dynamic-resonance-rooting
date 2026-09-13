@@ -30,7 +30,7 @@ Qlib  Riskfolio      VectorBT
 ML    Portfolio      Validation
 ```
 3. **Strict Non-Monolithic Optional Dependencies**: The base `drr-framework` package remains lightweight. External quant dependencies (`openbb`, `riskfolio-lib`, `pyqlib`, `vectorbt`) are optional extras (`drr-framework[quant]`).
-4. **Causal Anti-Leakage Invariants**: Signals, features, thresholds, and portfolio decisions dated at time $t$ rely strictly on market information available on or before time $t$.
+4. **Point-in-Time Anti-Leakage Invariants**: Signals, features, thresholds, and portfolio decisions dated at time $t$ rely strictly on market information available on or before time $t$.
 
 ---
 

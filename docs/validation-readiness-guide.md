@@ -7,7 +7,7 @@ use. This guide describes the artifacts DRR now generates to support that review
 ## Validation-Ready Artifacts
 
 - Model-risk card: intended use, prohibited uses, owners, data lineage, assumptions, limitations, and validation status.
-- SR 11-7-style checklist: intended use, conceptual soundness, implementation verification, outcomes analysis, ongoing monitoring, governance, and independent validation.
+- SR 26-2 reference profile: intended and foreseeable use, materiality, complexity, data quality, conceptual soundness, implementation verification, outcomes analysis, ongoing monitoring, limitations, change control, governance, and independent review status.
 - Outcomes snapshot: event backtest metrics such as alerts, detected events, missed events, precision, recall, and lead time.
 - Shadow-mode log: append-only JSONL analyst review records that do not affect supervisory conclusions.
 - Explainability summary: dominant modes, directed lead-lag edges, stability diagnostics, lineage, analyst questions, and caveats.
@@ -26,6 +26,19 @@ use. This guide describes the artifacts DRR now generates to support that review
 Generated validation packets are evidence for review. They are not validation
 approval. DRR outputs must not be described as ratings, findings, MRAs, MRIAs,
 enforcement recommendations, policy decisions, or causal proof.
+
+Model-card validation status is constrained to explicit readiness labels: candidate,
+development tested but not independently validated, or independent review pending.
+The builder also preserves prohibitions on ratings, findings, MRAs/MRIAs, enforcement
+recommendations, legal conclusions, and policy decisions. Any independently reviewed
+status in the lower-level model-risk profile requires attributed, time-stamped,
+content-addressed evidence.
+
+The current reference basis is the Federal Reserve's Revised Guidance on Model Risk
+Management issued as SR 26-2 on April 17, 2026. It superseded SR 11-7 and SR 21-8.
+Historical `sr_11_7_sections` fields remain only as compatibility output for existing
+consumers and are labeled as superseded. Neither the legacy packet nor the new
+`ModelRiskProfile` is a compliance certification or independent validation.
 
 ## Example
 

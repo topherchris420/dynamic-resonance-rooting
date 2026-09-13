@@ -7,7 +7,7 @@ performed before implementation. Existing DRR computes univariate FFT, Welch,
 wavelet, and Markov resonance; component depth; directed lagged-association or
 transfer-entropy scores with surrogate inference; and a fixed VAR(1)-style
 state-space representation. It did not retain a frequency-resolved pairwise
-field, collective resonance eigenmodes, temporal graph distances, a causal
+field, collective resonance eigenmodes, temporal graph distances, a structural
 fingerprint innovation score, or a structural Gram kernel.
 
 The external projects remain boundary systems. Qlib supplies data/model
@@ -103,7 +103,7 @@ has return-variance units and remains PSD. The kernel encodes shared structural
 exposure, not expected return. Lambda must be selected on training/validation
 data and compared with ordinary shrinkage under matched optimization inputs.
 
-## Causality, uncertainty, and falsification
+## Identification limits, uncertainty, and falsification
 
 Rolling geometry uses trailing windows and is prefix invariant. This first
 slice does not yet estimate confidence intervals, conditioned switching state

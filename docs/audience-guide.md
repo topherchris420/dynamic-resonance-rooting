@@ -135,12 +135,12 @@ Fed Supervisory Alignment Pack:
 - Risk domains: capital, liquidity, asset quality, earnings, market risk, operational resilience, governance and controls, and interconnectedness.
 - Data lineage fields: reporting form, MDRM codes, FFIEC source, NIC identifier, data vintage, peer group, and review owner.
 - Report checklist: materiality, proportionality, timeliness, source-data lineage, peer-group fit, and diagnostic boundary.
-- Reference basis: Federal Reserve supervision and regulation, supervisory operating principles, the Supervision and Regulation Report, MDRM, NIC, and SR 11-7.
+- Reference basis: Federal Reserve supervision and regulation, supervisory operating principles, the Supervision and Regulation Report, MDRM, NIC, and current SR 26-2 guidance. SR 11-7 is retained only as superseded historical context.
 
 Validation Readiness Pack:
 
 - Model-risk card with intended use, prohibited uses, owners, assumptions, limitations, data lineage, and validation status.
-- SR 11-7-style checklist covering conceptual soundness, implementation verification, outcomes analysis, ongoing monitoring, governance, and independent validation.
+- SR 26-2 reference profile covering intended and foreseeable use, materiality, complexity, data quality, conceptual soundness, implementation verification, outcomes analysis, monitoring, governance, change control, and independent review.
 - Event backtest helper for alert counts, detected events, missed events, false positives, precision, recall, and lead time.
 - Shadow-mode JSONL review log for analyst feedback that does not affect supervisory decisions.
 - Explainability summary for dominant modes, lead-lag edges, state-space stability, lineage, caveats, and analyst review questions.
@@ -149,7 +149,7 @@ Expected outputs:
 
 - Institution-level and peer-group DRR reports with supervisory caveats.
 - Supervisory Alignment report section with segment preset, risk domains, source lineage, review checklist, and official-reference links.
-- Validation Readiness report section with model card, SR 11-7-style checklist, outcomes snapshot, shadow-mode snapshot, and validation-reference links.
+- Validation Readiness report section with model card, SR 26-2 reference profile, outcomes snapshot, shadow-mode snapshot, and validation-reference links.
 - Tidy panel CSV shaped for Tableau, with institution/date/metric/value fields.
 - Summary, resonance-map, rooting-edge, and state-space diagnostic CSV exports.
 - JSON artifacts suitable for reproducible review or handoff to model-risk staff.

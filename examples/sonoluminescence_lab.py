@@ -252,7 +252,7 @@ def main() -> None:
             f"  Channel {dim_idx} [{ch_name:<20}]: Dominant Freq = {dom_freq:>9.1f} Hz | Depth = {depth:.4f}"
         )
 
-    print("\n--- Directed Rooting / Causal Relationships ---")
+    print("\n--- Directed Rooting / Temporal Relationships ---")
     rooting_res = results.get("rooting_analysis", {})
     sig_edges = rooting_res.get("significant_edges", [])
     if sig_edges:

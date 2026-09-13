@@ -35,6 +35,67 @@ The **Dynamic Resonance Rooting (DRR) Framework** is a computational pipeline th
 
 DRR combines spectral analysis (FFT, Welch PSD, Morlet wavelet scalograms), directional rooting (transfer entropy, lagged correlation), and state-space diagnostics to provide evidence for hypothesis generation about system behavior.
 
+## LFBO Supervisory Research Workbench
+
+The LFBO workbench is a separate, evidence-first application layer for the public-data
+workflow behind continuous monitoring. Its operating question is: **what changed since
+the last review, what deserves attention, and why?** DRR is optional and must earn its
+complexity against simpler statistical baselines.
+
+```text
+public filing -> as-of store -> verified semantics -> reconciliation
+              -> material changes + peers -> baselines -> optional DRR
+              -> falsification -> immutable evidence -> analyst disposition -> brief
+```
+
+The intended use is analyst-directed research and monitoring of public regulatory
+data. The workbench organizes, tests, and prioritizes evidence; a human investigates
+and interprets it. It must not generate supervisory ratings or findings, MRAs/MRIAs,
+enforcement or legal conclusions, institution-specific accusations, governance
+assessments from balance-sheet metrics, or proof of causation.
+
+The perspective layer treats institutional assessments, quantitative models, expert
+judgment, local measurements, distribution-sensitive indicators, and lived material
+experience as distinct observations of the same complex system. A model can be highly
+accurate within its designed scope while remaining intentionally incomplete. Each
+perspective keeps its population, scale, time horizon, method, evidence, limitations,
+and outside scope. Documented disagreement is retained as information; authority or
+statistical confidence does not silently erase another well-supported record. The
+architecture does not treat lived experience as automatically superior to quantitative
+evidence, nor quantitative evidence as exhaustive of material conditions.
+
+Key controls include:
+
+- ingestion-time SHA-256 source hashes, exact form/MDRM namespaces, and immutable
+  observation IDs;
+- point-in-time reconstruction from filing, amendment, ingestion, and availability
+  timestamps, including explicit reporting-definition and entity-perimeter breaks;
+- preserved nulls—canonical regulatory paths never silently interpolate or zero-fill;
+- reproducible peer cohorts, transparent baseline competitors, real sensitivity
+  reruns, and an explicit analyst attention budget;
+- content-addressed evidence, append-only dispositions and audit events, and an
+  analysis passport containing code, mapping, source, configuration, and output hashes.
+
+The bundled production registry is intentionally narrow: it verifies three March 2026
+FR Y-9C Schedule HC mappings (`BHCK0081`, `BHCK2170`, and `BHCK3210`) from official
+Federal Reserve artifacts. FR Y-9C, FFIEC 002, and FR Y-15 are isolated namespaces;
+additional codes or definition periods remain blocked until a versioned, authoritative
+mapping is supplied. Similar suffixes are never treated as equivalence.
+
+Run the complete offline lab:
+
+```bash
+python examples/lfbo_monitoring_workbench.py
+drr-monitor --demo --serve
+```
+
+The second command binds only to `127.0.0.1`. Use `--role viewer` for a read-only local
+process. This capability switch is not an enterprise identity or authorization system.
+For normalized public observations, provide `--input`, `--as-of`, and—when needed—a
+verified registry and explicit cohort. See the
+[LFBO Workbench Guide](docs/lfbo-workbench.md) for the data contract, evidence model,
+validation workflow, and deployment boundaries.
+
 ---
 
 ## Key Features
@@ -51,7 +112,7 @@ DRR combines spectral analysis (FFT, Welch PSD, Morlet wavelet scalograms), dire
 | **Nonlinear Filtering** | Tempered particle filter (Herbst–Schorfheide) for likelihood evaluation of nonlinear resonance systems, plus fast Chandrasekhar recursions for linear ones |
 | **Closed-Loop Control** | State observation, sensitivity estimation, and bounded intervention targeting via `ResonanceNavigationEngine` |
 | **Real-Time Streaming** | Pre-allocated circular buffer O(1) rolling DRR updates via `RealTimeDRR` for low-latency streaming data |
-| **Validation Readiness** | Model risk cards, shadow review records, supervisory profiles, and event backtesting via `validation_readiness` |
+| **Validation Readiness** | SR 26-2 reference profiles, model risk cards, shadow review records, supervisory profiles, and event backtesting |
 | **Phase-Transition Detection** | Evidence for drift or abrupt changes in system behavior |
 
 ### Supported Data Sources
@@ -62,7 +123,7 @@ DRR combines spectral analysis (FFT, Welch PSD, Morlet wavelet scalograms), dire
 | **Sonoluminescence** | Multimodal acoustic driver, cavitation bubble dynamics, optical flash emission, and electrical transduction |
 | **Sensing Systems** | Multi-channel radar micro-Doppler DSP analog time series |
 | **Policy Data** | Tabular time-series from FRED, policy observables |
-| **Supervisory Panels** | Banking data (FFIEC 002, FR Y-9C), institutional metrics |
+| **Supervisory Panels** | Public banking data (FR Y-9C, FFIEC 002, FR Y-15) with verified mappings supplied for each code/version |
 | **Financial Markets** | Multi-asset macro panels (SPY, TLT, GLD, HYG, VIXY) via OpenBB / Qlib / DataFrame providers |
 | **Custom Time-Series** | Any multivariate numerical array |
 
@@ -181,7 +242,7 @@ Its purpose is to test whether Dynamic Resonance Rooting produces useful, reprod
 2. **Riskfolio-Lib Integration** (`drr_framework.finance.portfolio`):
    - DRR-conditioned dynamic portfolio regime switching (Mean-Variance vs. CVaR 95% tail risk).
    - SciPy SLSQP optimization fallback.
-   - Strictly causal no-lookahead expanding/rolling percentile regime policies.
+   - Strict point-in-time, no-lookahead expanding/rolling percentile regime policies.
 
 3. **VectorBT Validation Adapter** (`drr_framework.finance.validation`):
    - Independent backtest reconstruction and multi-parameter robustness sweeps (lookbacks, quantiles, horizons, time-delays).
@@ -351,7 +412,9 @@ dynamic-resonance-rooting/
 ## Documentation
 
 - [Quant Research Lab Architecture](docs/quant-research.md) — Quantitative finance integration guide
-- [Validation Readiness Guide](docs/validation-readiness-guide.md) — Model risk management and supervisory compliance
+- [LFBO Workbench Guide](docs/lfbo-workbench.md) — public-data monitoring, lineage, validation, and operator workflow
+- [Security Posture](docs/security-posture.md) — local trust boundary, auditability, SBOM, and deployment caveats
+- [Validation Readiness Guide](docs/validation-readiness-guide.md) — model-risk review artifacts and SR 26-2 reference basis
 - [Resonance Geometry](docs/resonance-geometry.md) — Differential geometry and state space manifold dynamics
 - [Method Crosswalk](docs/method-crosswalk.md) — Cross-walk comparison with traditional time-series methods
 - [Audience Guide](docs/audience-guide.md) — Guidance for researchers, quants, and risk managers
