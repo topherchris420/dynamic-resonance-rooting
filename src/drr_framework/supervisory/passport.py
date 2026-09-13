@@ -9,7 +9,7 @@ import hashlib
 from dataclasses import dataclass
 from pathlib import Path
 
-from .common import canonical_json, stable_id, write_immutable
+from .common import canonical_json, sha256_hex, stable_id, write_immutable
 
 
 @dataclass(frozen=True)
@@ -21,6 +21,7 @@ class AnalysisPassport:
         required = {
             "software_version",
             "git_commit",
+            "source_code_sha256",
             "timestamp",
             "as_of",
             "filing_vintages",
@@ -38,6 +39,13 @@ class AnalysisPassport:
         }
         if required - set(value):
             raise ValueError("Incomplete analysis passport")
+        sha256_hex(value["source_code_sha256"])
+        if not value["source_hashes"]:
+            raise ValueError("Analysis passport requires at least one source hash")
+        for digest in value["source_hashes"]:
+            sha256_hex(digest)
+        for digest in value["output_hashes"].values():
+            sha256_hex(digest)
         object.__setattr__(self, "payload_json", canonical_json(value))
 
     @property
@@ -71,7 +79,7 @@ def software_identity():
         ).strip()
         dirty = bool(
             subprocess.check_output(
-                ["git", "status", "--porcelain", "--untracked-files=no"],
+                ["git", "status", "--porcelain", "--untracked-files=normal"],
                 cwd=root,
                 text=True,
                 stderr=subprocess.DEVNULL,

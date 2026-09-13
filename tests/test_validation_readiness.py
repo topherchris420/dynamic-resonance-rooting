@@ -1,6 +1,7 @@
 import json
 
 import pandas as pd
+import pytest
 
 from drr_framework import (
     build_model_risk_card,
@@ -78,6 +79,19 @@ def test_model_risk_card_and_packet_make_drr_validation_ready_not_validated():
         "srletters/sr1107" in item["url"]
         for item in packet["validation_readiness"]["reference_basis"]
     )
+    assert "legal conclusions" in model_card["prohibited_uses"]
+    assert "policy decisions" in model_card["prohibited_uses"]
+
+
+def test_model_risk_card_rejects_free_form_approval_status():
+    with pytest.raises(ValueError, match="readiness label"):
+        build_model_risk_card(
+            model_name="DRR",
+            version="candidate",
+            intended_use="Research diagnostics",
+            prohibited_uses=["ratings"],
+            validation_status="validated and approved",
+        )
 
 
 def test_event_backtest_measures_alert_quality_and_lead_time():
@@ -107,6 +121,38 @@ def test_event_backtest_measures_alert_quality_and_lead_time():
     assert result["precision"] == 2 / 3
     assert result["recall"] == 1.0
     assert result["mean_lead_time_periods"] == 1.5
+
+
+def test_event_backtest_retains_unscored_events_and_rejects_duplicate_dates():
+    frame = pd.DataFrame(
+        {
+            "period": pd.date_range("2020-01-01", periods=4, freq="QS"),
+            "score": [0.9, None, 0.1, 0.8],
+            "event": [False, True, True, False],
+        }
+    )
+    result = run_event_backtest(
+        frame,
+        date_column="period",
+        score_column="score",
+        event_column="event",
+        threshold=0.75,
+        lead_window=1,
+    )
+    assert result["event_count"] == 2
+    assert result["unscored_event_count"] == 1
+    assert result["missed_events"] == 1
+    duplicate = frame.copy()
+    duplicate.loc[3, "period"] = duplicate.loc[2, "period"]
+    with pytest.raises(ValueError, match="unique and increasing"):
+        run_event_backtest(
+            duplicate,
+            date_column="period",
+            score_column="score",
+            event_column="event",
+            threshold=0.75,
+            lead_window=1,
+        )
 
 
 def test_shadow_review_records_are_append_only_jsonl(tmp_path):

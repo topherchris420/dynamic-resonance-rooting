@@ -1,10 +1,16 @@
 from dataclasses import replace
+import sqlite3
 
 import pytest
 
 from test_regulatory_foundation import observation
 from drr_framework.supervisory.common import canonical
-from drr_framework.supervisory.evidence_ledger import EvidenceEntry, EvidenceLedger, AnalystReview
+from drr_framework.supervisory.evidence_ledger import (
+    AuditEvent,
+    EvidenceEntry,
+    EvidenceLedger,
+    AnalystReview,
+)
 from drr_framework.supervisory.feedback import evaluate_signal_usefulness
 from drr_framework.supervisory.passport import AnalysisPassport
 from drr_framework.supervisory.policy_context import PolicyContext, PolicyEvent
@@ -53,6 +59,8 @@ def test_evidence_deep_immutability_roundtrip_and_append_only_reviews(tmp_path):
     ledger.review(first)
     ledger.review(second)
     assert len(ledger.reviews()) == 2
+    assert len(ledger.audit_events()) == 2
+    assert {event.outcome for event in ledger.audit_events()} == {"recorded"}
     assert (
         ledger.latest_reviews(as_of="2025-09-01")[e.evidence_id].disposition.value == "investigate"
     )
@@ -88,6 +96,49 @@ def test_policy_availability_and_explicit_breakpoints():
     ) == ("2025-06-30",)
     with pytest.raises(ValueError, match="scope"):
         replace(event, applicability="authoritative_applicability")
+
+
+def test_audit_events_reject_sensitive_details_and_storage_is_append_only(tmp_path):
+    ledger = EvidenceLedger(tmp_path / "ledger.sqlite")
+    with pytest.raises(ValueError, match="sensitive"):
+        ledger.record_audit_event(
+            AuditEvent(
+                "2025-09-01",
+                "review_request",
+                "denied",
+                "local-client",
+                details=(("token", "do-not-store"),),
+            )
+        )
+    event = AuditEvent("2025-09-01", "health_check", "recorded", "local-client")
+    ledger.record_audit_event(event)
+    with pytest.raises(sqlite3.DatabaseError):
+        with ledger._connect() as db:
+            db.execute("UPDATE audit_events SET payload='{}' WHERE id=?", (event.event_id,))
+    with pytest.raises(sqlite3.DatabaseError):
+        with ledger._connect() as db:
+            db.execute("DELETE FROM audit_events WHERE id=?", (event.event_id,))
+
+
+def test_historical_ledger_export_filters_future_reviews(tmp_path):
+    ledger = EvidenceLedger(tmp_path / "ledger.sqlite")
+    evidence = entry()
+    ledger.append(evidence)
+    ledger.review(
+        AnalystReview(
+            evidence.evidence_id,
+            "investigate",
+            "Analyst",
+            "Later review",
+            "2025-10-01",
+        )
+    )
+    paths = ledger.export(
+        tmp_path / "exports",
+        as_of="2025-09-01",
+        evidence_ids=(evidence.evidence_id,),
+    )
+    assert paths["reviews"].read_text(encoding="utf-8") == ""
 
 
 def test_sourced_entity_perimeters_and_future_links():

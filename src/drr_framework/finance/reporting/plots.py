@@ -24,7 +24,7 @@ def plot_quant_lab_summary(
 
     Plots:
       1. Mean DRR Resonance Depth over time
-      2. Causal Network Density over time
+      2. Directional Network Density over time
       3. Cumulative Net Strategy Returns vs Benchmarks
       4. Strategy Drawdowns over time
     """
@@ -48,7 +48,7 @@ def plot_quant_lab_summary(
             label="Network Density",
         )
         axes[1].set_ylabel("Density")
-        axes[1].set_title("Causal Network Topology Density")
+        axes[1].set_title("Directional Network Topology Density")
         axes[1].grid(True, alpha=0.3)
         axes[1].legend(loc="upper left")
 

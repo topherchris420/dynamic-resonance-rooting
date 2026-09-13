@@ -2,7 +2,7 @@
 DRR Feature Generator & Rolling Matrix Builder.
 
 Transforms historical market return windows into DRR structural state representations
-and constructs rolling, strictly causal DRR feature matrices without lookahead leakage.
+and constructs rolling, strictly trailing DRR feature matrices without lookahead leakage.
 """
 
 import logging
@@ -104,7 +104,7 @@ def build_drr_feature_matrix(
     """
     Construct a rolling time series of DRR features across market returns.
 
-    Enforces strict causal alignment: row at index t uses returns in [t - depth_window, t].
+    Enforces point-in-time alignment: row at index t uses returns in [t - depth_window, t].
 
     Args:
         returns: Market returns DataFrame indexed by DatetimeIndex

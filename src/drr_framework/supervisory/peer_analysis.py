@@ -124,6 +124,9 @@ def analyze_peers(
         if o.unit != target.unit or o.definition_version != target.definition_version:
             excluded[peer] = "Different units or definition version"
             continue
+        if o.perimeter_version != target.perimeter_version:
+            excluded[peer] = "Different reporting perimeter version"
+            continue
         registry.resolve(
             form,
             metric,

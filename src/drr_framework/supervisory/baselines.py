@@ -47,13 +47,36 @@ class BaselineConfig:
             raise ValueError("Invalid baseline configuration")
 
 
-def run_baselines(dataset, config=None):
+def run_baselines(dataset, config=None, *, breakpoints=None):
     config = config or BaselineConfig()
     results = []
     for metric in dataset.variable_names:
         values = dataset.frame[metric].to_numpy(dtype=float)[-config.lookback - 1 :]
         history, current = values[:-1], values[-1]
         complete = len(history) >= config.min_history and np.isfinite(values).all()
+        window_dates = dataset.dates[-config.lookback - 1 :]
+        observations = [
+            o
+            for o in dataset.observations
+            if o.metric == metric and o.reporting_period in window_dates
+        ]
+        if len(
+            {(o.unit, o.definition_version, o.perimeter_version) for o in observations}
+        ) > 1 or any(p in window_dates for p in (breakpoints or {}).get(metric, ())):
+            results.append(
+                BaselineResult(
+                    metric,
+                    "availability",
+                    None,
+                    None,
+                    False,
+                    0,
+                    len(history),
+                    "comparable trailing window",
+                    "Reporting definition or perimeter break; comparison withheld",
+                )
+            )
+            continue
         if not complete:
             results.append(
                 BaselineResult(

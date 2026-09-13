@@ -18,9 +18,13 @@ from drr_framework.supervisory.vintage import (
 from drr_framework.supervisory.reconciliation import reconcile_dataset, reconcile_store
 from drr_framework.supervisory.model_risk import (
     ModelRiskProfile,
+    ValidationEvidence,
     ValidationStatus,
     MODEL_RISK_REFERENCE_BASIS,
 )
+from drr_framework.supervisory.common import file_sha256
+from drr_framework.supervisory.ingestion import FilingContext, ingest_wide_csv
+from drr_framework.supervisory.semantics import bundled_registry
 
 
 def definition(code="SYN_ASSETS", **kwargs):
@@ -193,4 +197,59 @@ def test_model_risk_has_current_basis_and_requires_independent_evidence():
             "research",
             ("ratings",),
             validation_status=ValidationStatus.INDEPENDENTLY_REVIEWED,
+        )
+
+    with pytest.raises(ValueError):
+        ValidationEvidence("implementation", ("not-a-hash",), "Reviewer", "not-a-date")
+    evidence = ValidationEvidence(
+        "implementation",
+        ("a" * 64,),
+        "Independent reviewer",
+        "2026-09-12",
+        independent=True,
+    )
+    profile = ModelRiskProfile(
+        "DRR",
+        "research",
+        ("ratings",),
+        validation_status=ValidationStatus.INDEPENDENTLY_REVIEWED,
+        evidence=(evidence,),
+    )
+    assert profile.evidence[0].content_addressed
+
+
+def test_public_ingestion_verifies_file_hash_and_exact_semantics(tmp_path):
+    filing = tmp_path / "filing.csv"
+    filing.write_text(
+        "RSSD_ID,LEGAL_NAME,BHCK0081,BHCK2170,BHCK3210\n"
+        "1234567,Example Holding Company,25,1000,90\n",
+        encoding="utf-8",
+    )
+    context = FilingContext(
+        form="FR Y-9C",
+        reporting_period="2026-03-31",
+        original_filing_date="2026-05-01",
+        ingestion_date="2026-09-12",
+        available_as_of="2026-09-12",
+        source_vintage="2026Q1-public-download",
+        source="https://www.ffiec.gov/npw/FinancialReport/FinancialDataDownload",
+        source_hash=file_sha256(filing),
+        definition_version="FRY9C-2026-03-verified-2026-09-12",
+    )
+    store = ingest_wide_csv(filing, bundled_registry(), context)
+    assert len(store.observations) == 3
+    assert {o.source_hash for o in store.observations} == {file_sha256(filing)}
+    assert {o.metric for o in store.observations} == {
+        "BHCK0081",
+        "BHCK2170",
+        "BHCK3210",
+    }
+    with pytest.raises(ValueError, match="does not match"):
+        ingest_wide_csv(filing, bundled_registry(), replace(context, source_hash="0" * 64))
+    with pytest.raises(ValueError, match="Unverified|Missing"):
+        ingest_wide_csv(
+            filing,
+            bundled_registry(),
+            context,
+            metric_columns=("RCFD2170",),
         )

@@ -77,12 +77,12 @@ def run_falsification(signal_key, specifications, evaluator):
             if result.magnitude is not None and not np.isfinite(result.magnitude):
                 raise ValueError("Magnitude must be finite or null")
             results.append(result)
-        except (ValueError, RuntimeError, np.linalg.LinAlgError) as exc:
+        except Exception as exc:
             results.append(SpecificationResult(spec, False, None, None, "failed", str(exc)))
     valid = [r for r in results if r.status == "evaluated"]
     supported = [r for r in valid if r.supported]
     # Denominator includes failed/non-applicable specifications, transparently reported.
-    survival = 100 * len(supported) / len(results) if valid else None
+    survival = 100 * len(supported) / len(results) if results else None
     directions = [r.direction for r in valid if r.direction is not None]
     direction_stability = (
         max(directions.count(d) for d in set(directions)) / len(directions) if directions else None
@@ -205,8 +205,40 @@ def falsify_drr_signal(dataset, config=None):
         for name in dataset.variable_names
         if len(dataset.variable_names) > 1
     ]
+    specs += [
+        SignalSpecification(
+            "omit-period-" + period,
+            omit_period=period,
+            lookback=config.lookback,
+        )
+        for period in dataset.dates[-5:-2]
+    ]
+    # Peer definitions and filing-vintage choices are evaluated in their own
+    # workbench layers; retain explicit non-applicable specifications so their
+    # absence cannot be mistaken for a successful DRR sensitivity check.
+    specs += [
+        SignalSpecification(
+            "alternate-peer-definition",
+            peer_definition="not_supplied_to_structural_drr",
+            lookback=config.lookback,
+        ),
+        SignalSpecification(
+            "alternate-data-vintage",
+            vintage="not_supplied_to_structural_drr",
+            lookback=config.lookback,
+        ),
+    ]
 
     def evaluate(spec):
+        if spec.peer_definition or spec.vintage:
+            return SpecificationResult(
+                spec,
+                False,
+                None,
+                None,
+                "not_applicable",
+                "Peer definitions and data-vintage alternatives are evaluated outside the structural DRR rerun",
+            )
         names = tuple(n for n in dataset.variable_names if n != spec.omit_variable)
         subset = type(dataset).from_vintage_store(
             dataset._store,
@@ -217,6 +249,34 @@ def falsify_drr_signal(dataset, config=None):
             metrics=names,
             allow_synthetic=dataset.metadata.get("allow_synthetic", False),
         )
+        if spec.omit_period:
+            if spec.omit_period not in subset.dates:
+                return SpecificationResult(
+                    spec,
+                    False,
+                    None,
+                    None,
+                    "not_applicable",
+                    "Requested period is outside the as-of time axis",
+                )
+            masked = tuple(
+                (
+                    replace(observation, value=None)
+                    if observation.reporting_period == spec.omit_period
+                    else observation
+                )
+                for observation in subset.observations
+            )
+            subset = replace(
+                subset,
+                frame=subset.frame.mask(subset.frame.index == spec.omit_period, axis="index"),
+                values=np.where(
+                    np.asarray(subset.frame.index == spec.omit_period)[:, None],
+                    np.nan,
+                    subset.values,
+                ),
+                observations=masked,
+            )
         cfg = replace(
             config,
             lookback=spec.lookback,
@@ -228,10 +288,24 @@ def falsify_drr_signal(dataset, config=None):
         )
         result = LFBORegimeAnalyzer(cfg).analyze(subset)
         if result["status"] == "unavailable":
+            if spec.omit_period:
+                return SpecificationResult(
+                    spec,
+                    False,
+                    None,
+                    None,
+                    "not_applicable",
+                    result.get("limitation", "DRR cannot evaluate a masked period"),
+                )
             raise ValueError(result["limitation"])
         surprise = result["structural_surprise"]
         return SpecificationResult(
             spec, surprise["flagged"], 1 if surprise["flagged"] else 0, surprise["score"]
         )
 
-    return run_falsification(f"{dataset.institution_id}:structural_surprise", specs, evaluate)
+    report = run_falsification(f"{dataset.institution_id}:structural_surprise", specs, evaluate)
+    return replace(
+        report,
+        peer_sensitivity="not applicable: peer context is evaluated in peer_analysis",
+        data_vintage_sensitivity="not applicable: point-in-time vintages are evaluated in backtesting",
+    )

@@ -42,6 +42,30 @@ SR_11_7_SECTIONS = (
     "governance_and_change_control",
 )
 
+# Model-card status is deliberately narrower than a caller's free-form prose.
+# These labels describe readiness states without implying approval or validation.
+SAFE_MODEL_CARD_VALIDATION_STATUSES = frozenset(
+    {
+        "candidate; not validated supervisory methodology",
+        "development tested; not independently validated",
+        "independent review pending; not approved for supervisory use",
+    }
+)
+MODEL_CARD_STATUS_ALIASES = {
+    ValidationStatus.NOT_REVIEWED.value: "candidate; not validated supervisory methodology",
+    ValidationStatus.DEVELOPMENT_TESTED.value: "development tested; not independently validated",
+    ValidationStatus.INDEPENDENT_REVIEW_PENDING.value: "independent review pending; not approved for supervisory use",
+}
+REQUIRED_PROHIBITED_USES = (
+    "ratings",
+    "findings",
+    "MRAs",
+    "MRIAs",
+    "enforcement recommendations",
+    "legal conclusions",
+    "policy decisions",
+)
+
 VALIDATION_READINESS_CHECKLIST = {
     "scope_and_use_classification": "Distinguish complex quantitative models from simple arithmetic and deterministic tools (SR 26-2 II).",
     "inherent_risk": "Assess complexity, assumptions, input quality and data constraints (III).",
@@ -74,12 +98,32 @@ def build_model_risk_card(
 ) -> Dict[str, Any]:
     """Build a model-risk card for a DRR supervisory candidate workflow."""
 
+    validation_status = (
+        validation_status.value
+        if isinstance(validation_status, ValidationStatus)
+        else str(validation_status).strip()
+    )
+    validation_status = MODEL_CARD_STATUS_ALIASES.get(validation_status, validation_status)
+    if validation_status not in SAFE_MODEL_CARD_VALIDATION_STATUSES:
+        raise ValueError(
+            "validation_status must be a non-approval readiness label; independent validation "
+            "requires separately bound evidence"
+        )
+    supplied_uses = tuple(str(value).strip() for value in prohibited_uses if str(value).strip())
+    if not supplied_uses:
+        raise ValueError("At least one prohibited use is required")
+    normalized_uses = {value.casefold() for value in supplied_uses}
+    prohibited = list(supplied_uses)
+    for required_use in REQUIRED_PROHIBITED_USES:
+        if required_use.casefold() not in normalized_uses:
+            prohibited.append(required_use)
+
     return _drop_empty(
         {
             "model_name": model_name,
             "version": version,
             "intended_use": intended_use,
-            "prohibited_uses": list(prohibited_uses),
+            "prohibited_uses": prohibited,
             "owners": list(owners or ()),
             "data_lineage": dict(data_lineage or {}),
             "assumptions": list(assumptions or ()),
@@ -149,13 +193,17 @@ def run_event_backtest(
 
     prepared = frame.loc[:, required].copy()
     prepared[date_column] = pd.to_datetime(prepared[date_column], errors="raise")
+    if (
+        prepared[date_column].duplicated().any()
+        or not prepared[date_column].is_monotonic_increasing
+    ):
+        raise ValueError("Backtest dates must be unique and increasing")
     prepared[score_column] = pd.to_numeric(prepared[score_column], errors="coerce")
     prepared[event_column] = prepared[event_column].astype(bool)
-    prepared = (
-        prepared.dropna(subset=[score_column]).sort_values(date_column).reset_index(drop=True)
-    )
+    prepared = prepared.reset_index(drop=True)
+    scored = prepared.dropna(subset=[score_column])
 
-    alert_indices = [int(index) for index in prepared.index[prepared[score_column] >= threshold]]
+    alert_indices = [int(index) for index in scored.index[scored[score_column] >= threshold]]
     event_indices = [int(index) for index in prepared.index[prepared[event_column]]]
     event_set = set(event_indices)
 
@@ -188,6 +236,8 @@ def run_event_backtest(
         "observation_count": int(len(prepared)),
         "alert_count": int(len(alert_indices)),
         "event_count": int(len(event_indices)),
+        "unscored_observation_count": int(prepared[score_column].isna().sum()),
+        "unscored_event_count": int((prepared[event_column] & prepared[score_column].isna()).sum()),
         "true_positive_alerts": int(len(true_positive_alerts)),
         "false_positive_alerts": int(len(false_positive_alerts)),
         "detected_events": int(len(detected_events)),

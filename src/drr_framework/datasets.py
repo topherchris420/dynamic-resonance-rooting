@@ -391,6 +391,7 @@ class RegulatoryAnalysisDataset(PolicyResonanceDataset):
     peer_group: Optional[str] = None
     provenance: Dict[str, str] = field(default_factory=dict)
     source_citations: Tuple[str, ...] = ()
+    source_hashes: Tuple[str, ...] = ()
     metric_metadata: Dict[str, Any] = field(default_factory=dict)
     institution_metadata: Dict[str, Any] = field(default_factory=dict)
     data_quality_flags: Tuple[str, ...] = ()

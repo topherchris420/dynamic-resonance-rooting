@@ -16,6 +16,7 @@ from drr_framework.supervisory.falsification import (
 from drr_framework.supervisory.backtesting import walk_forward_validate
 from drr_framework.supervisory.vintage import VintageStore
 from drr_framework.supervisory.semantics import SemanticRegistry
+from drr_framework.supervisory.peer_analysis import PeerGroupDefinition, analyze_peers
 
 
 def history(n=28):
@@ -85,9 +86,9 @@ def test_walk_forward_remains_unchanged_when_future_revision_is_appended():
     revision = replace(
         old,
         value=900,
-        amendment_date="2025-10-01",
-        ingestion_date="2025-10-01",
-        available_as_of="2025-10-01",
+        amendment_date="2024-03-01",
+        ingestion_date="2024-03-01",
+        available_as_of="2024-03-01",
         source_vintage="later",
         supersedes=old.observation_id,
     )
@@ -95,3 +96,68 @@ def test_walk_forward_remains_unchanged_when_future_revision_is_appended():
         VintageStore(records + (revision,)), SemanticRegistry((definition(),)), **args
     )
     assert initial == future
+
+
+def test_walk_forward_revision_audit_is_scoped_to_requested_target():
+    records = history()
+    other = tuple(
+        replace(
+            row,
+            institution_id="B",
+            institution_name="Synthetic B",
+            source_vintage="b-v1",
+        )
+        for row in records
+    )
+    old = other[-3]
+    revision = replace(
+        old,
+        value=900,
+        amendment_date="2025-10-01",
+        ingestion_date="2025-10-01",
+        available_as_of="2025-10-01",
+        source_vintage="b-v2",
+        supersedes=old.observation_id,
+    )
+    result = walk_forward_validate(
+        VintageStore(records + other + (revision,)),
+        SemanticRegistry((definition(),)),
+        institution="A",
+        form="FR Y-9C",
+        review_dates=[o.available_as_of for o in records[-3:]] + ["2024-04-01"],
+        allow_synthetic=True,
+        enable_drr=False,
+    )
+    assert all(row["later_revision_count"] == 0 for row in result["rows"])
+
+
+def test_peer_context_excludes_mismatched_reporting_perimeter():
+    target = history()[-1]
+    peer = replace(
+        target,
+        institution_id="B",
+        institution_name="Synthetic B",
+        perimeter_version="different-perimeter",
+        source_vintage="b-v1",
+    )
+    store = VintageStore(history() + (peer,))
+    cohort = PeerGroupDefinition(
+        "Synthetic peers",
+        ("A", "B", "C"),
+        "Explicit fixture cohort",
+        "2025-09-01",
+        "2017-01-01",
+    )
+    result = analyze_peers(
+        store,
+        SemanticRegistry((definition(),)),
+        cohort,
+        institution="A",
+        form="FR Y-9C",
+        metric="SYN_ASSETS",
+        period=target.reporting_period,
+        as_of="2025-09-01",
+        allow_synthetic=True,
+    )
+    assert result.included == ()
+    assert dict(result.excluded)["B"] == "Different reporting perimeter version"

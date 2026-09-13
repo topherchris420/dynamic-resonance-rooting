@@ -131,13 +131,13 @@ def run_negative_controls(
         s_ic, _ = stats.spearmanr(shuffled_x, y_vals)
         shuffled_ics.append(s_ic)
 
-    shuffled_ics = np.array(shuffled_ics)
-    p_value_empirical = float(np.mean(np.abs(shuffled_ics) >= np.abs(orig_ic)))
+    shuffled_array = np.asarray(shuffled_ics)
+    p_value_empirical = float(np.mean(np.abs(shuffled_array) >= np.abs(orig_ic)))
 
     return {
         "original_spearman_ic": float(orig_ic),
-        "shuffled_ic_mean": float(np.mean(shuffled_ics)),
-        "shuffled_ic_std": float(np.std(shuffled_ics)),
+        "shuffled_ic_mean": float(np.mean(shuffled_array)),
+        "shuffled_ic_std": float(np.std(shuffled_array)),
         "empirical_p_value": p_value_empirical,
         "is_statistically_distinct": bool(p_value_empirical < 0.05),
     }

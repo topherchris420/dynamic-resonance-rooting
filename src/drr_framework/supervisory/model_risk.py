@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Tuple
 
+from .common import instant, sha256_hex
+
 MODEL_RISK_REFERENCE_BASIS = (
     {
         "label": "SR 26-2 Revised Guidance on Model Risk Management",
@@ -72,6 +74,28 @@ class ValidationEvidence:
     independent: bool = False
     limitations: Tuple[str, ...] = ()
 
+    def __post_init__(self):
+        object.__setattr__(self, "evidence_ids", tuple(self.evidence_ids))
+        object.__setattr__(self, "limitations", tuple(self.limitations))
+        if not isinstance(self.area, str) or not self.area.strip():
+            raise ValueError("Validation evidence requires an area")
+        if not self.evidence_ids or any(
+            not isinstance(value, str) or not value.strip() for value in self.evidence_ids
+        ):
+            raise ValueError("Validation evidence requires immutable evidence IDs")
+        if not isinstance(self.reviewer, str) or not self.reviewer.strip():
+            raise ValueError("Validation evidence requires an attributed reviewer")
+        object.__setattr__(self, "reviewed_at", instant(self.reviewed_at).isoformat())
+        if not isinstance(self.independent, bool):
+            raise ValueError("Validation evidence independence must be explicit")
+        if any(not isinstance(value, str) or not value.strip() for value in self.limitations):
+            raise ValueError("Validation evidence limitations must be nonempty text")
+
+    @property
+    def content_addressed(self):
+        """Whether every referenced artifact is a SHA-256 content identifier."""
+        return all(_is_sha256_identifier(value) for value in self.evidence_ids)
+
 
 @dataclass(frozen=True)
 class ModelRiskProfile:
@@ -113,11 +137,31 @@ class ModelRiskProfile:
             "third_party_products",
         ):
             object.__setattr__(self, name, tuple(getattr(self, name)))
+        object.__setattr__(
+            self,
+            "evidence",
+            tuple(
+                ValidationEvidence(**item) if isinstance(item, dict) else item
+                for item in self.evidence
+            ),
+        )
+        if any(not isinstance(item, ValidationEvidence) for item in self.evidence):
+            raise ValueError("Model-risk evidence must use ValidationEvidence records")
         if not self.model_name or not self.intended_use or not self.foreseeable_misuse:
             raise ValueError("Intended use and foreseeable misuse must be explicit")
         if self.risk_tier != ModelRiskTier.UNASSESSED and not self.tier_rationale:
             raise ValueError("A human-assigned model risk tier needs a rationale")
         if self.validation_status == ValidationStatus.INDEPENDENTLY_REVIEWED and not any(
-            e.independent and e.reviewer and e.reviewed_at and e.evidence_ids for e in self.evidence
+            e.independent and e.content_addressed for e in self.evidence
         ):
-            raise ValueError("Independent review status requires independent review evidence")
+            raise ValueError(
+                "Independent review status requires independent, content-addressed evidence"
+            )
+
+
+def _is_sha256_identifier(value):
+    try:
+        sha256_hex(value)
+    except ValueError:
+        return False
+    return True

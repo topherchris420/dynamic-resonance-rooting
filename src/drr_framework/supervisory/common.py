@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import re
 from dataclasses import fields, is_dataclass
 from datetime import date, datetime, timezone
 from enum import Enum
@@ -78,6 +79,23 @@ def stable_id(value: Any) -> str:
     return hashlib.sha256(canonical_json(value).encode("utf-8")).hexdigest()
 
 
+def sha256_hex(value: str) -> str:
+    """Validate and normalize a SHA-256 digest supplied with source metadata."""
+    digest = str(value).lower()
+    if not re.fullmatch(r"[a-f0-9]{64}", digest):
+        raise ValueError("Source hash must be a 64-character SHA-256 digest")
+    return digest
+
+
+def file_sha256(path: Path) -> str:
+    """Hash a local source artifact without loading the entire file into memory."""
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as source:
+        for block in iter(lambda: source.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
 def source_url(value: str, *, authoritative: bool = False) -> str:
     url = urlsplit(value)
     if url.scheme != "https" or not url.hostname or url.username or url.password:
@@ -99,7 +117,15 @@ def write_immutable(path: Path, text: str) -> Path:
     try:
         with path.open("x", encoding="utf-8") as f:
             f.write(text)
+        try:
+            path.chmod(0o600)
+        except OSError:
+            pass
     except FileExistsError:
         if path.read_text(encoding="utf-8") != text:
             raise ValueError(f"Immutable artifact already exists: {path.name}") from None
+        try:
+            path.chmod(0o600)
+        except OSError:
+            pass
     return path

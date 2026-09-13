@@ -28,7 +28,7 @@ def generate_markdown_research_report(
 ) -> str:
     """
     Generate a research report in Markdown format following strict scientific standards.
-    Distinguishes observation, association, prediction, and causality.
+    Distinguishes observation, association, prediction, and causal identification.
     """
     out_p = Path(output_filepath)
     out_p.parent.mkdir(parents=True, exist_ok=True)
@@ -84,7 +84,7 @@ In evaluating these results, we strictly distinguish between:
 1. **Observation**: Empirical values measured from historical price series via phase space time-delay embedding.
 2. **Association**: Statistical correlations observed between trailing DRR resonance metrics and forward market volatility/drawdowns.
 3. **Prediction**: Out-of-sample forecast accuracy measured via Information Coefficients (IC) in matched control vs. experiment models.
-4. **Causality**: Directed graph connectivity inferred via transfer entropy or lagged correlation. Directed graph connectivity does NOT imply macroeconomic cause-and-effect.
+4. **Directional dependence**: Directed graph connectivity estimated via transfer entropy or lagged correlation. This temporal/predictive structure does not establish macroeconomic cause-and-effect.
 
 ---
 

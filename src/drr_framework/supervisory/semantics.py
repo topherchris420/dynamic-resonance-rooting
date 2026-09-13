@@ -7,7 +7,7 @@ import re
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 from .common import day, instant, source_url, stable_id
 
@@ -76,10 +76,12 @@ class SemanticRegistry:
         keys = [(d.form, d.code, d.version) for d in self.definitions]
         if len(keys) != len(set(keys)):
             raise ValueError("Duplicate semantic version")
+        self._version = stable_id(self.definitions)
+        self._resolve_cache: Dict[Tuple[object, ...], MetricDefinition] = {}
 
     @property
     def version(self) -> str:
-        return stable_id(self.definitions)
+        return self._version
 
     def resolve(
         self,
@@ -91,6 +93,16 @@ class SemanticRegistry:
         version: Optional[str] = None,
         allow_synthetic: bool = False,
     ) -> MetricDefinition:
+        key = (
+            form,
+            code,
+            day(period),
+            instant(as_of).isoformat(),
+            version,
+            bool(allow_synthetic),
+        )
+        if key in self._resolve_cache:
+            return self._resolve_cache[key]
         matches = [
             d
             for d in self.definitions
@@ -108,6 +120,9 @@ class SemanticRegistry:
             allow_synthetic and definition.status == VerificationStatus.SYNTHETIC
         ):
             raise ValueError(f"Unverified regulatory mapping blocked: {form}/{code}")
+        if len(self._resolve_cache) >= 4096:
+            self._resolve_cache.pop(next(iter(self._resolve_cache)))
+        self._resolve_cache[key] = definition
         return definition
 
     @classmethod

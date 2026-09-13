@@ -39,7 +39,7 @@ class MarketResonanceState:
     phase_coherence: float
     amplitude_stability: float
 
-    # Causal Topology & Network Structure
+    # Directional Topology & Network Structure
     network_density: float
     significant_edge_count: int
 

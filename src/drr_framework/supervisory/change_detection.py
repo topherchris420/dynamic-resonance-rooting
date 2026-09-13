@@ -92,7 +92,9 @@ def detect_material_changes(
                 versions[i] is not None
                 and versions[i - 1] is not None
                 and versions[i] != versions[i - 1]
-            ) or series.index[i] in breakpoints:
+            ) or series.index[i] in (
+                breakpoints.get(metric, ()) if isinstance(breakpoints, dict) else breakpoints
+            ):
                 start = max(start, i)
                 limitations.append(f"Comparability breakpoint at {series.index[i]}")
         comparable = series.iloc[start:]

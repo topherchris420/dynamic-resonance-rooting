@@ -21,6 +21,8 @@ def walk_forward_validate(
     allow_synthetic=False,
     enable_drr=True,
     events=None,
+    policy_context=None,
+    institution_class=None,
 ):
     from ..datasets import RegulatoryAnalysisDataset
 
@@ -29,6 +31,11 @@ def walk_forward_validate(
         raise ValueError("Review dates must be unique and increasing")
     rows = []
     previous = None
+    drr_cfg = drr_config
+    if drr_cfg is None:
+        from .analyzer import DRRConfig
+
+        drr_cfg = DRRConfig()
     for date in dates:
         dataset = RegulatoryAnalysisDataset.from_vintage_store(
             store,
@@ -39,14 +46,38 @@ def walk_forward_validate(
             metrics=metrics,
             allow_synthetic=allow_synthetic,
         )
-        baselines = run_baselines(dataset, baseline_config)
-        drr = (
-            LFBORegimeAnalyzer(drr_config).analyze(dataset, previous=previous)
-            if enable_drr
-            else {"status": "disabled", "structural_alert": False}
+        breakpoints = (
+            {
+                metric: policy_context.breakpoints(
+                    as_of=date,
+                    form=form,
+                    metric=metric,
+                    dates=dataset.dates,
+                    institution_class=institution_class,
+                )
+                for metric in dataset.variable_names
+            }
+            if policy_context is not None
+            else {}
         )
+        baselines = run_baselines(dataset, baseline_config, breakpoints=breakpoints)
+        active_break = any(
+            point in dataset.dates[-drr_cfg.lookback :]
+            for points in breakpoints.values()
+            for point in points
+        )
+        if not enable_drr:
+            drr = {"status": "disabled", "structural_alert": False}
+        elif active_break:
+            drr = {
+                "status": "unavailable",
+                "structural_alert": False,
+                "limitation": "Reporting comparability break inside the DRR analysis window",
+            }
+        else:
+            drr = LFBORegimeAnalyzer(drr_cfg).analyze(dataset, previous=previous)
         baseline_alert = any(b.flagged for b in baselines) or any(
-            c.flagged for c in detect_material_changes(dataset)
+            c.flagged for c in detect_material_changes(dataset, breakpoints=breakpoints)
         )
         rows.append(
             dict(
@@ -58,6 +89,7 @@ def walk_forward_validate(
                 source_ids=tuple(o.observation_id for o in dataset.observations),
                 source_vintages=dataset.filing_vintage,
                 input_hash=stable_id(dataset.observations),
+                breakpoints=breakpoints,
                 later_revision_count=None,
             )
         )
@@ -68,7 +100,13 @@ def walk_forward_validate(
     # Post-run revision audit is evaluation-only, never an input to historical alerts.
     if dates:
         for row in rows:
-            row["later_revision_count"] = len(store.compare_vintages(row["as_of"], dates[-1]))
+            revisions = store.compare_vintages(row["as_of"], dates[-1])
+            row["later_revision_count"] = sum(
+                revision.current.institution_id == institution
+                and revision.current.form == form
+                and (metrics is None or revision.current.metric in metrics)
+                for revision in revisions
+            )
     return {
         "mode": "point_in_time_reconstruction",
         "rows": rows,

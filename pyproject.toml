@@ -73,6 +73,7 @@ quant = [
 
 [project.scripts]
 drr-reproduce = "drr_framework.experiments:main"
+drr-monitor = "drr_framework.supervisory.cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

@@ -13,7 +13,7 @@ from enum import Enum
 import numpy as np
 import pandas as pd
 
-from .common import canonical, canonical_json, day, instant, source_url, stable_id
+from .common import canonical, canonical_json, day, instant, sha256_hex, source_url, stable_id
 from .semantics import SemanticRegistry
 
 
@@ -70,6 +70,7 @@ class RegulatoryObservation:
     supersedes: Optional[str] = None
     perimeter_version: str = "unspecified"
     lineage: Optional[CalculationLineage] = None
+    source_hash: str = ""
 
     def __post_init__(self):
         object.__setattr__(self, "provenance", ObservationProvenance(self.provenance))
@@ -122,6 +123,9 @@ class RegulatoryObservation:
             ObservationProvenance.EXTERNAL_REFERENCE,
         }:
             source_url(self.source)
+            object.__setattr__(self, "source_hash", sha256_hex(self.source_hash))
+        elif self.source_hash:
+            object.__setattr__(self, "source_hash", sha256_hex(self.source_hash))
 
     @property
     def filing_date(self):
@@ -163,6 +167,8 @@ class VintageStore:
         self.observations = tuple(
             sorted(observations, key=lambda o: (o.key, o.filing_date, o.observation_id))
         )
+        self._known_cache = {}
+        self._as_of_cache = {}
         by_id = {o.observation_id: o for o in self.observations}
         for o in self.observations:
             if o.supersedes:
@@ -206,9 +212,19 @@ class VintageStore:
 
     def known_records(self, as_of):
         cutoff = instant(as_of)
-        return tuple(o for o in self.observations if instant(o.available_as_of) <= cutoff)
+        key = cutoff.isoformat()
+        if key not in self._known_cache:
+            if len(self._known_cache) >= 64:
+                self._known_cache.pop(next(iter(self._known_cache)))
+            self._known_cache[key] = tuple(
+                o for o in self.observations if instant(o.available_as_of) <= cutoff
+            )
+        return self._known_cache[key]
 
     def as_of(self, as_of):
+        key = instant(as_of).isoformat()
+        if key in self._as_of_cache:
+            return self._as_of_cache[key]
         selected = {}
         for o in self.known_records(as_of):
             old = selected.get(o.key)
@@ -231,7 +247,11 @@ class VintageStore:
                     raise ValueError(
                         f"Conflicting source facts for {o.key}; analyst reconciliation required"
                     )
-        return tuple(selected[key] for key in sorted(selected))
+        result = tuple(selected[record_key] for record_key in sorted(selected))
+        if len(self._as_of_cache) >= 64:
+            self._as_of_cache.pop(next(iter(self._as_of_cache)))
+        self._as_of_cache[key] = result
+        return result
 
     def get_observation_as_of(self, institution_id, form, metric, period, as_of):
         key = institution_id, form, metric, day(period)
@@ -261,11 +281,9 @@ class VintageStore:
 
     def export_jsonl(self, path):
         output = Path(path)
-        output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(
-            "".join(canonical_json(o) + "\n" for o in self.observations), encoding="utf-8"
-        )
-        return output
+        from .common import write_immutable
+
+        return write_immutable(output, "".join(canonical_json(o) + "\n" for o in self.observations))
 
     @classmethod
     def from_file(cls, path):
@@ -361,6 +379,7 @@ def build_regulatory_dataset(
         peer_group=peer_group,
         provenance={o.observation_id: o.provenance.value for o in records},
         source_citations=tuple(sorted({o.source for o in records})),
+        source_hashes=tuple(sorted({o.source_hash for o in records if o.source_hash})),
         metric_metadata=definitions,
         institution_metadata={"perimeter_versions": sorted({o.perimeter_version for o in records})},
         data_quality_flags=flags,

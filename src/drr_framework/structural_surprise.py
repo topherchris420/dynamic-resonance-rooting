@@ -1,4 +1,4 @@
-"""Causal ridge-VAR structural innovation scoring."""
+"""Trailing ridge-VAR structural innovation scoring without future observations."""
 
 from __future__ import annotations
 
