@@ -114,7 +114,8 @@ def test_compact_notebook_helper_preserves_input_trace(monkeypatch):
 
 
 def test_numerical_analysis_does_not_load_matplotlib():
-    script = textwrap.dedent("""
+    script = textwrap.dedent(
+        """
         import importlib.abc
         import sys
         class BlockMatplotlib(importlib.abc.MetaPathFinder):
@@ -136,7 +137,8 @@ def test_numerical_analysis_does_not_load_matplotlib():
         assert "error" not in result["rooting_analysis"]
         assert "matplotlib" not in sys.modules
         assert "drr_framework.visualizations" not in sys.modules
-        """)
+        """
+    )
     result = subprocess.run(
         [sys.executable, "-c", script],
         cwd=Path(__file__).resolve().parents[1],
