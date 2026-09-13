@@ -11,6 +11,11 @@ License: MIT
 # Lazy import pattern for optional dependencies
 # Core modules that work without optional dependencies
 from .modules import ResonanceDetector, RootingAnalyzer, DepthCalculator, AnomalyDetector
+from .disagreement import (
+    DRR_ScopeResolver,
+    ObservationalPerspective,
+    ObservationalScale,
+)
 from .benchmarks import BenchmarkSystems, generate_micro_doppler_analog
 from .datasets import (
     PolicyResonanceDataset,
@@ -287,4 +292,7 @@ __all__ = [
     "NavigationMetrics",
     "ResonanceNavigationEngine",
     "ResonanceControlExperimentSuite",
+    "ObservationalScale",
+    "ObservationalPerspective",
+    "DRR_ScopeResolver",
 ]
