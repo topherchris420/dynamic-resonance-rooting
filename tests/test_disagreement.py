@@ -112,20 +112,67 @@ class TestDisagreementPrinciple(unittest.TestCase):
             indicators={"economy": "stabilizing"},
             evidence_provenance="prov_01",
         )
-        local_stable = ObservationalPerspective(
+        local_robust = ObservationalPerspective(
             source_id="Local_Model",
             scale="LOCAL",
             confidence_score=0.88,
-            indicators={"local_economy": "stabilizing"},
+            indicators={"local_economy": "robust"},
             evidence_provenance="prov_02",
         )
 
-        resolver = DRR_ScopeResolver([macro_stable, local_stable])
+        resolver = DRR_ScopeResolver([macro_stable, local_robust])
         payload = resolver.generate_drr_conclusion()
 
+        # Both 'stabilizing' and 'robust' are positive polarity -> no divergence
         self.assertFalse(payload["has_divergence"])
         self.assertEqual(payload["status"], "concordant_consensus")
         self.assertIn("concordance", payload["conclusion"])
+
+    def test_multi_scale_divergence_detection(self) -> None:
+        """Verify divergence is flagged when non-MACRO pairs (e.g. MESO vs MICRO) disagree."""
+        meso_positive = ObservationalPerspective(
+            source_id="Regional_Bank_Survey",
+            scale="MESO",
+            confidence_score=0.85,
+            indicators={"credit_flow": "expanding"},
+            evidence_provenance="prov_meso",
+        )
+        micro_negative = ObservationalPerspective(
+            source_id="Micro_Merchant_Tracker",
+            scale="MICRO",
+            confidence_score=0.78,
+            indicators={"cash_flow": "distressed"},
+            evidence_provenance="prov_micro",
+        )
+
+        resolver = DRR_ScopeResolver([meso_positive, micro_negative])
+        payload = resolver.generate_drr_conclusion()
+
+        self.assertTrue(payload["has_divergence"])
+        self.assertEqual(payload["status"], "divergent_scopes_preserved")
+
+    def test_indicator_dictionary_isolation_against_mutation(self) -> None:
+        """Verify indicator dictionary is defensively copied and isolated from external caller mutations."""
+        mutable_indicators = {"inflation": "moderating"}
+        perspective = ObservationalPerspective(
+            source_id="Test_Model",
+            scale="MACRO",
+            confidence_score=0.9,
+            indicators=mutable_indicators,
+            evidence_provenance="prov",
+        )
+
+        # Mutate the dictionary passed to constructor
+        mutable_indicators["inflation"] = "MUTATED"
+        self.assertEqual(perspective.indicators["inflation"], "moderating")
+
+        resolver = DRR_ScopeResolver([perspective])
+        payload = resolver.generate_drr_conclusion()
+
+        # Mutate the dictionary in the returned payload
+        payload["registered_perspectives"][0]["indicators"]["inflation"] = "MUTATED_AGAIN"
+        self.assertEqual(perspective.indicators["inflation"], "moderating")
+        self.assertEqual(resolver.perspectives[0].indicators["inflation"], "moderating")
 
     def test_observational_perspective_field_validation(self) -> None:
         """Verify validation logic for confidence_score and scale."""

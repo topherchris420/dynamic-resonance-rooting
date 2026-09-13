@@ -9,7 +9,7 @@ filtering, or smoothing out conflicting metrics from local/micro-level observati
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Union
 
 
 class ObservationalScale(str, Enum):
@@ -19,6 +19,30 @@ class ObservationalScale(str, Enum):
     MESO = "MESO"
     MICRO = "MICRO"
     LOCAL = "LOCAL"
+
+
+POSITIVE_POLARITY_TERMS: Set[str] = {
+    "stabilizing",
+    "stable",
+    "moderating",
+    "expanding",
+    "growing",
+    "positive",
+    "robust",
+    "healthy",
+    "strong",
+}
+
+NEGATIVE_POLARITY_TERMS: Set[str] = {
+    "deteriorating",
+    "contracting",
+    "distressed",
+    "negative",
+    "declining",
+    "fragile",
+    "weak",
+    "vulnerable",
+}
 
 
 @dataclass(frozen=True)
@@ -72,9 +96,10 @@ class ObservationalPerspective:
                 f"confidence_score must be in range [0.0, 1.0], got {self.confidence_score}"
             )
 
-        # Validate indicators
+        # Validate indicators and isolate mapping against external caller mutations
         if not isinstance(self.indicators, dict):
             raise TypeError(f"indicators must be a dict, got {type(self.indicators).__name__}")
+        object.__setattr__(self, "indicators", dict(self.indicators))
 
 
 class DRR_ScopeResolver:
@@ -83,7 +108,7 @@ class DRR_ScopeResolver:
 
     Enforces the critical invariant: High confidence_score or large scale (MACRO)
     MUST NOT silently overwrite, filter, or smooth out conflicting metrics from smaller
-    scales (LOCAL/MICRO).
+    scales (LOCAL/MICRO/MESO).
     """
 
     def __init__(
@@ -146,24 +171,27 @@ class DRR_ScopeResolver:
             return ", ".join(unique_states)
         return default
 
+    @staticmethod
+    def _get_text_polarity(text: str) -> Optional[str]:
+        """Classify text polarity as 'positive', 'negative', or None."""
+        words = set(text.lower().replace(",", " ").split())
+        has_pos = bool(words & POSITIVE_POLARITY_TERMS)
+        has_neg = bool(words & NEGATIVE_POLARITY_TERMS)
+        if has_pos and not has_neg:
+            return "positive"
+        if has_neg and not has_pos:
+            return "negative"
+        return None
+
     def _detect_scale_divergence(
         self,
     ) -> Tuple[bool, str, str]:
         """
-        Inspect indicators across registered perspectives and detect divergence.
+        Inspect indicators across ALL registered scales and detect polar divergence.
 
         Returns:
             Tuple of (has_divergence, macro_state_str, local_state_str)
         """
-        macro_perspectives = [
-            p for p in self._perspectives if p.scale == ObservationalScale.MACRO
-        ]
-        local_micro_perspectives = [
-            p
-            for p in self._perspectives
-            if p.scale in (ObservationalScale.LOCAL, ObservationalScale.MICRO)
-        ]
-
         macro_state = self._extract_state_string(
             [ObservationalScale.MACRO], default="stabilizing"
         )
@@ -171,41 +199,21 @@ class DRR_ScopeResolver:
             [ObservationalScale.LOCAL, ObservationalScale.MICRO], default="deteriorating"
         )
 
-        # Flag divergence if both macro and local/micro perspectives are present
-        # and their indicator assessments diverge or represent distinct scope findings
+        # Collect state text and polarities per represented scale
+        scale_polarities: Dict[ObservationalScale, str] = {}
+        for scale in ObservationalScale:
+            scale_text = self._extract_state_string([scale], default="")
+            if scale_text:
+                pol = self._get_text_polarity(scale_text)
+                if pol:
+                    scale_polarities[scale] = pol
+
+        # Divergence exists if any pair of represented scales have opposite polarities
+        # (e.g. MACRO positive vs LOCAL negative, or MESO positive vs MICRO negative)
         has_divergence = False
-        if macro_perspectives and local_micro_perspectives:
-            # Check for opposite state indicators or distinct scale findings
-            positive_terms = {
-                "stabilizing",
-                "stable",
-                "moderating",
-                "expanding",
-                "growing",
-                "positive",
-                "robust",
-            }
-            negative_terms = {
-                "deteriorating",
-                "contracting",
-                "distressed",
-                "negative",
-                "declining",
-                "fragile",
-            }
-
-            macro_words = set(macro_state.lower().split())
-            local_words = set(local_state.lower().split())
-
-            macro_has_pos = bool(macro_words & positive_terms)
-            macro_has_neg = bool(macro_words & negative_terms)
-            local_has_pos = bool(local_words & positive_terms)
-            local_has_neg = bool(local_words & negative_terms)
-
-            if (macro_has_pos and local_has_neg) or (macro_has_neg and local_has_pos):
-                has_divergence = True
-            elif macro_state.lower() != local_state.lower():
-                has_divergence = True
+        polarities = list(scale_polarities.values())
+        if "positive" in polarities and "negative" in polarities:
+            has_divergence = True
 
         return has_divergence, macro_state, local_state
 
@@ -284,12 +292,13 @@ class DRR_ScopeResolver:
             },
         }
 
+        # Defensively copy indicator mappings in non-erasure ledger to isolate from caller mutations
         registered_ledger = [
             {
                 "source_id": p.source_id,
                 "scale": p.scale.value if isinstance(p.scale, Enum) else str(p.scale),
                 "confidence_score": p.confidence_score,
-                "indicators": p.indicators,
+                "indicators": dict(p.indicators),
                 "evidence_provenance": p.evidence_provenance,
                 "dissent_logged": p.dissent_logged,
             }
