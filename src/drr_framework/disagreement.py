@@ -75,13 +75,15 @@ class ObservationalPerspective:
         elif isinstance(scale_val, str):
             try:
                 scale_enum = ObservationalScale(scale_val.upper())
-            except ValueError:
+            except ValueError as err:
                 valid_scales = [s.value for s in ObservationalScale]
                 raise ValueError(
                     f"Invalid scale '{scale_val}'. Must be one of {valid_scales}"
-                )
+                ) from err
         else:
-            raise TypeError(f"Scale must be ObservationalScale or str, got {type(scale_val).__name__}")
+            raise TypeError(
+                f"Scale must be ObservationalScale or str, got {type(scale_val).__name__}"
+            )
 
         # Override scale to normalized Enum using object.__setattr__ due to frozen=True
         object.__setattr__(self, "scale", scale_enum)
@@ -111,9 +113,7 @@ class DRR_ScopeResolver:
     scales (LOCAL/MICRO/MESO).
     """
 
-    def __init__(
-        self, perspectives: Optional[Sequence[ObservationalPerspective]] = None
-    ) -> None:
+    def __init__(self, perspectives: Optional[Sequence[ObservationalPerspective]] = None) -> None:
         """Initialize the scope resolver with an optional sequence of perspectives."""
         self._perspectives: List[ObservationalPerspective] = []
         if perspectives:
@@ -147,9 +147,7 @@ class DRR_ScopeResolver:
         default: str = "undetermined",
     ) -> str:
         """Helper to extract representative state strings for given scales."""
-        matching_perspectives = [
-            p for p in self._perspectives if p.scale in target_scales
-        ]
+        matching_perspectives = [p for p in self._perspectives if p.scale in target_scales]
         if not matching_perspectives:
             return default
 
@@ -192,9 +190,7 @@ class DRR_ScopeResolver:
         Returns:
             Tuple of (has_divergence, macro_state_str, local_state_str)
         """
-        macro_state = self._extract_state_string(
-            [ObservationalScale.MACRO], default="stabilizing"
-        )
+        macro_state = self._extract_state_string([ObservationalScale.MACRO], default="stabilizing")
         local_state = self._extract_state_string(
             [ObservationalScale.LOCAL, ObservationalScale.MICRO], default="deteriorating"
         )
@@ -231,9 +227,7 @@ class DRR_ScopeResolver:
         """
         has_divergence, macro_state, local_state = self._detect_scale_divergence()
 
-        macro_perspectives = [
-            p for p in self._perspectives if p.scale == ObservationalScale.MACRO
-        ]
+        macro_perspectives = [p for p in self._perspectives if p.scale == ObservationalScale.MACRO]
         local_perspectives = [
             p
             for p in self._perspectives
@@ -287,9 +281,7 @@ class DRR_ScopeResolver:
                 "contagion pathways."
             ),
             "non_erasure_invariant_maintained": True,
-            "dissent_logged_summary": {
-                p.source_id: p.dissent_logged for p in self._perspectives
-            },
+            "dissent_logged_summary": {p.source_id: p.dissent_logged for p in self._perspectives},
         }
 
         # Defensively copy indicator mappings in non-erasure ledger to isolate from caller mutations
