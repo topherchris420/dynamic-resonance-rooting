@@ -28,7 +28,6 @@ from .model_risk import (
     ValidationStatus,
 )
 
-
 DEFAULT_MODEL_RISK_PROFILE = ModelRiskProfile(
     model_name="LFBO monitoring workbench with optional DRR diagnostic",
     intended_use="Analyst-directed public-data monitoring, evidence organization, and research diagnostics",

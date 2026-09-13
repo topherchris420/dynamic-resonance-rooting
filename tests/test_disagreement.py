@@ -70,10 +70,12 @@ class TestDisagreementPrinciple(unittest.TestCase):
 
     def test_divergence_synthesis_engine_output_and_template(self) -> None:
         """Verify generate_drr_conclusion outputs required natural language template and humility metadata."""
-        resolver = DRR_ScopeResolver([
-            self.samira_macro_archetype,
-            self.christopher_local_archetype,
-        ])
+        resolver = DRR_ScopeResolver(
+            [
+                self.samira_macro_archetype,
+                self.christopher_local_archetype,
+            ]
+        )
 
         conclusion_payload = resolver.generate_drr_conclusion()
 
@@ -88,7 +90,9 @@ class TestDisagreementPrinciple(unittest.TestCase):
             "be interpreted together rather than collapsed into a single state."
         )
         self.assertIn("Aggregate financial-system indicators support", conclusion_text)
-        self.assertIn(", while material indicators for the evaluated population support", conclusion_text)
+        self.assertIn(
+            ", while material indicators for the evaluated population support", conclusion_text
+        )
         self.assertIn(expected_template_suffix, conclusion_text)
 
         # Check macro and local state extraction
@@ -101,7 +105,9 @@ class TestDisagreementPrinciple(unittest.TestCase):
         self.assertIn("completeness_of_representation", humility)
         self.assertTrue(humility["non_erasure_invariant_maintained"])
         self.assertIn("MACRO avg confidence: 0.95", humility["accuracy_within_representation"])
-        self.assertIn("LOCAL/MICRO avg confidence: 0.82", humility["accuracy_within_representation"])
+        self.assertIn(
+            "LOCAL/MICRO avg confidence: 0.82", humility["accuracy_within_representation"]
+        )
 
     def test_concordant_perspectives_returns_consensus(self) -> None:
         """Verify concordant perspectives across scales synthesize without divergence flag."""
