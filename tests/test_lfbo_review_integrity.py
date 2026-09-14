@@ -126,6 +126,30 @@ def test_viewer_reads_activity_but_cannot_write(lab):
         assert not lab.ledger.reviews()
 
 
+def test_investigate_reopens_with_unresolved_priority(lab):
+    lab.config = replace(lab.config, top_n=1)
+    result, _, _ = lab.run(CURRENT_REVIEW)
+    first = result["attention"]["review_first"][0]["signal"]["evidence_id"]
+    with serve(lab, result) as (get, post):
+        assert post(first, "investigate") == 200
+        activity = json.loads(get("/api/review-activity"))
+        selected = next(
+            item
+            for item in activity["attention"]["review_first"]
+            if item["signal"]["evidence_id"] == first
+        )
+        original = next(
+            item
+            for item in result["attention"]["review_first"]
+            if item["signal"]["evidence_id"] == first
+        )
+        assert selected["priority"] == original["priority"]
+        assert (
+            next(s for s in activity["signals"] if s["evidence_id"] == first)["disposition"]
+            == "investigate"
+        )
+
+
 @pytest.mark.parametrize("field", ["state", "evidence", "passport"])
 def test_tampered_snapshots_fail_before_export_creates_files(lab, tmp_path, field):
     result, state, passport = lab.run(CURRENT_REVIEW)

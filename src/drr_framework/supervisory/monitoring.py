@@ -218,14 +218,22 @@ def build_review_activity(snapshot, reviews, *, as_of):
         if review.evidence_id in allowed and instant(review.reviewed_at) <= cutoff:
             latest[review.evidence_id] = review
 
-    def signal(value):
+    def signal(value, *, scoring=False):
         item = MonitoringSignal(**value)
         review = latest.get(item.evidence_id)
-        return replace(item, disposition=review.disposition.value) if review else item
+        if review is None:
+            return item
+        disposition = review.disposition.value
+        # `investigate` is an active queue state, so it must retain the original
+        # unresolved priority component while remaining visible as investigate in
+        # the activity feed.
+        if scoring and disposition == "investigate":
+            disposition = "unresolved"
+        return replace(item, disposition=disposition)
 
     delta = dict(snapshot["delta"])
     for name in ("new_signals", "strengthened", "weakened", "changed_evidence", "disappeared"):
-        delta[name] = tuple(signal(s) for s in delta[name])
+        delta[name] = tuple(signal(s, scoring=True) for s in delta[name])
     attention = AttentionBudget(top_n=snapshot["config"]["top_n"]).select(MonitoringDelta(**delta))
     return canonical(
         {
