@@ -15,7 +15,8 @@ from .briefs import generate_morning_brief, generate_lfbo_monitoring_brief
 from .common import canonical, canonical_json, stable_id, write_immutable
 from .demo import synthetic_monitoring_lab, synthetic_perspectives, CURRENT_REVIEW, PREVIOUS_REVIEW
 from .evidence_ledger import AuditEvent, EvidenceLedger, AnalystReview
-from .passport import dependency_inventory
+from .passport import dependency_inventory, verify_monitoring_snapshot
+from .monitoring import build_review_activity
 from .peer_analysis import PeerGroupDefinition
 from .perspectives import PerspectiveInventory
 from .semantics import SemanticRegistry, bundled_registry
@@ -25,6 +26,9 @@ from .workbench import MonitoringWorkbench, WorkbenchConfig, review_state_from_d
 
 
 def export_run(result, state, passport, ledger, directory):
+    verified = verify_monitoring_snapshot(result)
+    if verified.analysis_id != passport.analysis_id or state.state_id != result["state_id"]:
+        raise ValueError("Export state/passport does not match the monitoring snapshot")
     root = Path(directory)
     root.mkdir(parents=True, exist_ok=True, mode=0o700)
     try:
@@ -38,6 +42,10 @@ def export_run(result, state, passport, ledger, directory):
     except OSError:
         pass
     write_immutable(directory / "snapshot.json", canonical_json(result) + "\n")
+    write_immutable(
+        directory / "filing-revisions.json",
+        canonical_json(result.get("observation_revisions", [])) + "\n",
+    )
     write_immutable(
         directory / "perspectives.json",
         canonical_json(result.get("perspectives", {})) + "\n",
@@ -70,12 +78,20 @@ def export_run(result, state, passport, ledger, directory):
 def make_review_server(workbench, result, *, previous=None, port=8765, role="analyst"):
     if role not in {"viewer", "analyst"} or not 0 <= port <= 65535:
         raise ValueError("Invalid local server role or port")
+    verify_monitoring_snapshot(result)
     token = secrets.token_urlsafe(32)
-    current = [result]
+    # Store canonical bytes, not a caller-owned mutable object. Human activity is
+    # projected separately and never changes these passport-covered source bytes.
+    snapshot_json = canonical_json(result)
+    snapshot = json.loads(snapshot_json)
     import base64
 
     style_hash = base64.b64encode(hashlib.sha256(STYLE.encode()).digest()).decode()
     script_hash = base64.b64encode(hashlib.sha256(SCRIPT.encode()).digest()).decode()
+
+    def review_activity():
+        cutoff = datetime.now(timezone.utc).isoformat()
+        return build_review_activity(snapshot, workbench.ledger.reviews(as_of=cutoff), as_of=cutoff)
 
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *args):
@@ -120,11 +136,18 @@ def make_review_server(workbench, result, *, previous=None, port=8765, role="ana
             if self.path == "/":
                 return self.respond(
                     200,
-                    render_workbench(current[0], token=token, editable=role == "analyst"),
+                    render_workbench(
+                        snapshot,
+                        token=token,
+                        editable=role == "analyst",
+                        review_activity=review_activity(),
+                    ),
                     "text/html",
                 )
             if self.path == "/api/snapshot":
-                return self.respond(200, canonical_json(current[0]))
+                return self.respond(200, snapshot_json)
+            if self.path == "/api/review-activity":
+                return self.respond(200, canonical_json(review_activity()))
             if self.path == "/health":
                 return self.respond(200, '{"status":"ok","mode":"local"}')
             return self.respond(404, '{"error":"Not found"}')
@@ -167,7 +190,7 @@ def make_review_server(workbench, result, *, previous=None, port=8765, role="ana
                     raise ValueError("Unexpected review fields")
                 if len(data.get("reviewer", "")) > 120 or len(data.get("rationale", "")) > 4000:
                     raise ValueError("Review text is too long")
-                if data.get("evidence_id") not in current[0]["evidence"]:
+                if data.get("evidence_id") not in snapshot["evidence"]:
                     raise ValueError("Evidence is outside the current review")
                 reviewed_at = datetime.now(timezone.utc).isoformat()
                 review = AnalystReview(
@@ -176,26 +199,9 @@ def make_review_server(workbench, result, *, previous=None, port=8765, role="ana
                     data["reviewer"],
                     data["rationale"],
                     reviewed_at,
-                    float(data.get("review_minutes", 0)),
+                    data.get("review_minutes", 0),
                 )
                 oid = workbench.ledger.review(review)
-                # Replay calculations at their original as-of; human reviews are displayed
-                # as today's activity and never injected into historical analytical inputs.
-                for s in current[0]["state"]["signals"]:
-                    if s["evidence_id"] == review.evidence_id:
-                        s["disposition"] = review.disposition.value
-                for group in ("review_first", "deferred"):
-                    current[0]["attention"][group] = [
-                        item
-                        for item in current[0]["attention"][group]
-                        if not (
-                            item["signal"]["evidence_id"] == review.evidence_id
-                            and review.disposition.value in {"explained", "noisy", "dismissed"}
-                        )
-                    ]
-                from .feedback import evaluate_signal_usefulness
-
-                current[0]["feedback"] = canonical(evaluate_signal_usefulness(workbench.ledger))
                 return self.respond(200, canonical_json({"review_id": oid, "recorded": True}))
             except (ValueError, TypeError, KeyError, json.JSONDecodeError) as exc:
                 self.audit_denial(type(exc).__name__, outcome="failed")

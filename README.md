@@ -76,6 +76,17 @@ Key controls include:
 - content-addressed evidence, append-only dispositions and audit events, and an
   analysis passport containing code, mapping, source, configuration, and output hashes.
 
+The **Filing revisions** panel compares the exact records held by two reviews:
+before/after values, units, vintages, availability times, changed fields, and concurrent
+alert transitions. Numerical comparisons are withheld across definition, unit,
+perimeter, provenance, or missing-value breaks. The same evidence is included in the
+Morning Brief and a standalone `filing-revisions.json` export.
+
+Live dispositions preserve the original analytical snapshot and its hashes. Resolving
+an item promotes the next deferred item; reopening it restores its place in the ranked
+queue. The server reconstructs this activity from the persistent ledger after restart.
+Snapshots are verified before serving or exporting.
+
 The bundled production registry is intentionally narrow: it verifies three March 2026
 FR Y-9C Schedule HC mappings (`BHCK0081`, `BHCK2170`, and `BHCK3210`) from official
 Federal Reserve artifacts. FR Y-9C, FFIEC 002, and FR Y-15 are isolated namespaces;
@@ -95,6 +106,10 @@ For normalized public observations, provide `--input`, `--as-of`, and—when nee
 verified registry and explicit cohort. See the
 [LFBO Workbench Guide](docs/lfbo-workbench.md) for the data contract, evidence model,
 validation workflow, and deployment boundaries.
+
+For the standalone `DRR_ScopeResolver`, see [Scope resolution](docs/scope-resolution.md).
+It retains individual disagreements and exposes missing scopes and unclassified
+indicators; textual polarity does not establish model accuracy or substantive consensus.
 
 ---
 

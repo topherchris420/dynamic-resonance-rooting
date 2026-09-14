@@ -144,10 +144,11 @@ def evidence_details(oid, payload, *, token="", editable=False):
     return content
 
 
-def render_workbench(result, *, token="", editable=False):
+def render_workbench(result, *, token="", editable=False, review_activity=None):
     nav = (
         ("today", "Today"),
         ("institutions", "Institutions"),
+        ("revisions", "Filing revisions"),
         ("peers", "Peers"),
         ("evidence", "Evidence"),
         ("policy", "Policy"),
@@ -157,7 +158,7 @@ def render_workbench(result, *, token="", editable=False):
         ("perspectives", "Perspectives"),
     )
     sections = {}
-    attention = result["attention"]
+    attention = review_activity["attention"] if review_activity is not None else result["attention"]
     delta = result["delta"]
     selected = attention["review_first"]
     today = '<p class="eyebrow">Continuous monitoring</p><h1>Since your last review</h1><p class="lede">What changed, what deserves attention, and the evidence behind it.</p><div class="stats">'
@@ -181,7 +182,15 @@ def render_workbench(result, *, token="", editable=False):
         message = (
             "No material signal cleared the queue. Review the data-quality blockers before treating this as a quiet period."
             if any(e["severity"] == "important" for e in result["quality"])
-            else "Nothing material changed among eligible observations and configured review thresholds."
+            else (
+                "Material items are deferred by the configured attention budget."
+                if attention["deferred"]
+                else (
+                    "No new material item remains in today's queue after analyst review."
+                    if review_activity and review_activity["reviews"]
+                    else "Nothing material changed among eligible observations and configured review thresholds."
+                )
+            )
         )
         today += f'<div class="empty">{esc(message)}</div>'
     if attention["deferred"]:
@@ -218,6 +227,59 @@ def render_workbench(result, *, token="", editable=False):
             + "</article>"
         )
     sections["institutions"] = institutions
+    revisions = (
+        '<p class="eyebrow">Source changes</p><h1>What the filing revised</h1>'
+        '<p class="lede">Compare the exact observations held by each review, for the same reporting period. '
+        "A revision is separate from a quarterly change. Signal transitions shown alongside it do not establish causation.</p>"
+    )
+    for revision in result.get("observation_revisions", []):
+        old, new = revision["previous"], revision["current"]
+        revisions += '<article class="card"><h3>' + esc(revision["observation_key"]) + "</h3>"
+        revisions += table(
+            ("Review", "Value", "Vintage", "Available", "Observation ID"),
+            (
+                (
+                    (
+                        label,
+                        number(fact["value"]) + " " + esc(fact["unit"]),
+                        esc(fact["source_vintage"]),
+                        esc(fact["available_as_of"]),
+                        "<code>" + esc(fact["observation_id"]) + "</code>",
+                    )
+                    if fact
+                    else (label, "Source unavailable", "—", "—", esc(oid))
+                )
+                for label, fact, oid in (
+                    ("Previous", old, revision["previous_observation_id"]),
+                    ("Current", new, revision["current_observation_id"]),
+                )
+            ),
+        )
+        revisions += (
+            "<p>Comparison: "
+            + esc(revision["comparison_status"])
+            + ". "
+            + esc(revision["limitation"])
+            + "</p>"
+        )
+        if revision["comparison_status"] == "comparable":
+            revisions += (
+                "<p>Revision: "
+                + number(revision["raw_change"])
+                + " "
+                + esc(new["unit"])
+                + "; percent revision: "
+                + number(revision["percent_change"])
+                + "%.</p>"
+            )
+        revisions += (
+            "<details><summary>Changed fields, source facts and concurrent signal changes</summary><pre>"
+            + esc(json.dumps(revision, indent=2))
+            + "</pre></details></article>"
+        )
+    if not result.get("observation_revisions"):
+        revisions += '<div class="empty">No same-period filing revisions among the compared observations.</div>'
+    sections["revisions"] = revisions
     peer_rows = [p for a in result["analyses"] for p in a["peers"].values()]
     sections["peers"] = (
         '<p class="eyebrow">Horizontal comparison</p><h1>Who moved together?</h1><p class="lede">Cohorts are explicit. The target is excluded from its comparison distribution. Shared movement does not identify a causal source.</p>'
@@ -274,12 +336,21 @@ def render_workbench(result, *, token="", editable=False):
             ),
         )
     )
-    queue = [
-        s for s in result["state"]["signals"] if s["disposition"] in ("unresolved", "investigate")
-    ]
+    signals = (
+        review_activity["signals"] if review_activity is not None else result["state"]["signals"]
+    )
+    queue = [s for s in signals if s["disposition"] in ("unresolved", "investigate")]
     sections["queue"] = (
         '<p class="eyebrow">Analyst workflow</p><h1>Review queue</h1><p class="lede">Dispositions record human interpretation separately from the original evidence.</p>'
     )
+    if review_activity is not None:
+        sections["queue"] += (
+            '<p class="muted">Analytical cutoff: '
+            + esc(result["as_of"])
+            + ". Analyst activity through "
+            + esc(review_activity["review_as_of"])
+            + ". The analytical snapshot remains unchanged.</p>"
+        )
     if not editable:
         sections[
             "queue"
@@ -294,6 +365,20 @@ def render_workbench(result, *, token="", editable=False):
                 editable=editable,
             )
             + "</article>"
+        )
+    if review_activity and review_activity["reviews"]:
+        sections["queue"] += "<h2>Latest dispositions</h2>" + table(
+            ("Evidence", "Disposition", "Reviewer", "Reviewed", "Rationale"),
+            (
+                (
+                    esc(r["evidence_id"][:16]),
+                    esc(r["disposition"]),
+                    esc(r["reviewer"]),
+                    esc(r["reviewed_at"]),
+                    esc(r["rationale"]),
+                )
+                for r in review_activity["reviews"]
+            ),
         )
     model_risk = {
         "profile": result.get("model_risk_profile", {}),

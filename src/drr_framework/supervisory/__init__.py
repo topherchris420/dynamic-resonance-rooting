@@ -48,8 +48,15 @@ from .monitoring import (
     MonitoringSignal,
     ReviewState,
     compare_review_states,
+    build_review_activity,
 )
-from .passport import AnalysisPassport, dependency_inventory, software_identity
+from .passport import (
+    AnalysisPassport,
+    dependency_inventory,
+    software_identity,
+    verify_monitoring_snapshot,
+)
+from .revisions import build_revision_audit
 from .peer_analysis import PeerAnalysis, PeerGroupDefinition, SignalContext, analyze_peers
 from .policy_context import ApplicabilityBasis, PolicyContext, PolicyEvent
 from .reconciliation import (
@@ -145,6 +152,9 @@ __all__ = [
     "attach_peer_context",
     "bundled_registry",
     "compare_review_states",
+    "build_review_activity",
+    "build_revision_audit",
+    "verify_monitoring_snapshot",
     "dependency_inventory",
     "detect_material_changes",
     "evaluate_signal_usefulness",
