@@ -66,6 +66,46 @@ items. An absent, ambiguous, future-known, synthetic, or unverified definition i
 blocked by default. Synthetic definitions require both the `SYN_` namespace and an
 explicit `allow_synthetic=True` configuration.
 
+## Portfolio-scale automated mapping and data validation
+
+To eliminate the burden of manual per-MDRM coding and spreadsheet mapping when scaling
+across a broad supervisory portfolio (hundreds of institutions and multi-form regulatory series),
+DRR provides automated taxonomy mapping, cross-form crosswalk translation, and pre-ingestion
+portfolio dataset validation:
+
+- **Automated Schema Mapper (`AutomatedSchemaMapper`)**: Automatically expands `SemanticRegistry` snapshots with valid, provenance-backed definitions across reporting forms (FR Y-9C, FFIEC 031/041/051, FFIEC 002, FR Y-15) without requiring line-by-line manual JSON entries.
+- **Cross-Form Crosswalk (`MDRMCrosswalk`)**: Translates equivalent MDRM items across reporting form families (e.g., holding company `BHCK` codes to commercial bank Call Report `RCFD`/`RCON` codes).
+- **Portfolio Data Validation Engine (`validate_portfolio_dataset`)**: Audits broad portfolio DataFrames/CSVs prior to ingestion for schema drift, unmapped MDRM codes, float RSSD ID formatting errors, null distributions, and zero-variance series.
+- **Auto-Generated Registry Patches**: Automatically constructs `PortfolioValidationReport` auto-patch registries to remediate unmapped metrics in a single step while maintaining point-in-time semantic rigor.
+
+```python
+from drr_framework.supervisory import (
+    bundled_registry,
+    validate_portfolio_dataset,
+    ingest_wide_filing,
+)
+
+# 1. Validate portfolio dataset & auto-generate registry patch
+report = validate_portfolio_dataset(
+    "portfolio_q1_2026.csv",
+    bundled_registry(),
+    form="FR Y-9C",
+    reporting_period="2026-03-31",
+    available_as_of="2026-09-12T14:00:00Z",
+    auto_generate_patches=True,
+)
+
+print(report.summary())
+
+# 2. Ingest atomically using the auto-patched registry
+store = ingest_wide_filing(
+    df,
+    report.auto_patch_registry,
+    context,
+    metric_columns=["BHCK0081", "BHCK2170", "BHCK3210"],
+)
+```
+
 ## Filing input contract
 
 `ingest_wide_csv` accepts a local wide CSV only when its bytes match the
