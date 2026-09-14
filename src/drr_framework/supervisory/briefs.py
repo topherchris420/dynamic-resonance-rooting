@@ -46,6 +46,25 @@ def generate_morning_brief(result):
             "",
             f"{len(attention['deferred'])} additional items are deferred by the attention budget and remain visible in the queue.",
         ]
+    lines += ["", "## Filing Revisions", ""]
+    for revision in result.get("observation_revisions", []):
+        old, new = revision["previous"], revision["current"]
+        label = revision["observation_key"]
+        if old and new:
+            label = f"{new['institution_id']} · {new['form']} · {new['metric']} · {new['reporting_period']}"
+            lines.append(
+                f"- {label}: {old['value']} {old['unit']} → {new['value']} {new['unit']} "
+                f"({old['source_vintage']} → {new['source_vintage']}). "
+                f"Comparison: {revision['comparison_status']}. {revision['limitation']}"
+            )
+        else:
+            lines.append(f"- {label}: {revision['limitation']}")
+        for transition in revision["concurrent_signal_changes"]:
+            lines.append(
+                f"  - Concurrent signal change: {transition['transition'].replace('_', ' ')} — {transition['claim']}."
+            )
+    if not result.get("observation_revisions"):
+        lines.append("No same-period filing revisions among the compared observations.")
     lines += ["", "## Deprioritized", ""]
     for s in attention["deprioritized"]:
         revised = any(

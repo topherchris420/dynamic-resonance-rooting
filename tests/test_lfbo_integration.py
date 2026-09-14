@@ -18,21 +18,6 @@ from drr_framework.supervisory.ui import render_workbench
 from drr_framework.supervisory.workbench import review_state_from_dict
 
 
-@pytest.fixture
-def lab(tmp_path):
-    store, registry, cohort, policy, entities = synthetic_monitoring_lab()
-    ledger = EvidenceLedger(tmp_path / "ledger.sqlite")
-    return MonitoringWorkbench(
-        store,
-        registry,
-        ledger,
-        cohort=cohort,
-        policy=policy,
-        entities=entities,
-        config=WorkbenchConfig(allow_synthetic=True, enable_drr=False),
-    )
-
-
 def test_complete_workflow_revisions_and_unchanged_morning_brief(lab, tmp_path):
     _, previous, _ = lab.run(PREVIOUS_REVIEW)
     result, state, passport = lab.run(CURRENT_REVIEW, previous=previous)

@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from numbers import Integral
 from typing import Optional, Tuple
 
-from .common import instant, stable_id
+from .common import canonical, instant, stable_id
 
 
 @dataclass(frozen=True)
@@ -63,6 +64,16 @@ class ReviewState:
             object.__setattr__(self, name, tuple(getattr(self, name)))
         if len({s.key for s in self.signals}) != len(self.signals):
             raise ValueError("Duplicate signal key in review state")
+        if any(
+            not isinstance(row, (tuple, list))
+            or len(row) != 2
+            or any(not isinstance(value, str) or not value for value in row)
+            for row in self.observations
+        ):
+            raise ValueError("Review observations require nonempty key/ID pairs")
+        object.__setattr__(self, "observations", tuple(tuple(row) for row in self.observations))
+        if len(dict(self.observations)) != len(self.observations):
+            raise ValueError("Duplicate observation key in review state")
 
     @property
     def state_id(self):
@@ -152,7 +163,9 @@ class AttentionBudget:
 
     def __post_init__(self):
         if (
-            self.top_n < 0
+            isinstance(self.top_n, bool)
+            or not isinstance(self.top_n, Integral)
+            or self.top_n < 0
             or not 0 <= self.minimum_materiality <= 100
             or not 0 <= self.minimum_confidence <= 1
         ):
@@ -170,7 +183,7 @@ class AttentionBudget:
                 if (
                     signal.materiality < self.minimum_materiality
                     or signal.confidence < self.minimum_confidence
-                    or signal.disposition in {"explained", "noisy", "dismissed"}
+                    or signal.disposition in {"useful", "explained", "noisy", "dismissed"}
                 ):
                     deprioritized.append(signal)
                     continue
@@ -189,3 +202,40 @@ class AttentionBudget:
                 )
         ranked = tuple(sorted(candidates, key=lambda item: (-item.priority, item.signal.key)))
         return AttentionSelection(ranked[: self.top_n], ranked[self.top_n :], tuple(deprioritized))
+
+
+def build_review_activity(snapshot, reviews, *, as_of):
+    """Project current human activity onto an immutable analytical snapshot.
+
+    Rebuild the attention budget from its original candidates so resolving an item
+    promotes the next deferred item and reopening it restores its original rank.
+    Reviews of evidence outside this snapshot are deliberately excluded.
+    """
+    cutoff = instant(as_of)
+    latest = {}
+    allowed = set(snapshot["evidence"])
+    for review in sorted(reviews, key=lambda r: (instant(r.reviewed_at), r.review_id)):
+        if review.evidence_id in allowed and instant(review.reviewed_at) <= cutoff:
+            latest[review.evidence_id] = review
+
+    def signal(value):
+        item = MonitoringSignal(**value)
+        review = latest.get(item.evidence_id)
+        return replace(item, disposition=review.disposition.value) if review else item
+
+    delta = dict(snapshot["delta"])
+    for name in ("new_signals", "strengthened", "weakened", "changed_evidence", "disappeared"):
+        delta[name] = tuple(signal(s) for s in delta[name])
+    attention = AttentionBudget(top_n=snapshot["config"]["top_n"]).select(MonitoringDelta(**delta))
+    return canonical(
+        {
+            "analysis_id": snapshot["passport"]["analysis_id"],
+            "analytical_as_of": snapshot["as_of"],
+            "review_as_of": cutoff.isoformat(),
+            "reviews": [
+                dict(review_id=r.review_id, **canonical(r)) for _, r in sorted(latest.items())
+            ],
+            "signals": [signal(s) for s in snapshot["state"]["signals"]],
+            "attention": attention,
+        }
+    )

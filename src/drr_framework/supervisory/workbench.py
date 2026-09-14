@@ -18,6 +18,7 @@ from .passport import AnalysisPassport, software_identity
 from .peer_analysis import analyze_peers
 from .policy_context import PolicyContext
 from .reconciliation import DataQualityException, reconcile_dataset, reconcile_store
+from .revisions import build_revision_audit
 from .entity_graph import EntityGraph
 from .snc import analyze_public_snc
 from .perspectives import PerspectiveInventory
@@ -446,6 +447,9 @@ class MonitoringWorkbench:
             state=canonical(state),
             state_id=state.state_id,
             delta=canonical(delta),
+            observation_revisions=canonical(
+                build_revision_audit(self.store, previous, state, delta)
+            ),
             attention=canonical(attention),
             analyses=analyses,
             quality=[dict(exception_id=e.exception_id, **canonical(e)) for e in quality],

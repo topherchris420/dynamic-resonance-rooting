@@ -67,6 +67,26 @@ class AnalysisPassport:
         )
 
 
+def verify_monitoring_snapshot(snapshot):
+    """Verify the passport, analytical payload and review-state content hashes."""
+    try:
+        payload = dict(snapshot["passport"])
+        expected_id = payload.pop("analysis_id")
+        passport = AnalysisPassport.create(**payload)
+        valid = (
+            passport.analysis_id == expected_id
+            and stable_id(snapshot["state"]) == snapshot["state_id"]
+            and snapshot["as_of"] == snapshot["state"]["as_of"] == payload["as_of"]
+            and stable_id({k: v for k, v in snapshot.items() if k != "passport"})
+            == payload["output_hashes"]["monitoring"]
+        )
+    except (KeyError, TypeError, ValueError):
+        raise ValueError("Monitoring snapshot integrity check failed") from None
+    if not valid:
+        raise ValueError("Monitoring snapshot integrity check failed")
+    return passport
+
+
 def software_identity():
     try:
         version = importlib.metadata.version("drr-framework")

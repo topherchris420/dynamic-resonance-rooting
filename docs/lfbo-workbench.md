@@ -115,6 +115,23 @@ cannot displace a known amendment. Conflicting values with the same filing times
 are blocked for reconciliation. `compare_vintages` and `filing_revision_history`
 expose the history explicitly.
 
+The workbench's `observation_revisions` audit uses the **exact observation IDs in the
+two review states**, rather than substituting whatever a later store reconstructs at
+the old cutoff. It retains both complete source records, changed fields, numeric and
+percent revisions when comparable, and concurrent changes to the corresponding
+metric's signals. These are same-period filing revisions, not quarterly movements.
+Concurrent signal transitions are descriptive and do not attribute causation.
+
+An absent historical source is `source_unavailable`; null values are `missing_value`;
+unit, definition, perimeter, or provenance changes are `incomparable`. None of these
+produces a numeric difference. A zero prior value has no percent revision. A raw
+revision outside floating-point range is `numeric_overflow`; an overflowing percent
+revision is withheld with an explicit limitation. The Filing revisions panel, Morning
+Brief, and `filing-revisions.json` expose the same audit,
+which is covered by the monitoring payload's passport hash. Initial reviews have no
+revision comparison. Observations outside the intersection of the two review scopes
+are not described as filing revisions.
+
 Date-only cutoffs mean midnight UTC. Callers that need end-of-day scope should pass an
 explicit timestamp. A later local download cannot prove what a different system knew
 historically; the walk-forward report states that limitation.
@@ -181,6 +198,23 @@ policy events, entity relationships, DRR relationships, and failed robustness re
 `AttentionBudget(top_n=5)` ranks only unresolved changes and can truthfully return
 “Nothing material changed.” Blocked data never produces that message.
 
+The live server keeps analytical evidence separate from current human activity:
+
+| Surface | Content |
+| --- | --- |
+| `GET /api/snapshot` | The original canonical analytical snapshot; unchanged by reviews |
+| `GET /api/review-activity` | Current dispositions and attention queue, tied to an analysis ID and a separate review cutoff |
+| `POST /api/review` | An append-only disposition for evidence in the current snapshot |
+
+Resolving an item (`useful`, `explained`, `noisy`, or `dismissed`) removes it from
+active triage and promotes the next eligible deferred candidate. Reopening it
+(`unresolved` or `investigate`) restores its original score and rank among that run's
+candidates. Scores and analytical signals are not recalculated from the analyst's
+opinion. Refresh the page after recording a disposition; the queue also reconstructs
+from persisted reviews on restart. The current activity cutoff is displayed separately
+from the historical analytical cutoff. Historical exports continue to include only
+reviews available at the analytical cutoff.
+
 ## Analysis passport
 
 Each run produces a content-addressed `AnalysisPassport` with software version, Git
@@ -192,6 +226,11 @@ integrity and reproducibility evidence; they are not digital signatures. The
 `monitoring` output hash is explicitly the stable ID of the complete monitoring
 payload before the passport field is appended; the passport records that scope and
 the verified prior review-state ID.
+
+`verify_monitoring_snapshot(snapshot)` checks the passport ID, review-state ID, shared
+analytical cutoff, and monitoring output hash. Serving and export reject inconsistent
+snapshots; export also checks its supplied state/passport before creating files. This
+detects content inconsistency, not malicious recomputation of every hash.
 
 ## Local operation
 
