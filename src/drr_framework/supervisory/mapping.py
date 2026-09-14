@@ -38,8 +38,12 @@ class MDRMCrosswalk:
     """
 
     DEFAULT_MAPPINGS: Tuple[MDRMCrosswalkRule, ...] = (
-        MDRMCrosswalkRule("FR Y-9C", "BHCK0081", "FFIEC 031", "RCFD0081", "Noninterest-bearing balances"),
-        MDRMCrosswalkRule("FR Y-9C", "BHCK0081", "FFIEC 041", "RCON0081", "Noninterest-bearing balances"),
+        MDRMCrosswalkRule(
+            "FR Y-9C", "BHCK0081", "FFIEC 031", "RCFD0081", "Noninterest-bearing balances"
+        ),
+        MDRMCrosswalkRule(
+            "FR Y-9C", "BHCK0081", "FFIEC 041", "RCON0081", "Noninterest-bearing balances"
+        ),
         MDRMCrosswalkRule("FR Y-9C", "BHCK2170", "FFIEC 031", "RCFD2170", "Total assets"),
         MDRMCrosswalkRule("FR Y-9C", "BHCK2170", "FFIEC 041", "RCON2170", "Total assets"),
         MDRMCrosswalkRule("FR Y-9C", "BHCK3210", "FFIEC 031", "RCFD3210", "Total equity capital"),
@@ -99,7 +103,9 @@ class AutomatedSchemaMapper:
             or "https://www.federalreserve.gov/apps/reportingforms/Download/DownloadAttachment?guid=e2ec0b30-bf6c-44b9-abf9-9acdaa2dc402"
         )
         clean_vdate = verification_date or f"{reporting_period}T00:00:00Z"
-        default_hash = hashlib.sha256(f"{form}:{code_upper}:{reporting_period}".encode("utf-8")).hexdigest()
+        default_hash = hashlib.sha256(
+            f"{form}:{code_upper}:{reporting_period}".encode("utf-8")
+        ).hexdigest()
         clean_hash = sha256_hex(source_hash or default_hash)
 
         is_mdrm_code = bool(re.fullmatch(r"[A-Z]{4}[A-Z0-9]{4}", code_upper))
@@ -237,7 +243,9 @@ def validate_portfolio_dataset(
 
     # 1. Identifier checks
     if institution_column not in frame.columns:
-        issues.append({"type": "missing_column", "detail": f"Missing institution column {institution_column}"})
+        issues.append(
+            {"type": "missing_column", "detail": f"Missing institution column {institution_column}"}
+        )
         remediations.append(f"Add required identifier column '{institution_column}'")
         inst_series = pd.Series([], dtype=str)
     else:
@@ -254,11 +262,13 @@ def validate_portfolio_dataset(
             id_errors.append(f"Row {idx}: Floating point identifier '{val}'")
 
     if id_errors:
-        issues.append({
-            "type": "identifier_format",
-            "count": len(id_errors),
-            "samples": id_errors[:5],
-        })
+        issues.append(
+            {
+                "type": "identifier_format",
+                "count": len(id_errors),
+                "samples": id_errors[:5],
+            }
+        )
         remediations.append("Format institution RSSD_IDs as non-float strings (e.g., '1073757')")
 
     # 2. Metric column resolution against SemanticRegistry
@@ -290,11 +300,13 @@ def validate_portfolio_dataset(
             )
         except Exception as err:
             unmapped.append(col)
-            issues.append({
-                "type": "unmapped_metric",
-                "metric": col,
-                "detail": str(err),
-            })
+            issues.append(
+                {
+                    "type": "unmapped_metric",
+                    "metric": col,
+                    "detail": str(err),
+                }
+            )
 
     if unmapped:
         remediations.append(
@@ -302,10 +314,12 @@ def validate_portfolio_dataset(
         )
 
     if zero_var:
-        issues.append({
-            "type": "zero_variance_warning",
-            "metrics": zero_var,
-        })
+        issues.append(
+            {
+                "type": "zero_variance_warning",
+                "metrics": zero_var,
+            }
+        )
         remediations.append(f"Review zero-variance metrics for reporting errors: {zero_var}")
 
     # 3. Auto-generate registry patch if requested

@@ -30,21 +30,15 @@ class TestPortfolioMappingValidation(unittest.TestCase):
     def test_mdrm_crosswalk(self):
         crosswalk = MDRMCrosswalk()
         # Test default mappings
-        self.assertEqual(
-            crosswalk.translate("FR Y-9C", "BHCK2170", "FFIEC 031"), "RCFD2170"
-        )
-        self.assertEqual(
-            crosswalk.translate("FR Y-9C", "BHCK2170", "FFIEC 041"), "RCON2170"
-        )
+        self.assertEqual(crosswalk.translate("FR Y-9C", "BHCK2170", "FFIEC 031"), "RCFD2170")
+        self.assertEqual(crosswalk.translate("FR Y-9C", "BHCK2170", "FFIEC 041"), "RCON2170")
         # Test unmapped query
         self.assertIsNone(crosswalk.translate("FR Y-9C", "BHCK9999", "FFIEC 031"))
 
         # Test custom rule addition
         custom_rule = MDRMCrosswalkRule("FR Y-9C", "BHCK9999", "FFIEC 031", "RCFD9999")
         crosswalk.add_rule(custom_rule)
-        self.assertEqual(
-            crosswalk.translate("FR Y-9C", "BHCK9999", "FFIEC 031"), "RCFD9999"
-        )
+        self.assertEqual(crosswalk.translate("FR Y-9C", "BHCK9999", "FFIEC 031"), "RCFD9999")
 
     def test_automated_schema_mapper(self):
         mapper = AutomatedSchemaMapper()
@@ -80,12 +74,14 @@ class TestPortfolioMappingValidation(unittest.TestCase):
         self.assertEqual(resolved.code, "BHCK0390")
 
     def test_validate_portfolio_dataset_valid(self):
-        df = pd.DataFrame({
-            "RSSD_ID": ["1073757", "1073758"],
-            "LEGAL_NAME": ["Bank Alpha", "Bank Beta"],
-            "BHCK0081": [100.0, 200.0],
-            "BHCK2170": [5000.0, 10000.0],
-        })
+        df = pd.DataFrame(
+            {
+                "RSSD_ID": ["1073757", "1073758"],
+                "LEGAL_NAME": ["Bank Alpha", "Bank Beta"],
+                "BHCK0081": [100.0, 200.0],
+                "BHCK2170": [5000.0, 10000.0],
+            }
+        )
 
         report = validate_portfolio_dataset(
             frame_or_path=df,
@@ -102,13 +98,15 @@ class TestPortfolioMappingValidation(unittest.TestCase):
         self.assertIn("PASSED", report.summary())
 
     def test_validate_portfolio_dataset_unmapped_and_formatting_errors(self):
-        df = pd.DataFrame({
-            "RSSD_ID": ["1073757.0", "1073758"],  # float RSSD_ID error
-            "LEGAL_NAME": ["Bank Alpha", "Bank Beta"],
-            "BHCK0081": [100.0, 200.0],
-            "BHCK9991": [10.0, 20.0],  # unmapped 8-char MDRM
-            "ZERO_VAR_METRIC": [50.0, 50.0],  # zero variance non-MDRM
-        })
+        df = pd.DataFrame(
+            {
+                "RSSD_ID": ["1073757.0", "1073758"],  # float RSSD_ID error
+                "LEGAL_NAME": ["Bank Alpha", "Bank Beta"],
+                "BHCK0081": [100.0, 200.0],
+                "BHCK9991": [10.0, 20.0],  # unmapped 8-char MDRM
+                "ZERO_VAR_METRIC": [50.0, 50.0],  # zero variance non-MDRM
+            }
+        )
 
         report = validate_portfolio_dataset(
             frame_or_path=df,
@@ -139,12 +137,14 @@ class TestPortfolioMappingValidation(unittest.TestCase):
         self.assertEqual(resolved_unmapped.code, "BHCK9991")
 
     def test_end_to_end_ingestion_with_auto_patch(self):
-        df = pd.DataFrame({
-            "RSSD_ID": ["1073757", "1073758"],
-            "LEGAL_NAME": ["Bank Alpha", "Bank Beta"],
-            "BHCK0081": [100.0, 200.0],
-            "BHCK9992": [15.0, 25.0],
-        })
+        df = pd.DataFrame(
+            {
+                "RSSD_ID": ["1073757", "1073758"],
+                "LEGAL_NAME": ["Bank Alpha", "Bank Beta"],
+                "BHCK0081": [100.0, 200.0],
+                "BHCK9992": [15.0, 25.0],
+            }
+        )
 
         report = validate_portfolio_dataset(
             frame_or_path=df,
