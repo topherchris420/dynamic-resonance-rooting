@@ -46,6 +46,7 @@ $$D_R = 0.35 \cdot S_{\text{conc}} + 0.25 \cdot T_{\text{pers}} + 0.25 \cdot \Ph
 * **Regulatory Backend (`layer1_regulatory_backend.py`)**: Integrates Call Report (FFIEC 002 / FR Y-9C) bank balance sheet series (MDRM codes for cash, unencumbered liquid assets, core vs. wholesale deposits, AOCI).
 * **Supervisory Alignment (`supervision.py`)**: Maps risk signals to Fed supervisory frameworks (CAMELS, LFI, RFI, ROCA, G-SIB surcharges).
 * **Stress Module**: Simulates 200 bps interest rate shocks under Full AOCI vs. Opt-Out accounting rules to measure balance sheet capital and liquidity impacts.
+* **Portfolio Mapping & Validation Infrastructure**: Provides `AutomatedSchemaMapper`, `MDRMCrosswalk`, and `validate_portfolio_dataset` to eliminate manual per-MDRM coding and tedious spreadsheet mapping across multi-form portfolio datasets (FR Y-9C, FFIEC 031/041/051, FFIEC 002, FR Y-15), automatically producing point-in-time registry patches and pre-ingestion audit reports.
 
 ---
 
@@ -71,3 +72,4 @@ $$D_R = 0.35 \cdot S_{\text{conc}} + 0.25 \cdot T_{\text{pers}} + 0.25 \cdot \Ph
 3. **Linearity Bottleneck in Composite Depth**: Hilbert transform phase unwrapping assumes single-component narrow-band signals. Multi-component broad-band financial signals cause Hilbert phase distortion.
 4. **Computational Complexity of Particle Filter**: Tempered particle filtering scales exponentially with state space dimension ($O(N_{\text{particles}} \cdot d^2)$), constraining real-time supervisory applications.
 5. **Heuristic Thresholding**: The QBism belief threshold ($b > 0.65$) and significant edge threshold ($\mu + \sigma$) are heuristics rather than strictly calibrated econometric rejection boundaries.
+6. **Portfolio Scale & Manual Mapping Mitigation**: Broad portfolio deployment across hundreds of institutions and thousands of MDRM series historically required manual schema definition. The framework mitigates this via `AutomatedSchemaMapper` bulk expansion, `MDRMCrosswalk` cross-form translations, and pre-ingestion `validate_portfolio_dataset` auto-patching, though unmapped non-MDRM fields still require explicit synthetic (`SYN_`) namespace scoping to preserve strict auditability.

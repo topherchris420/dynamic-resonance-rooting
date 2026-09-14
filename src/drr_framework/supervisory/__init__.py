@@ -65,6 +65,14 @@ from .reconciliation import (
     reconcile_dataset,
     reconcile_store,
 )
+from .mapping import (
+    AutomatedSchemaMapper,
+    MDRMCrosswalk,
+    MDRMCrosswalkRule,
+    PortfolioValidationReport,
+    build_portfolio_registry,
+    validate_portfolio_dataset,
+)
 from .semantics import MetricDefinition, SemanticRegistry, VerificationStatus, bundled_registry
 from .snc import PublicSNCAggregate, analyze_public_snc
 from .vintage import (
@@ -99,6 +107,7 @@ __all__ = [
     "AnalysisPassport",
     "AnalystDisposition",
     "AnalystFeedbackMetrics",
+    "AutomatedSchemaMapper",
     "AnalystReview",
     "ApplicabilityBasis",
     "AttentionBudget",
@@ -118,6 +127,8 @@ __all__ = [
     "FilingRevision",
     "IssueTracker",
     "LFBORegimeAnalyzer",
+    "MDRMCrosswalk",
+    "MDRMCrosswalkRule",
     "MaterialChange",
     "MetricDefinition",
     "ModelRiskProfile",
@@ -132,6 +143,7 @@ __all__ = [
     "PeerGroupDefinition",
     "PolicyContext",
     "PolicyEvent",
+    "PortfolioValidationReport",
     "PublicEntity",
     "PublicSNCAggregate",
     "ReconciliationRule",
@@ -150,6 +162,7 @@ __all__ = [
     "analyze_peers",
     "analyze_public_snc",
     "attach_peer_context",
+    "build_portfolio_registry",
     "bundled_registry",
     "compare_review_states",
     "build_review_activity",
@@ -172,5 +185,6 @@ __all__ = [
     "run_baselines",
     "run_falsification",
     "software_identity",
+    "validate_portfolio_dataset",
     "walk_forward_validate",
 ]
