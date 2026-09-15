@@ -10,6 +10,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Conventional challenge models in `supervisory.challenge_models`: fixed-lag VAR
+  forecast errors and pooled panel logit probabilities, refitted at each review
+  from ingestion-constrained vintages. Frozen specifications and results retain
+  exact windows, source records, label availability, fitted parameters, training
+  normalization, numerical diagnostics, and explicit withholding reasons.
+- Separate `supervisory.challenge_evaluation` outcome analysis: known-event
+  detection, actual alert/event timing, alert burden, missing outcomes, unscored
+  events, censoring, and disagreement with a matched DRR run. Sparse inventories
+  withhold performance comparisons; unknown outcomes never become non-events.
+- Optional `econometrics` extra using statsmodels; the CI Python matrix installs
+  this extra to exercise the conventional models. Existing scalar baselines,
+  event-backtest fields, state-space estimators, and evidence-ledger semantics
+  retain their contracts. These additions provide research implementation
+  evidence and remain subject to independent conceptual-soundness review.
 - **State-space smoothers** (`drr_framework.smoothers`), a dependency-free NumPy
   port of the smoothing routines in the New York Fed's
   [`StateSpaceRoutines.jl`](https://github.com/FRBNY-DSGE/StateSpaceRoutines.jl):

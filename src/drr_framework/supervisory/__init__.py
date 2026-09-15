@@ -12,6 +12,17 @@ from .baselines import (
 from .briefs import generate_lfbo_monitoring_brief, generate_morning_brief
 from .change_detection import MaterialChange, attach_peer_context, detect_material_changes
 from .common import DECISION_BOUNDARY
+from .challenge_models import (
+    BinaryEventLabel,
+    ChallengeReview,
+    ConventionalChallengeResult,
+    LaggedFeature,
+    PanelLogitConfig,
+    VARChallengeConfig,
+    walk_forward_panel_logit,
+    walk_forward_var,
+)
+from .challenge_evaluation import ChallengeEvaluationDesign, evaluate_challenge_results
 from .entity_graph import EntityGraph, EntityRelationship, PublicEntity
 from .evidence_ledger import (
     AuditEvent,
@@ -187,4 +198,14 @@ __all__ = [
     "software_identity",
     "validate_portfolio_dataset",
     "walk_forward_validate",
+    "BinaryEventLabel",
+    "ChallengeReview",
+    "ConventionalChallengeResult",
+    "LaggedFeature",
+    "PanelLogitConfig",
+    "VARChallengeConfig",
+    "walk_forward_panel_logit",
+    "walk_forward_var",
+    "ChallengeEvaluationDesign",
+    "evaluate_challenge_results",
 ]
