@@ -16,6 +16,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   missing predictors referenced by its fixed design withhold estimation.
 
 ### Added
+- NIST Contingency-based supplementary binary metrology in
+  `supervisory.contingency`: explicit label populations, contingency counts,
+  MCC, precision/recall, F1/F2, average precision, and threshold sensitivity.
+  Pre-specified, earlier-history tuning, and retrospective sensitivity protocols
+  remain distinct. Unknown labels, unavailable scores, undefined metrics, and
+  dependency failures are surfaced without a local numerical fallback.
+- Optional `contingency` extra for Python 3.12 and later, isolating the reviewed
+  `contingency-tools==0.2.3` release and its undeclared `beartype` requirement.
+  DRR retains Python 3.8 base support; older runtimes surface backend
+  unavailability. Existing event detection and Phase 1 scoring are unchanged.
 - Conventional challenge models in `supervisory.challenge_models`: fixed-lag VAR
   forecast errors and pooled panel logit probabilities, refitted at each review
   from ingestion-constrained vintages. Frozen specifications and results retain

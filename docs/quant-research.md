@@ -343,3 +343,16 @@ Statistical API references:
 [statsmodels VAR fitting](https://www.statsmodels.org/v0.14.4/generated/statsmodels.tsa.vector_ar.var_model.VAR.fit.html),
 [logit fitting](https://www.statsmodels.org/v0.14.4/generated/statsmodels.discrete.discrete_model.Logit.fit.html),
 and [numerical pitfalls](https://www.statsmodels.org/v0.14.4/pitfalls.html).
+
+## Supplementary binary metrology (Phase 2)
+
+`supervisory.contingency.evaluate_contingency()` adds NIST Contingency-based
+supplementary detection metrology for explicitly labeled classification targets.
+It reports counts, MCC, precision/recall, F1/F2, average precision, and threshold
+sensitivity. Pre-specified, tuning-derived, and retrospective analyses carry
+different recorded protocols; unknown outcomes never become negatives.
+
+This API does not call or change the event backtester, its lead-window metrics,
+or the Phase 1 challenge scorers. The optional extra requires Python 3.12;
+dependency and mathematical unavailability are explicit. See the
+[metrology contract, examples, numerical conventions, and review limitations](contingency-metrology.md).

@@ -23,6 +23,13 @@ from .challenge_models import (
     walk_forward_var,
 )
 from .challenge_evaluation import ChallengeEvaluationDesign, evaluate_challenge_results
+from .contingency import (
+    ContingencyDesign,
+    ContingencyResult,
+    ContingencyScore,
+    ContingencyThresholdResult,
+    evaluate_contingency,
+)
 from .entity_graph import EntityGraph, EntityRelationship, PublicEntity
 from .evidence_ledger import (
     AuditEvent,
@@ -208,4 +215,9 @@ __all__ = [
     "walk_forward_var",
     "ChallengeEvaluationDesign",
     "evaluate_challenge_results",
+    "ContingencyDesign",
+    "ContingencyResult",
+    "ContingencyScore",
+    "ContingencyThresholdResult",
+    "evaluate_contingency",
 ]

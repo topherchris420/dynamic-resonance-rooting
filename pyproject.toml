@@ -44,6 +44,12 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
+contingency = [
+  # Release 0.2.3 uses Python 3.12 syntax despite declaring >=3.11.
+  "contingency-tools==0.2.3; python_version >= '3.12'",
+  # Imported by the released package but omitted from its dependency metadata.
+  "beartype>=0.21,<0.23; python_version >= '3.12'",
+]
 econometrics = [
   "statsmodels>=0.14,<0.14.2; python_version < '3.9'",
   "statsmodels>=0.14.4,<0.15; python_version >= '3.9'",
