@@ -25,7 +25,11 @@ from drr_framework.supervisory.baselines import run_baselines
 from drr_framework.supervisory.common import canonical_json
 from drr_framework.supervisory.policy_context import PolicyContext, PolicyEvent
 from drr_framework.supervisory.semantics import SemanticRegistry
-from drr_framework.supervisory.vintage import VintageStore
+from drr_framework.supervisory.vintage import (
+    CalculationLineage,
+    ObservationProvenance,
+    VintageStore,
+)
 import drr_framework.supervisory.challenge_models as challenges
 
 
@@ -645,3 +649,90 @@ def test_evaluation_rejects_mismatched_grids_hashes_and_future_thresholds(var_la
     changed = rows[:-1] + (replace(rows[-1], config=replace(rows[-1].config, warning_threshold=2)),)
     with pytest.raises(ValueError, match="fixed"):
         evaluate_challenge_results(changed, labels, design=design, evaluation_as_of="2010-01-01")
+
+
+@pytest.mark.parametrize(
+    "change", [{"definition_version": "unregistered-legacy"}, {"unit": "legacy-unit"}]
+)
+def test_snapshot_validates_only_the_requested_window(var_lab, panel_lab, change):
+    for lab, runner in ((var_lab, run_var), (panel_lab, run_logit)):
+        store, registry, config, dates, rest = lab
+        expected = runner(lab)
+        old = store.observations[0]
+        assert old.reporting_period < expected[0].information_set["lag_history_start"]
+        changed = VintageStore(
+            tuple(replace(o, **change) if o == old else o for o in store.observations)
+        )
+        assert runner((changed, registry, config, dates, rest)) == expected
+        # The same defect on an input inside the window must still withhold.
+        current = next(o for o in store.observations if o.reporting_period == dates[-2])
+        changed = VintageStore(
+            tuple(replace(o, **change) if o == current else o for o in store.observations)
+        )
+        results = runner((changed, registry, config, dates, rest))
+        assert all(r.status == "withheld" and r.score is None for r in results)
+
+
+def test_windowed_snapshot_preserves_outside_window_lineage(var_lab):
+    store, registry, config, dates, values = var_lab
+    parent = store.observations[0]
+    child = next(o for o in store.observations if o.reporting_period == dates[-5])
+    lineage = CalculationLineage(
+        "synthetic lineage fixture",
+        (parent.observation_id,),
+        (parent.metric,),
+        (parent.reporting_period,),
+        "fixture-v1",
+        (),
+        child.unit,
+        child.available_as_of,
+    )
+    derived = replace(child, provenance=ObservationProvenance.DERIVED_COMPUTED, lineage=lineage)
+    changed = VintageStore(tuple(derived if o == child else o for o in store.observations))
+    result = run_var((changed, registry, config, dates, values))[0]
+    assert result.status == "available", result.withholding_reason
+    assert result.score == run_var(var_lab)[0].score
+    assert parent.observation_id not in result.information_set["source_ids"]
+    assert derived.observation_id in result.information_set["source_ids"]
+    assert any(
+        o["lineage"] and parent.observation_id in o["lineage"]["input_ids"]
+        for o in result.information_set["source_observations"]
+    )
+
+
+@pytest.mark.parametrize("kind", ["early_x", "late_y", "required_x", "required_y"])
+@pytest.mark.parametrize("missing_kind", ["null", "absent"])
+def test_mixed_lags_ignore_unused_padding_but_preserve_required_missingness(
+    panel_lab, kind, missing_kind
+):
+    store, registry, config, dates, labels = panel_lab
+    config = replace(config, features=(LaggedFeature("SYN_X", 1), LaggedFeature("SYN_Y", 4)))
+    lab = (store, registry, config, dates, labels)
+    expected = run_logit(lab)
+    assert all(r.status == "available" for r in expected)
+    target = pd.Period(dates[-1], freq="Q")
+    earliest = (target - config.training_periods - 4).end_time.date().isoformat()
+    metric, period = {
+        "early_x": ("SYN_X", earliest),
+        "late_y": ("SYN_Y", dates[-2]),
+        "required_x": ("SYN_X", dates[-2]),
+        "required_y": ("SYN_Y", earliest),
+    }[kind]
+    chosen = next(
+        o for o in store.observations if o.metric == metric and o.reporting_period == period
+    )
+    records = tuple(
+        replace(o, value=None) if o == chosen else o
+        for o in store.observations
+        if missing_kind != "absent" or o != chosen
+    )
+    results = run_logit((VintageStore(records), registry, config, dates, labels))
+    fit = results[0].fit
+    if kind.startswith("required"):
+        assert all(r.status == "withheld" and r.score is None for r in results)
+        assert fit["missing_cells"] == fit["missing_cells_by_metric"][metric] == 1
+    else:
+        assert all(r.status == "available" for r in results)
+        assert [r.score for r in results] == [r.score for r in expected]
+        assert fit["coefficients"] == expected[0].fit["coefficients"]
+        assert fit["missing_cells"] == 0 and fit["unused_missing_cells"] == 1

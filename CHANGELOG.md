@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Conventional challenge snapshots now restrict semantic validation to the
+  requested dates while preserving vintage and lineage rules. Panel logit
+  distinguishes required lag inputs from unused rectangular padding, so only
+  missing predictors referenced by its fixed design withhold estimation.
+
 ### Added
 - Conventional challenge models in `supervisory.challenge_models`: fixed-lag VAR
   forecast errors and pooled panel logit probabilities, refitted at each review

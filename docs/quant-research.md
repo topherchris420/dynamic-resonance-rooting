@@ -145,6 +145,11 @@ legacy panel adapter's full-sample standardization, interpolation or row cleanin
 Missing quarters are materialized. Lags use exact calendar-quarter keys, so a
 missing quarter cannot become a longer, undocumented lag.
 
+Semantic validation is restricted to the requested snapshot dates. Unrelated
+legacy observations do not invalidate an otherwise valid current window. The
+original store still controls as-of selection and validates revision and lineage
+references, including ancestors outside the model window.
+
 Every `ConventionalChallengeResult` exposes:
 
 - `config`, `review`, `method`, `institution_id`, `status`, `score`, `flagged`,
@@ -237,6 +242,11 @@ conflicting label vintages at the same availability time raise an error. The cod
 reports the configured sample size, labeled/usable observations, usable firms,
 positive and negative counts, event fraction, unknown-label count, missing cells
 by variable, convergence, optimizer iterations and information-matrix conditioning.
+For mixed lag lengths, `missing_cells` and `missing_cells_by_metric` count only
+source cells referenced by the fixed training and scoring designs, including the
+configured training rows without labels. Missing rectangular padding is recorded
+as `unused_missing_cells` and does not withhold a fit. Required missing cells
+still withhold the complete primary specification; no window is shortened.
 An institution with no eligible labels is counted through the configured versus
 usable scope; it is never silently assigned synthetic non-events.
 

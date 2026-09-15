@@ -293,10 +293,21 @@ def _package_version(name):
         return None
 
 
+@dataclass(frozen=True)
+class _WindowedStore:
+    """Restrict dataset validation while retaining the original vintage/lineage rules."""
+
+    store: object
+    dates: Tuple[str, ...]
+
+    def as_of(self, cutoff):
+        return tuple(o for o in self.store.as_of(cutoff) if o.reporting_period in self.dates)
+
+
 def _snapshot(store, registry, institution, form, variables, dates, cutoff, allow_synthetic):
     """Reconstruct immutable records, never use a caller-mutated display DataFrame."""
     dataset = RegulatoryAnalysisDataset.from_vintage_store(
-        store,
+        _WindowedStore(store, tuple(dates)),
         registry,
         institution_id=institution,
         form=form,
@@ -787,6 +798,25 @@ def walk_forward_panel_logit(
             ),
         )
         missing = ~np.isfinite(panel.frame[list(variables)].to_numpy(dtype=float))
+        # A rectangular panel includes padding for features whose lags differ.
+        # Only cells referenced by the fixed training/scoring designs are required.
+        required_dates = {
+            metric: {
+                (_quarter(date) - feature.lag).end_time.date().isoformat()
+                for feature in config.features
+                if feature.metric == metric
+                for date in training_dates + (review.reporting_period,)
+            }
+            for metric in variables
+        }
+        required = np.asarray(
+            [
+                [date in required_dates[metric] for metric in variables]
+                for date in panel.frame[panel.date_column]
+            ],
+            dtype=bool,
+        )
+        missing_required = missing & required
         n, positives = len(outcomes), int(sum(outcomes))
         fit = dict(
             package="statsmodels",
@@ -802,8 +832,9 @@ def walk_forward_panel_logit(
             unlabeled_observation_count=len(keys) - n,
             usable_observation_count=0,
             usable_institution_count=0,
-            missing_cells=int(missing.sum()),
-            missing_cells_by_metric=dict(zip(variables, missing.sum(axis=0).tolist())),
+            missing_cells=int(missing_required.sum()),
+            missing_cells_by_metric=dict(zip(variables, missing_required.sum(axis=0).tolist())),
+            unused_missing_cells=int((missing & ~required).sum()),
             converged=None,
             iterations=None,
             fit_attempted=False,
@@ -812,9 +843,9 @@ def walk_forward_panel_logit(
         complete = np.isfinite(x).all(axis=1)
         fit["usable_observation_count"] = int(complete.sum())
         fit["usable_institution_count"] = len({k[0] for k, ok in zip(used_keys, complete) if ok})
-        if missing.any():
+        if missing_required.any():
             reasons.append(
-                "Insufficient history or missing/non-finite features in the exact configured panel window"
+                "Insufficient history or missing/non-finite required features in the exact configured panel window"
             )
         if n < max(config.minimum_observations, len(config.features) + 2):
             reasons.append("Too few usable labeled observations")
