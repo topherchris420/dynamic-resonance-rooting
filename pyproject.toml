@@ -80,6 +80,10 @@ quant = [
   "pyqlib",
   "vectorbt",
 ]
+judgment = [
+  # Official TypeSafe SDK. Python 3.10+ only; older runtimes keep local-only mode.
+  "typesafe-sdk>=0.7.1,<0.8; python_version >= '3.10'",
+]
 
 [project.scripts]
 drr-reproduce = "drr_framework.experiments:main"

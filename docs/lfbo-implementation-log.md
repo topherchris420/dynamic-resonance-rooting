@@ -29,3 +29,12 @@ Legacy policy interpolation is retrospective; it is not used by the new workbenc
 All development tests and demonstration records are separate from independent
 validation evidence. No government approval or validated supervisory methodology
 is claimed.
+
+## Typed judgment overlay
+
+The judgment provider runs only after `EvidenceEntry` creation, falsification,
+`ReviewState` construction, and `AttentionBudget.select`. It is not part of
+`DynamicResonanceRooting.analyze_system`, baselines, statistical tests, or
+walk-forward reconstruction. Question set `evidence-packet-v1` and policy `v1`
+are versioned. Remote use is optional, off by default, and limited to minimized
+public or synthetic evidence packets.

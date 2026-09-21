@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import math
+import re
 from dataclasses import dataclass, replace
 from typing import Tuple
 
@@ -13,6 +15,12 @@ from .common import canonical, canonical_json, instant, stable_id, DECISION_BOUN
 from .evidence_ledger import EvidenceEntry
 from .feedback import evaluate_signal_usefulness
 from .falsification import falsify_material_change, falsify_drr_signal
+from .judgment import (
+    build_judgment_provider,
+    judge_selected_evidence,
+    judgment_configuration,
+    typesafe_model_risk_extension,
+)
 from .monitoring import ReviewState, MonitoringSignal, AttentionBudget, compare_review_states
 from .passport import AnalysisPassport, software_identity
 from .peer_analysis import analyze_peers
@@ -63,6 +71,31 @@ class WorkbenchConfig:
     drr: DRRConfig = DRRConfig()
     institution_class: str = "large_foreign_banking_organization"
     model_risk_profile: ModelRiskProfile = DEFAULT_MODEL_RISK_PROFILE
+    judgment_enabled: bool = False
+    judgment_provider: str = "typesafe"
+    judgment_model: str = "jev-latest"
+    judgment_timeout_seconds: float = 10.0
+    judgment_policy_version: str = "v1"
+
+    def __post_init__(self):
+        if not isinstance(self.judgment_enabled, bool):
+            raise ValueError("judgment_enabled must be true or false")
+        if self.judgment_provider not in {"typesafe", "mock", "disabled"}:
+            raise ValueError("Unknown judgment provider")
+        if self.judgment_policy_version != "v1":
+            raise ValueError("Unsupported judgment policy version")
+        if not isinstance(self.judgment_model, str) or not re.fullmatch(
+            r"[A-Za-z0-9._-]{1,80}", self.judgment_model
+        ):
+            raise ValueError("Invalid judgment model alias")
+        if isinstance(self.judgment_timeout_seconds, bool) or not isinstance(
+            self.judgment_timeout_seconds, (int, float)
+        ):
+            raise ValueError("Invalid judgment timeout")
+        timeout = float(self.judgment_timeout_seconds)
+        if not math.isfinite(timeout) or not 0 < timeout <= 120:
+            raise ValueError("Invalid judgment timeout")
+        object.__setattr__(self, "judgment_timeout_seconds", timeout)
 
 
 class MonitoringWorkbench:
@@ -78,6 +111,7 @@ class MonitoringWorkbench:
         entities=None,
         snc=(),
         perspectives=None,
+        judgment_provider=None,
     ):
         self.store = store
         self.registry = registry
@@ -85,6 +119,7 @@ class MonitoringWorkbench:
         self.cohort = cohort
         self.config = config or WorkbenchConfig()
         self.policy = policy or PolicyContext()
+        self._judgment_provider = judgment_provider
         self.entities = entities or EntityGraph()
         self.snc = tuple(snc)
         self.perspectives = perspectives or PerspectiveInventory()
@@ -427,6 +462,9 @@ class MonitoringWorkbench:
                     dates=dataset.dates,
                 )
             )
+        profile = cfg.model_risk_profile
+        if cfg.judgment_enabled and cfg.judgment_provider == "typesafe":
+            profile = typesafe_model_risk_extension(profile, model=cfg.judgment_model)
         state = ReviewState(
             as_of,
             tuple(sorted(current_observations)),
@@ -461,7 +499,7 @@ class MonitoringWorkbench:
             snc=analyze_public_snc(self.snc, as_of=as_of),
             feedback=canonical(evaluate_signal_usefulness(self.ledger, as_of=as_of)),
             config=canonical(cfg),
-            model_risk_profile=canonical(cfg.model_risk_profile),
+            model_risk_profile=canonical(profile),
             model_risk_reference_basis=canonical(MODEL_RISK_REFERENCE_BASIS),
             scope=(
                 "synthetic demonstration" if cfg.allow_synthetic else "public regulatory research"
@@ -501,15 +539,36 @@ class MonitoringWorkbench:
                 ),
             },
             perspective_configuration=perspective_snapshot,
-            model_risk_profile=canonical(cfg.model_risk_profile),
+            model_risk_profile=canonical(profile),
             model_risk_reference_basis=canonical(MODEL_RISK_REFERENCE_BASIS),
             output_hashes={"monitoring": monitoring_output_hash},
             output_hash_scope={
-                "monitoring": "stable_id of the complete monitoring payload before the passport field is appended"
+                "monitoring": (
+                    "stable_id of the complete monitoring payload before the passport field is appended"
+                    + (
+                        "; optional result.judgment artifacts are excluded and must not be re-queried"
+                        if cfg.judgment_enabled
+                        else ""
+                    )
+                )
             },
             previous_state_id=previous.state_id if previous is not None else None,
+            **(
+                {"judgment_configuration": judgment_configuration(cfg)}
+                if cfg.judgment_enabled
+                else {}
+            ),
         )
         result["passport"] = dict(analysis_id=passport.analysis_id, **passport.payload)
+        if cfg.judgment_enabled:
+            provider = self._judgment_provider or build_judgment_provider(cfg)
+            result["judgment"] = judge_selected_evidence(
+                provider,
+                attention.review_first,
+                ledger=self.ledger,
+                analysis_id=passport.analysis_id,
+                as_of=as_of,
+            )
         return canonical(result), state, passport
 
 

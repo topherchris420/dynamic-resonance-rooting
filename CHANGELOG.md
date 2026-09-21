@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   missing predictors referenced by its fixed design withhold estimation.
 
 ### Added
+- Optional typed judgment overlay for the LFBO workbench. Local-only mode remains
+  the default and makes no judgment network call. Explicitly enabled runs may use
+  TypeSafe Jev, a deterministic mock, or a disabled provider after attention
+  selection. Judgments are append-only, separate from evidence and analyst
+  dispositions, and excluded from the analytical monitoring hash.
 - NIST Contingency-based supplementary binary metrology in
   `supervisory.contingency`: explicit label populations, contingency counts,
   MCC, precision/recall, F1/F2, average precision, and threshold sensitivity.

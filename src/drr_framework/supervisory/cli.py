@@ -232,6 +232,18 @@ def main(argv=None):
     parser.add_argument("--no-drr", action="store_true")
     parser.add_argument("--top-n", type=int, default=5)
     parser.add_argument(
+        "--judgment",
+        action="store_true",
+        help="Enable optional typed judgment. Off by default. The typesafe provider makes a network call.",
+    )
+    parser.add_argument(
+        "--judgment-provider",
+        choices=("typesafe", "mock", "disabled"),
+        default="typesafe",
+    )
+    parser.add_argument("--judgment-model", default="jev-latest")
+    parser.add_argument("--judgment-timeout", type=float, default=10.0)
+    parser.add_argument(
         "--serve", action="store_true", help="Serve the local review interface at 127.0.0.1"
     )
     parser.add_argument("--port", type=int, default=8765)
@@ -263,7 +275,15 @@ def main(argv=None):
         perspectives = (
             PerspectiveInventory.from_json(args.perspectives) if args.perspectives else None
         )
-    cfg = WorkbenchConfig(allow_synthetic=args.demo, enable_drr=not args.no_drr, top_n=args.top_n)
+    cfg = WorkbenchConfig(
+        allow_synthetic=args.demo,
+        enable_drr=not args.no_drr,
+        top_n=args.top_n,
+        judgment_enabled=args.judgment,
+        judgment_provider=args.judgment_provider,
+        judgment_model=args.judgment_model,
+        judgment_timeout_seconds=args.judgment_timeout,
+    )
     workbench = MonitoringWorkbench(
         store,
         registry,

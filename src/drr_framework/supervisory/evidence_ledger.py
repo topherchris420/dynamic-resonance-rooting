@@ -262,6 +262,19 @@ class EvidenceLedger:
                 CREATE TRIGGER IF NOT EXISTS audit_events_no_delete
                     BEFORE DELETE ON audit_events
                     BEGIN SELECT RAISE(ABORT, 'audit events are append-only'); END;
+                CREATE TABLE IF NOT EXISTS judgments (
+                    id TEXT PRIMARY KEY,
+                    evidence_id TEXT NOT NULL,
+                    recorded_at TEXT NOT NULL,
+                    payload TEXT NOT NULL,
+                    FOREIGN KEY(evidence_id) REFERENCES evidence(id)
+                );
+                CREATE TRIGGER IF NOT EXISTS judgments_no_update
+                    BEFORE UPDATE ON judgments
+                    BEGIN SELECT RAISE(ABORT, 'judgments are append-only'); END;
+                CREATE TRIGGER IF NOT EXISTS judgments_no_delete
+                    BEFORE DELETE ON judgments
+                    BEGIN SELECT RAISE(ABORT, 'judgments are append-only'); END;
             """
             )
         try:
@@ -339,6 +352,77 @@ class EvidenceLedger:
             )
         return review.review_id
 
+    def append_judgment(self, overlay):
+        """Append an immutable typed-judgment overlay. Evidence itself is not rewritten."""
+        from .judgment import assert_no_secrets, judgment_content, overlay_from_dict
+
+        payload = canonical(overlay)
+        payload_json = canonical_json(payload)
+        assert_no_secrets(payload_json)
+        stored = overlay_from_dict(json.loads(payload_json))
+        judgment_id = stored.judgment_result.judgment_id
+        self.get(stored.evidence_id)
+        with self._connect() as db:
+            existing = db.execute(
+                "SELECT payload FROM judgments WHERE id=?", (judgment_id,)
+            ).fetchone()
+            if existing:
+                if judgment_content(json.loads(existing[0])) != judgment_content(payload):
+                    raise ValueError("Judgment integrity conflict")
+                return judgment_id
+            recorded_at = stored.judgment_result.completed_at
+            db.execute(
+                "INSERT INTO judgments VALUES (?,?,?,?)",
+                (judgment_id, stored.evidence_id, recorded_at, payload_json),
+            )
+            outcome = (
+                "recorded" if stored.judgment_result.provider_status == "completed" else "failed"
+            )
+            event = AuditEvent(
+                recorded_at,
+                "typed_judgment",
+                outcome,
+                "judgment:" + stored.judgment_result.provider,
+                stored.evidence_id,
+                (
+                    ("judgment_id", judgment_id),
+                    ("provider", stored.judgment_result.provider),
+                    ("model", stored.judgment_result.model),
+                    ("provider_status", stored.judgment_result.provider_status),
+                    ("policy_outcome", stored.policy_outcome),
+                    ("question_set_version", stored.judgment_result.question_set_version),
+                ),
+            )
+            db.execute(
+                "INSERT OR IGNORE INTO audit_events VALUES (?,?,?)",
+                (event.event_id, event.occurred_at, canonical_json(event)),
+            )
+        return judgment_id
+
+    def judgments(self, *, as_of=None, evidence_ids=None):
+        from .judgment import overlay_from_dict
+
+        allowed = None if evidence_ids is None else set(evidence_ids)
+        with self._connect() as db:
+            rows = db.execute(
+                "SELECT id, evidence_id, recorded_at, payload FROM judgments ORDER BY recorded_at, id"
+            ).fetchall()
+        result = []
+        cutoff = instant(as_of) if as_of is not None else None
+        for judgment_id, evidence_id, recorded_at, payload in rows:
+            if allowed is not None and evidence_id not in allowed:
+                continue
+            if cutoff is not None and instant(recorded_at) > cutoff:
+                continue
+            overlay = overlay_from_dict(json.loads(payload))
+            if (
+                overlay.judgment_result.judgment_id != judgment_id
+                or overlay.evidence_id != evidence_id
+            ):
+                raise ValueError("Judgment integrity check failed")
+            result.append(overlay)
+        return tuple(result)
+
     def record_audit_event(self, event):
         """Append an operational event without changing analytical evidence."""
         with self._connect() as db:
@@ -411,9 +495,19 @@ class EvidenceLedger:
             directory / f"audit-{stable_id(audit)[:16]}.jsonl",
             "".join(canonical_json(event) + "\n" for event in audit),
         )
+        judgments = tuple(
+            judgment
+            for judgment in self.judgments(as_of=as_of)
+            if allowed is None or judgment.evidence_id in allowed
+        )
+        judgment_path = write_immutable(
+            directory / f"judgments-{stable_id(judgments)[:16]}.jsonl",
+            "".join(canonical_json(judgment) + "\n" for judgment in judgments),
+        )
         return {
             "json": json_path,
             "jsonl": jsonl_path,
             "reviews": review_path,
             "audit": audit_path,
+            "judgments": judgment_path,
         }

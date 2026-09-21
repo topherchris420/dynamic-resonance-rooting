@@ -77,7 +77,7 @@ def verify_monitoring_snapshot(snapshot):
             passport.analysis_id == expected_id
             and stable_id(snapshot["state"]) == snapshot["state_id"]
             and snapshot["as_of"] == snapshot["state"]["as_of"] == payload["as_of"]
-            and stable_id({k: v for k, v in snapshot.items() if k != "passport"})
+            and stable_id({k: v for k, v in snapshot.items() if k not in {"passport", "judgment"}})
             == payload["output_hashes"]["monitoring"]
         )
     except (KeyError, TypeError, ValueError):

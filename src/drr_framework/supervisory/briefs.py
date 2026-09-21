@@ -31,6 +31,13 @@ def generate_morning_brief(result):
             lines += [
                 f"- **{s['claim']}** — {item['novelty']}. Materiality {s['materiality']:.0f}/100; data confidence {s['confidence']:.0%}. [Why am I seeing this?](evidence/{s['evidence_id']}.md)"
             ]
+            overlay = ((result.get("judgment") or {}).get("overlays") or {}).get(s["evidence_id"])
+            if overlay:
+                lines.append(
+                    "  - Typed judgment policy: "
+                    + str(overlay.get("policy_outcome", "JUDGMENT_UNAVAILABLE")).replace("_", " ")
+                    + ". This is not the analytical score and it is not an analyst disposition."
+                )
     elif any(e["severity"] == "important" for e in result["quality"]):
         lines.append(
             "No material signal cleared the review queue. Data-quality blockers require attention before interpreting this as a quiet period."

@@ -117,6 +117,7 @@ DRR combines multi-resolution spectral decomposition (FFT, Welch PSD, Morlet wav
 - **Continuous Monitoring**: Public-data supervisory workflow answering *what changed, what deserves attention, and why?*
 - **Disagreement Principle & Scope Resolver**: `DRR_ScopeResolver` retains divergent observations across scales (`MACRO`, `MESO`, `MICRO`, `LOCAL`) without forced statistical erasure.
 - **Immutable Evidence Ledger**: Point-in-time reconstruction, content-addressed SHA-256 source hashes, and append-only audit passports.
+- **Optional typed judgment**: Disabled by default. When enabled, a provider-neutral overlay asks bounded questions about evidence the attention budget already selected. It does not change DRR mathematics, statistical tests, evidence hashes, or attention rank.
 
 ---
 
