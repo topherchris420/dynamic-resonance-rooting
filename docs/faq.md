@@ -12,6 +12,15 @@ No. The repository includes validation-readiness artifacts to support model-risk
 review. A specific intended use would still require independent validation,
 governance approval, outcomes analysis, and ongoing monitoring.
 
+## Do the tests show that DRR outperforms standard models?
+
+The tests show that the implementation follows its specifications. The external
+comparison is the preregistered NOAA CPC QBO study. Its reviewed claim status is
+`not_supported`, because full DRR's holdout false-alarm rate is above the
+preregistered tolerance. That result belongs to the atmospheric adapter. It does
+not establish a financial, supervisory, sensing, or physics result, and a result
+in one of those adapters would not rewrite the QBO study.
+
 ## Why use a `src/` layout?
 
 The `src/` layout makes local development behave more like installed-package

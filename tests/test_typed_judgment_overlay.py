@@ -24,8 +24,10 @@ from drr_framework.supervisory.judgment import (
     QUESTION_SET_VERSION,
     DeterministicMockJudgmentProvider,
     DisabledJudgmentProvider,
+    JudgmentOverlay,
     JudgmentResponseError,
     JudgmentResult,
+    display_policy_outcome,
     TypeSafeJudgmentProvider,
     apply_judgment_policy,
     assemble_overlay,
@@ -275,6 +277,7 @@ def test_only_review_first_evidence_is_judged_and_no_disposition_is_created(tmp_
     assert "Typed judgment" in rendered
     assert "Analyst disposition" in rendered
     assert "Judgment policy" in rendered
+    assert "EVIDENCE REVIEWABLE" in rendered
     assert "Model confidence is not statistical confidence" in rendered
     assert "AI confidence" not in rendered
     verify_monitoring_snapshot(result)
@@ -467,14 +470,46 @@ def test_policy_outcomes_follow_the_versioned_rules():
     limited = completed_result(state, adequacy="limited")
     insufficient = completed_result(state, adequacy="insufficient", nouls={"scope_overreach": 0.99})
     boundary = completed_result(state, nouls={"scope_overreach": 0.5})
-    assert apply_judgment_policy(ready) == ("READY", (), "moderate")
+    assert apply_judgment_policy(ready) == ("EVIDENCE_REVIEWABLE", (), "moderate")
     outcome, warnings, complexity = apply_judgment_policy(careful)
     assert outcome == "REVIEW_CAREFULLY"
     assert complexity == "moderate"
     assert any(item.startswith("additional_review_needed=") for item in warnings)
     assert apply_judgment_policy(limited)[0] == "REVIEW_CAREFULLY"
     assert apply_judgment_policy(insufficient)[0] == "INSUFFICIENT_EVIDENCE"
-    assert apply_judgment_policy(boundary)[0] == "READY"
+    assert apply_judgment_policy(boundary)[0] == "EVIDENCE_REVIEWABLE"
+    overlay = assemble_overlay(ready)
+    assert overlay.policy_version == "v2"
+    assert overlay.policy_outcome == "EVIDENCE_REVIEWABLE"
+    assert display_policy_outcome("EVIDENCE_REVIEWABLE") == "EVIDENCE REVIEWABLE"
+    legacy = JudgmentOverlay(
+        overlay.evidence_id,
+        overlay.judgment_result,
+        overlay.review_complexity,
+        overlay.warnings,
+        "READY",
+        "v1",
+    )
+    assert legacy.policy_outcome == "READY"
+    assert display_policy_outcome(legacy.policy_outcome) == "EVIDENCE REVIEWABLE"
+    with pytest.raises(ValueError, match="policy outcome"):
+        JudgmentOverlay(
+            overlay.evidence_id,
+            overlay.judgment_result,
+            overlay.review_complexity,
+            (),
+            "READY",
+            "v2",
+        )
+    with pytest.raises(ValueError, match="policy outcome"):
+        JudgmentOverlay(
+            overlay.evidence_id,
+            overlay.judgment_result,
+            overlay.review_complexity,
+            (),
+            "EVIDENCE_REVIEWABLE",
+            "v1",
+        )
 
 
 def test_judgments_are_append_only_and_hashes_follow_content_not_timestamps(tmp_path):
@@ -619,6 +654,9 @@ def test_invalid_judgment_configuration_fails_fast():
         WorkbenchConfig(judgment_provider="openai")
     with pytest.raises(ValueError):
         WorkbenchConfig(judgment_policy_version="v9")
+    with pytest.raises(ValueError):
+        WorkbenchConfig(judgment_policy_version="v1")
+    assert WorkbenchConfig().judgment_policy_version == "v2"
     with pytest.raises(ValueError):
         WorkbenchConfig(judgment_timeout_seconds=0)
 

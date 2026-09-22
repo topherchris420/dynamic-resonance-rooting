@@ -1,5 +1,10 @@
 # Dynamic Resonance Rooting (DRR) Framework: Final Validation Report
 
+The sections below are a narrative validation memo. They are not the
+preregistered external comparison. That comparison is
+[`results/expected/qbo_structural_change_benchmark.json`](results/expected/qbo_structural_change_benchmark.json),
+and its reviewed `claim_status` is `not_supported`.
+
 ## Executive Summary & Findings
 
 > **Core Research Question**: *What does DRR demonstrate that conventional financial-stability analytics do not already demonstrate, and how strong is the evidence?*

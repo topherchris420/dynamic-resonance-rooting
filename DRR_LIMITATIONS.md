@@ -65,7 +65,17 @@ $$D_R = 0.35 \cdot S_{\text{conc}} + 0.25 \cdot T_{\text{pers}} + 0.25 \cdot \Ph
 
 ---
 
-## 4. Known Technical & Methodological Limitations
+## 4. External comparative evidence
+
+Specification tests show that the implementation follows its definitions. The
+preregistered comparison against conventional detectors is the NOAA CPC QBO
+study in `results/expected/qbo_structural_change_benchmark.json`. The reviewed
+`claim_status` is `not_supported`: full DRR's holdout false-alarm rate exceeds
+the frozen tolerance. That statement is about equatorial stratospheric wind.
+It does not license a performance claim for another adapter, and the narrative
+tables in `DRR_BENCHMARKS.md` are not a substitute for the artifact.
+
+## 5. Known Technical & Methodological Limitations
 
 1. **Parameter Sensitivity**: Resonance Depth and Rooting edge detection are sensitive to the choice of embedding dimension $m$, delay $\tau$, window size $W$, and FFT segment length $n_{perseg}$.
 2. **Discretization Artifacts in Transfer Entropy**: Discretizing continuous data into $N_{\text{bins}} = 10$ uniform bins creates boundary effects and information loss in high-volatility financial regimes.

@@ -97,6 +97,7 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 "drr_framework.supervisory" = ["data/*.json"]
+"drr_framework.external_benchmark" = ["data/*"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from .common import DECISION_BOUNDARY
+from .judgment import display_policy_outcome
 
 
 def generate_morning_brief(result):
@@ -35,7 +36,7 @@ def generate_morning_brief(result):
             if overlay:
                 lines.append(
                     "  - Typed judgment policy: "
-                    + str(overlay.get("policy_outcome", "JUDGMENT_UNAVAILABLE")).replace("_", " ")
+                    + display_policy_outcome(overlay.get("policy_outcome"))
                     + ". This is not the analytical score and it is not an analyst disposition."
                 )
     elif any(e["severity"] == "important" for e in result["quality"]):

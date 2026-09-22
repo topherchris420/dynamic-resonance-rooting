@@ -64,6 +64,21 @@ Large external datasets should be prepared by scripts and documented with:
 - Preprocessing steps
 - Expected file names and checksums
 
+## External evidence benchmark
+
+The preregistered QBO comparison is separate from the synthetic reproduction
+harness. From the repository root:
+
+```bash
+python scripts/run_structural_change_benchmark.py --output-dir results/expected
+```
+
+The command reads the vendored NOAA CPC snapshots and
+`src/drr_framework/external_benchmark/data/preregistration.json`. It writes
+`qbo_structural_change_benchmark.json` and a Markdown report that states only
+the claim contained in that JSON. The protocol is described in
+[External evidence](external-evidence.md).
+
 ## Reviewer Checklist
 
 - Can the example run from a clean checkout?

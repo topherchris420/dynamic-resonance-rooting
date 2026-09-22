@@ -7,6 +7,7 @@ import json
 import math
 
 from .common import canonical_json
+from .judgment import display_policy_outcome
 
 STYLE = """
 :root{color-scheme:light;--ink:#1d302c;--muted:#60716a;--paper:#f6f5ef;--line:#d8dfd7;--accent:#276658}
@@ -81,13 +82,10 @@ def _noul_text(answer):
 
 
 def _policy_label(outcome):
-    labels = {
-        "READY": "READY",
-        "REVIEW_CAREFULLY": "REVIEW CAREFULLY",
-        "INSUFFICIENT_EVIDENCE": "INSUFFICIENT EVIDENCE",
-        "JUDGMENT_UNAVAILABLE": "JUDGMENT UNAVAILABLE",
-    }
-    return labels.get(outcome, outcome or "Unavailable")
+    label = display_policy_outcome(outcome)
+    if outcome == "READY":
+        return label + " (policy v1 record)"
+    return label
 
 
 def judgment_layers(signal, result):

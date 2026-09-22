@@ -9,13 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-- Conventional challenge snapshots now restrict semantic validation to the
-  requested dates while preserving vintage and lineage rules. Panel logit
-  distinguishes required lag inputs from unused rectangular padding, so only
-  missing predictors referenced by its fixed design withhold estimation.
-
 ### Added
+- Preregistered external comparison on the NOAA CPC QBO zonal-wind index:
+  fixed public snapshots, published disruption windows, conventional detectors,
+  full DRR, spectral and rooting ablations, a temporal holdout, a block-bootstrap
+  interval, and a JSON/Markdown artifact. The reviewed run's `claim_status` is
+  `not_supported` because full DRR's holdout false-alarm rate exceeds the
+  preregistered tolerance. The result is confined to that atmospheric adapter.
+- Claim map for the repository: DRR core, validation substrate, and domain
+  adapters, with universal operator claims separated from adapter results.
 - Optional typed judgment overlay for the LFBO workbench. Local-only mode remains
   the default and makes no judgment network call. Explicitly enabled runs may use
   TypeSafe Jev, a deterministic mock, or a disabled provider after attention
@@ -81,6 +83,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (the figure is closed after optional saving instead of displayed)
 
 ### Changed
+- Typed-judgment policy `v2` emits `EVIDENCE_REVIEWABLE` where policy `v1`
+  emitted `READY`. The decision rule is unchanged. `EVIDENCE_REVIEWABLE` means
+  the packet is coherent enough for ordinary human review. Stored `v1` records
+  remain readable. New workbench runs accept policy `v2` only.
 - Vectorized lagged-correlation rooting scores (one cross-correlation matrix per
   lag instead of a `corrcoef` call per variable pair), speeding up
   `RootingAnalyzer.analyze` and its surrogate testing by ~6x on typical panels
@@ -104,6 +110,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   previous versions)
 
 ### Fixed
+- GitHub Actions `checkout`, `setup-python`, `upload-artifact`, and the PyPI
+  publish action are pinned to releases that declare the Node 24 runtime.
+  `ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION` is removed.
+- Conventional challenge snapshots now restrict semantic validation to the
+  requested dates while preserving vintage and lineage rules. Panel logit
+  distinguishes required lag inputs from unused rectangular padding, so only
+  missing predictors referenced by its fixed design withhold estimation.
 - `MarkovChain` stationary distribution had the wrong length when eigenvalue 1
   had multiplicity greater than one (e.g. reducible chains); a single
   eigenvector is now selected

@@ -262,18 +262,20 @@ option, probabilities, and model confidence. Noul answers keep the yes-probabili
 only. Those quantities are not statistical confidence and are not blended into
 one score.
 
-Policy `v1` is deterministic presentation logic:
+Policy `v2` is deterministic presentation logic:
 
 | Condition | Outcome |
 | --- | --- |
 | Provider or answer failure | `JUDGMENT_UNAVAILABLE` |
 | Evidence adequacy is `insufficient` | `INSUFFICIENT_EVIDENCE` |
 | Adequacy is `limited`, or a Noul is strictly above 0.5 | `REVIEW_CAREFULLY` |
-| Adequacy is `adequate` and no Noul is above 0.5 | `READY` |
+| Adequacy is `adequate` and no Noul is above 0.5 | `EVIDENCE_REVIEWABLE` |
 
-`READY` means the packet is coherent enough for ordinary human review under this
-policy. It is not a supervisory conclusion. The policy never removes a signal
-from review and never creates an `AnalystReview`.
+`EVIDENCE_REVIEWABLE` means the packet is coherent enough for ordinary human review
+under this policy. It is a description of the packet, not an approval of the claim
+and not a supervisory conclusion. Policy `v1` stored that same rule as `READY`.
+Those records still load. The policy never removes a signal from review and never
+creates an `AnalystReview`.
 
 Judgments are append-only and content-addressed. A later model version produces
 a new record. The analytical passport records judgment configuration when the

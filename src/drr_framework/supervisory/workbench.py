@@ -75,14 +75,14 @@ class WorkbenchConfig:
     judgment_provider: str = "typesafe"
     judgment_model: str = "jev-latest"
     judgment_timeout_seconds: float = 10.0
-    judgment_policy_version: str = "v1"
+    judgment_policy_version: str = "v2"
 
     def __post_init__(self):
         if not isinstance(self.judgment_enabled, bool):
             raise ValueError("judgment_enabled must be true or false")
         if self.judgment_provider not in {"typesafe", "mock", "disabled"}:
             raise ValueError("Unknown judgment provider")
-        if self.judgment_policy_version != "v1":
+        if self.judgment_policy_version != "v2":
             raise ValueError("Unsupported judgment policy version")
         if not isinstance(self.judgment_model, str) or not re.fullmatch(
             r"[A-Za-z0-9._-]{1,80}", self.judgment_model

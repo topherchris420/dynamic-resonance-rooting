@@ -23,7 +23,7 @@ from .common import canonical, canonical_json, sha256_hex, stable_id
 from .model_risk import ModelRiskProfile
 
 QUESTION_SET_VERSION = "evidence-packet-v1"
-JUDGMENT_POLICY_VERSION = "v1"
+JUDGMENT_POLICY_VERSION = "v2"
 STATE_SCHEMA_VERSION = "judgment-state-v1"
 RESULT_SCHEMA_VERSION = "judgment-result-v1"
 OVERLAY_SCHEMA_VERSION = "judgment-overlay-v1"
@@ -68,9 +68,17 @@ _PROVIDER_STATUSES = frozenset(
         "missing_credentials",
     }
 )
-_POLICY_OUTCOMES = frozenset(
-    {"READY", "REVIEW_CAREFULLY", "INSUFFICIENT_EVIDENCE", "JUDGMENT_UNAVAILABLE"}
-)
+_POLICY_OUTCOMES = {
+    "v1": frozenset({"READY", "REVIEW_CAREFULLY", "INSUFFICIENT_EVIDENCE", "JUDGMENT_UNAVAILABLE"}),
+    "v2": frozenset(
+        {
+            "EVIDENCE_REVIEWABLE",
+            "REVIEW_CAREFULLY",
+            "INSUFFICIENT_EVIDENCE",
+            "JUDGMENT_UNAVAILABLE",
+        }
+    ),
+}
 _SENSITIVE_KEY = re.compile(
     r"(api[_-]?key|authorization|bearer|credential|password|secret|token|rationale|reviewer)",
     re.IGNORECASE,
@@ -366,7 +374,8 @@ class JudgmentOverlay:
     def __post_init__(self):
         if self.evidence_id != self.judgment_result.evidence_id:
             raise ValueError("Judgment overlay is bound to one evidence record")
-        if self.policy_outcome not in _POLICY_OUTCOMES:
+        allowed = _POLICY_OUTCOMES.get(self.policy_version)
+        if allowed is None or self.policy_outcome not in allowed:
             raise ValueError("Invalid judgment policy outcome")
         if self.review_complexity not in {None, "routine", "moderate", "complex"}:
             raise ValueError("Invalid review complexity")
@@ -527,6 +536,12 @@ def parse_system_one_response(payload, questions=EVIDENCE_PACKET_QUESTIONS):
     return model, answers
 
 
+def display_policy_outcome(outcome):
+    """Human label for a policy token. Legacy v1 READY is shown as reviewable evidence."""
+    token = "EVIDENCE_REVIEWABLE" if outcome == "READY" else (outcome or "JUDGMENT_UNAVAILABLE")
+    return str(token).replace("_", " ")
+
+
 def apply_judgment_policy(result, *, threshold=NOUL_MATERIAL_THRESHOLD):
     """Map typed answers to a presentation outcome. This does not rank attention."""
     if result.provider_status != "completed":
@@ -566,7 +581,7 @@ def apply_judgment_policy(result, *, threshold=NOUL_MATERIAL_THRESHOLD):
         if adequacy.choice == "limited" and not warning_text:
             warning_text = ("evidence_adequacy=limited",)
         return ("REVIEW_CAREFULLY", warning_text, complexity.choice)
-    return ("READY", (), complexity.choice)
+    return ("EVIDENCE_REVIEWABLE", (), complexity.choice)
 
 
 def assemble_overlay(result):
@@ -1110,7 +1125,7 @@ def typesafe_model_risk_extension(profile: ModelRiskProfile, *, model: str) -> M
         ),
         change_control=profile.change_control
         + (
-            "Question set evidence-packet-v1 and judgment policy v1 are explicit. A provider model version change creates a distinct judgment record.",
+            "Question set evidence-packet-v1 and judgment policy v2 are explicit. Policy v2 names the adequate, no-material-Noul outcome EVIDENCE_REVIEWABLE. A provider model version change creates a distinct judgment record.",
         ),
         dependencies=profile.dependencies
         + ("typesafe-sdk optional extra; imported only when the TypeSafe provider runs",),

@@ -1,5 +1,11 @@
 # Dynamic Resonance Rooting (DRR) Framework: Benchmark Evaluation & Empirical Validation
 
+These tables are narrative summaries. They are not produced by the preregistered
+public-dataset harness. The comparative record is
+[`results/expected/qbo_structural_change_benchmark.json`](results/expected/qbo_structural_change_benchmark.json).
+Its reviewed `claim_status` is `not_supported`. See
+[External evidence](docs/external-evidence.md).
+
 ## 1. Out-of-Sample Historical Evaluation Results
 
 DRR was evaluated across three historical financial stress episodes using strict expanding temporal windows (zero look-ahead bias):

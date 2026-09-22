@@ -38,3 +38,7 @@ The judgment provider runs only after `EvidenceEntry` creation, falsification,
 walk-forward reconstruction. Question set `evidence-packet-v1` and policy `v1`
 are versioned. Remote use is optional, off by default, and limited to minimized
 public or synthetic evidence packets.
+
+Policy `v2` keeps that decision rule and emits `EVIDENCE_REVIEWABLE` where policy
+`v1` emitted `READY`. The new token names readiness for ordinary human review of
+the packet. Stored `v1` records remain readable and are labeled as such.

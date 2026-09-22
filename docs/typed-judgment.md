@@ -23,7 +23,7 @@ WorkbenchConfig(
     judgment_provider="typesafe",    # typesafe, mock, or disabled
     judgment_model="jev-latest",     # alias sent only when typesafe is enabled
     judgment_timeout_seconds=10.0,
-    judgment_policy_version="v1",
+    judgment_policy_version="v2",
 )
 ```
 
@@ -63,17 +63,19 @@ does not retry a failed call and does not fall back to another model.
 Choice and Score answers retain `probabilities` and `confidence`. Noul answers retain
 `noul` only. Model confidence is not data confidence and is not a p-value.
 
-## Policy `v1`
+## Policy `v2`
 
 A Noul is material when it is strictly greater than 0.5.
 
 - provider failure, disabled provider, or an unusable answer → `JUDGMENT_UNAVAILABLE`
 - `evidence_adequacy == insufficient` → `INSUFFICIENT_EVIDENCE`
 - limited adequacy, or any material Noul → `REVIEW_CAREFULLY`
-- adequate evidence and no material Noul → `READY`
+- adequate evidence and no material Noul → `EVIDENCE_REVIEWABLE`
 
-`READY` means the packet is coherent enough for ordinary human review under this
-policy. It does not mean a supervisory conclusion is correct.
+`EVIDENCE_REVIEWABLE` means the packet is coherent enough for ordinary human review
+under this policy. It is a statement about the packet, not an approval of the
+claim and not a supervisory conclusion. Policy `v1` used the token `READY` for
+this same rule. Stored `v1` records remain readable. New runs emit policy `v2`.
 
 ## What is sent
 
@@ -98,7 +100,7 @@ audit fields; `judgment_id` is the SHA-256 of the remaining content.
 {
   "evidence_id": "abc123",
   "policy_outcome": "REVIEW_CAREFULLY",
-  "policy_version": "v1",
+  "policy_version": "v2",
   "review_complexity": "moderate",
   "warnings": ["additional_review_needed=0.7200 exceeds 0.5"],
   "judgment_result": {

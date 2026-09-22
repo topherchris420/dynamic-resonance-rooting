@@ -5,6 +5,43 @@ time-indexed signal matrix, detect resonance structure, estimate directional
 rooting relationships, compute resonance-depth metrics, attach state-space and
 validation-readiness diagnostics, and export reviewer-readable artifacts.
 
+## Layers and claim scope
+
+The layers are DRR core → validation substrate → domain adapters.
+
+```mermaid
+flowchart LR
+    Core[DRR core] --> Substrate[Validation substrate]
+    Substrate --> Adapters[Domain adapters]
+```
+
+The core is the set of operators on a numeric series: resonance detection,
+directional rooting, resonance depth, state-space estimation, geometry, and
+control. A universal claim is a property of those operators.
+
+The validation substrate checks the checkout. Specification tests, synthetic
+ground truth, leakage checks, and surrogate inference show that the
+implementation follows its definitions. The preregistered external comparison
+is the one place a performance claim against conventional detectors is
+recorded. Passing tests are evidence about the implementation. They are
+evidence about a real-world comparison only when the external artifact says so.
+
+Domain adapters apply the core to physics, sensing, macro policy, banking
+supervision, financial markets, machine-learning research, and typed judgment.
+A domain claim stays in its adapter. The QBO study is an atmospheric adapter.
+Its reviewed claim status is `not_supported`. Finance, supervision, and the
+other adapters do not inherit that run, and that run does not inherit them.
+
+| Question | Record |
+| --- | --- |
+| What do the operators compute? | Core modules and the specification tests |
+| Does this checkout implement those definitions? | Validation substrate |
+| Did full DRR beat the named conventional detectors on the fixed public series, inside the false-alarm tolerance? | `results/expected/qbo_structural_change_benchmark.json` |
+| Does a supervisory, market, sensing, or physics workflow therefore succeed? | Only a study of that adapter |
+
+The diagrams below are the code map for the core pipeline. They do not promote
+an adapter result into a universal result.
+
 ## Overall DRR Workflow
 
 ```mermaid

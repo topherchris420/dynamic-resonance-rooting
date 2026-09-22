@@ -38,43 +38,42 @@ The **Dynamic Resonance Rooting (DRR) Framework** provides a unified computation
 
 DRR combines multi-resolution spectral decomposition (FFT, Welch PSD, Morlet wavelets), non-parametric directional rooting (transfer entropy, surrogate null-hypothesis testing), state-space estimation (Kalman filtering, Hamilton/Koopman smoothers, tempered particle filters), and information-theoretic diagnostics to yield reproducible empirical evidence.
 
+Those operators are the **DRR core**. Physics, sensing, macro policy, banking supervision, financial markets, and machine-learning research are **domain adapters** that call the core. A result in one adapter stays in that adapter. The **validation substrate** is what sits between them: specification tests, synthetic ground truth, leakage checks, and the preregistered external comparison.
+
 ---
 
 ## 🏗️ System Architecture
 
+The architecture is three layers:
+
 ```text
-┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│                                   INPUT DATA SOURCES                                    │
-│    Physical Systems  •  Sensing DSP  •  Policy Series  •  Financial Markets  •  Panels   │
-└────────────────────────────────────────────┬────────────────────────────────────────────┘
-                                             │
-                                             ▼
-┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│                               DRR CORE ANALYTICS ENGINE                                 │
-│  ┌─────────────────────────┐  ┌─────────────────────────┐  ┌─────────────────────────┐  │
-│  │   Resonance Detector    │  │    Rooting Analyzer     │  │    Depth Calculator     │  │
-│  │ FFT • Welch • Wavelets  │  │ Transfer Entropy • Corr │  │ Coherence • Persistence │  │
-│  └────────────┬────────────┘  └────────────┬────────────┘  └────────────┬────────────┘  │
-└───────────────┼────────────────────────────┼────────────────────────────┼───────────────┘
-                │                            │                            │
-                ▼                            ▼                            ▼
-┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│                             ADVANCED DYNAMICAL ENGINE                                   │
-│  ┌─────────────────────────┐  ┌─────────────────────────┐  ┌─────────────────────────┐  │
-│  │  State-Space & Smooth   │  │   Resonance Geometry    │  │ Closed-Loop Control     │  │
-│  │ Kalman • Hamilton • DK  │  │ Manifolds • Curvature   │  │ Navigation • Guidance   │  │
-│  └─────────────────────────┘  └─────────────────────────┘  └─────────────────────────┘  │
-└────────────────────────────────────────────┬────────────────────────────────────────────┘
-                                             │
-                                             ▼
-┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│                               APPLICATION ADAPTER LAYERS                                │
-│  ┌─────────────────────────────────────────┐  ┌──────────────────────────────────────┐  │
-│  │        Quant Research Lab               │  │  LFBO Supervisory Monitoring         │  │
-│  │ Qlib ML • Riskfolio • VectorBT Backtest │  │ As-Of Store • Disagreement • Ledger  │  │
-│  └─────────────────────────────────────────┘  └──────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────────────────────────────┘
+DRR core → validation substrate → domain adapters
 ```
+
+```text
+DRR core
+  resonance detection · directional rooting · resonance depth
+  state-space estimation · geometry · control
+        |
+        v
+validation substrate
+  specification tests · synthetic ground truth
+  leakage checks · surrogate inference
+  preregistered external comparison
+        |
+        v
+domain adapters
+  physics · sensing · macro policy · banking supervision
+  financial markets · machine-learning research · typed judgment
+```
+
+| Claim | Where it lives | What this repository shows |
+| --- | --- | --- |
+| Universal | DRR core. A property of the operators on a numeric series. | Definitions, checked by the specification tests. |
+| Validation | The substrate. A checkout implements those definitions, or a named comparison met its preregistered rule. | The test suite, plus one external artifact. |
+| Domain | One adapter. | Examples and adapter code. An adapter result does not move to another adapter. |
+
+The test suite shows that the implementation follows its specifications. The external comparison is the NOAA CPC quasi-biennial oscillation study. Its reviewed `claim_status` is `not_supported`: full DRR's holdout false-alarm rate is above the preregistered tolerance. The record is [`results/expected/qbo_structural_change_benchmark.json`](results/expected/qbo_structural_change_benchmark.json), with a readable report beside it. Narrative tables in `DRR_BENCHMARKS.md` are not that study. See [External evidence](docs/external-evidence.md) and [Architecture](docs/architecture.md).
 
 ---
 
@@ -321,7 +320,8 @@ dynamic-resonance-rooting/
 │   │   ├── portfolio/          # Riskfolio adapter & regime allocation
 │   │   ├── validation/         # VectorBT adapter, walk-forward & HAC stats
 │   │   └── reporting/          # Research report generators & plotting
-│   └── supervisory/            # LFBO Supervisory Workbench backend & CLI
+│   ├── supervisory/            # LFBO Supervisory Workbench backend & CLI
+│   └── external_benchmark/    # Preregistered public-dataset comparison
 ├── examples/                    # Runnable lab scripts and demonstrations
 ├── tests/                       # Unit and integration test suite
 ├── docs/                        # Framework documentation and guides
@@ -335,7 +335,8 @@ dynamic-resonance-rooting/
 Detailed technical documentation is available in the [`docs/`](docs/) directory:
 
 - [**User Guide**](docs/user-guide.md) — Getting started with DRR.
-- [**Architecture**](docs/architecture.md) — High-level design and module interaction.
+- [**Architecture**](docs/architecture.md) — Core, validation substrate, domain adapters, and module interaction.
+- [**External evidence**](docs/external-evidence.md) — Preregistered QBO comparison and how to read its claim status.
 - [**API Reference**](docs/api.md) — Function and class signatures.
 - [**Quant Research Lab Guide**](docs/quant-research.md) — Qlib, Riskfolio, and VectorBT integration.
 - [**LFBO Workbench Guide**](docs/lfbo-workbench.md) — Supervisory workbench, data contract, and evidence model.

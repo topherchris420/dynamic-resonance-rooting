@@ -1,0 +1,129 @@
+{
+  "id": "qbo-disruption-structural-change-v1",
+  "schema_version": "external-evidence-preregistration-v1",
+  "claim_class": "domain_adapter",
+  "domain": "equatorial stratospheric zonal wind",
+  "universal": false,
+  "dataset": {
+    "name": "NOAA CPC QBO 30 mb and 50 mb zonal wind index",
+    "publisher": "NOAA Climate Prediction Center",
+    "license": "U.S. government work, public domain",
+    "retrieved": "2026-09-22",
+    "section": "ORIGINAL DATA",
+    "urls": [
+      "https://www.cpc.ncep.noaa.gov/data/indices/qbo.u30.index",
+      "https://www.cpc.ncep.noaa.gov/data/indices/qbo.u50.index"
+    ],
+    "sha256": {
+      "qbo.u30.index": "c05beb569aad871f93bc1e571611b9f726d0214954c70fd172d5c393abeb6c93",
+      "qbo.u50.index": "b3f919632c1fe676ec4632f85ab9e886aecc27f1a108a23e337c763b90cd4879"
+    },
+    "first_month": "1979-01",
+    "last_month": "2026-08",
+    "finite_months": 572
+  },
+  "analysis": {
+    "holdout_start": "2011-01",
+    "trailing_window_months": 84,
+    "rooting_max_lag": 12,
+    "sampling_rate_per_month": 1.0,
+    "false_alarm_tolerance": 0.05,
+    "var_order": 1,
+    "logistic_C": 1.0,
+    "minimum_repeat_count": 2,
+    "bootstrap": {
+      "method": "circular_block",
+      "replicates": 400,
+      "block_length_months": 28,
+      "seed": 20260922,
+      "lower_quantile": 0.05,
+      "upper_quantile": 0.95
+    }
+  },
+  "events": [
+    {
+      "id": "qbo-2015-2016",
+      "start": "2016-01",
+      "end": "2016-04",
+      "sources": [
+        {
+          "citation": "Osprey, S. M., et al. (2016). An unexpected disruption of the atmospheric quasi-biennial oscillation. Science, 353(6306), 1424-1427.",
+          "doi": "10.1126/science.aah4156",
+          "anchor": "The oscillation was disrupted in February 2016."
+        },
+        {
+          "citation": "Newman, P. A., Coy, L., Pawson, S., & Lait, L. R. (2016). The anomalous change in the QBO in 2015-2016. Geophysical Research Letters, 43, 8791-8797.",
+          "doi": "10.1002/2016GL070373",
+          "anchor": "The westerly-to-easterly change at 40 hPa occurred in January 2016, and the anomalous westerly phase was over by mid-April."
+        }
+      ]
+    },
+    {
+      "id": "qbo-2019-2020",
+      "start": "2019-12",
+      "end": "2020-03",
+      "sources": [
+        {
+          "citation": "Anstey, J. A., et al. (2021). Prospect of increased disruption to the QBO in a changing climate. Geophysical Research Letters, 48, e2021GL093058.",
+          "doi": "10.1029/2021GL093058",
+          "anchor": "A second disruption began in December 2019. A shallow westward layer near 40 hPa emerged about three months later."
+        }
+      ]
+    }
+  ],
+  "window_rule": "Each disruption window is the inclusive span from the cited onset month through the cited emergence of the anomalous layer. These windows were taken from the papers above and are not adjusted to scores.",
+  "estimation_rule": "Months before the holdout are a negative-control period. Newman et al. (2016) describe the 2015-2016 anomaly as unprecedented in the observed record, and both windows fall after December 2010. Every estimation month is a non-event.",
+  "information_sets": {
+    "shared": "Scores begin once trailing_window_months observations exist strictly before the scored month. No score uses a later month.",
+    "trailing_window": "Spectral concentration, directed lag, rolling volatility, and rolling correlation use the trailing window that ends at the scored month.",
+    "var": "The VAR(1) residual at a month is the one-step error of coefficients fit only on earlier months. Location and scale are the mean and standard deviation of months before the holdout.",
+    "logistic": "The logistic arm, when it has estimation labels, is fit on estimation rows only. Its features are the three other conventional scores. DRR scores are not inputs. This dataset has no positive estimation labels, so the arm is withheld.",
+    "threshold": "The threshold for a scored model is the least strict score at which the estimation alarm rate is at most false_alarm_tolerance. An alarm is a score at or above that threshold. A model with no such threshold is uncalibrated and is left out of the comparison."
+  },
+  "hypotheses": [
+    {
+      "id": "H1",
+      "statement": "On holdout months outside the disruption windows, the full DRR false-alarm rate is at most 0.05."
+    },
+    {
+      "id": "H2",
+      "statement": "At least two disruption windows contain a full DRR alarm and contain no alarm from any conventional model that calibrated inside the same tolerance."
+    },
+    {
+      "id": "H3",
+      "statement": "No single ablation that itself stays inside the 0.05 tolerance hits every disruption window counted by H2."
+    }
+  ],
+  "uncertainty_rule": "Thresholds are redrawn by a circular block bootstrap of estimation months, with one shared month draw applied to every model. Holdout scores stay fixed. A replicate in which full DRR does not calibrate contributes a unique-hit count of 0 and a false-alarm rate of 1. Support requires the lower end of the unique-hit interval to be at least 1.",
+  "decision_rule": "supported only when H1, H2, and H3 all hold and the uncertainty rule holds. A single unique detection is inconclusive. A point estimate that fails is not_supported and is not rescued by the interval. A window without finite scores is inconclusive.",
+  "models": {
+    "rolling_volatility": {
+      "role": "conventional",
+      "definition": "Mean, across the two levels, of the trailing-window sample standard deviation. Larger values alarm."
+    },
+    "rolling_correlation": {
+      "role": "conventional",
+      "definition": "Drop of the trailing-window absolute contemporaneous Pearson correlation below its estimation-period median. Larger drops alarm."
+    },
+    "var_residual": {
+      "role": "conventional",
+      "definition": "Root-mean-square residual of a VAR(1) with an intercept. Larger residuals alarm."
+    },
+    "regularized_logistic": {
+      "role": "conventional",
+      "definition": "L2-regularized logistic probability of an event month given the three other conventional scores."
+    },
+    "drr_spectral": {
+      "role": "ablation",
+      "definition": "One minus the mean, across the two levels, of DepthCalculator spectral concentration on the trailing window. Larger values alarm."
+    },
+    "drr_rooting": {
+      "role": "ablation",
+      "definition": "Absolute deviation of RootingAnalyzer's dominant directed lag from the estimation-period median lag. Larger deviations alarm."
+    },
+    "drr_full": {
+      "role": "drr",
+      "definition": "Maximum of the estimation-standardized spectral and rooting scores. Its threshold is calibrated on the combined score."
+    }
+  }
+}
