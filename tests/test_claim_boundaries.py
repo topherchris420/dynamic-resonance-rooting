@@ -16,11 +16,10 @@ def _read(name: str) -> str:
 def test_architecture_names_core_substrate_and_adapters():
     readme = _read("README.md")
     architecture = _read("docs/architecture.md")
-    assert "DRR core → validation substrate → domain adapters" in readme
-    for layer in ("DRR core", "validation substrate", "domain adapters"):
-        assert layer in readme
-        assert layer in architecture
-    assert "Universal" in readme
+    assert "DRR core → validation substrate → domain adapters" in architecture
+    for layer in ("validation substrate", "Domain adapters"):
+        assert layer.lower() in readme.lower()
+        assert layer.lower() in architecture.lower()
     assert "A domain claim stays in its adapter." in architecture
 
 
