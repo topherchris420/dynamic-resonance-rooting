@@ -77,7 +77,9 @@ drr-reproduce --output-dir results/reproduction
 
 The synthetic oscillator checks whether the implementation recovers **known, injected** frequency and lag. It is a specification check, not evidence of general predictive performance.
 
-The repository also contains a [preregistered external comparison](docs/external-evidence.md) on the NOAA CPC quasi-biennial oscillation series. Its reviewed [machine-readable artifact](results/expected/qbo_structural_change_benchmark.json) records the current claim status. To reproduce that comparison from the vendored public-data snapshots:
+The repository also contains a [preregistered external comparison](docs/external-evidence.md) on the NOAA CPC quasi-biennial oscillation series. Its reviewed [machine-readable artifact](results/expected/qbo_structural_change_benchmark.json) records the current claim as **not supported** (`not_supported`): the full DRR holdout false-alarm rate exceeds the preregistered tolerance. This result is specific to the equatorial stratospheric zonal-wind comparison and does not establish results in other domains.
+
+To reproduce that comparison from the vendored public-data snapshots:
 
 ```bash
 python scripts/run_structural_change_benchmark.py --output-dir results/expected
