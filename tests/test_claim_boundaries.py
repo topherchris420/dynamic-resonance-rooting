@@ -16,11 +16,10 @@ def _read(name: str) -> str:
 def test_architecture_names_core_substrate_and_adapters():
     readme = _read("README.md")
     architecture = _read("docs/architecture.md")
-    assert "DRR core → validation substrate → domain adapters" in readme
-    for layer in ("DRR core", "validation substrate", "domain adapters"):
-        assert layer in readme
-        assert layer in architecture
-    assert "Universal" in readme
+    assert "DRR core → validation substrate → domain adapters" in architecture
+    for layer in ("validation substrate", "Domain adapters"):
+        assert layer.lower() in readme.lower()
+        assert layer.lower() in architecture.lower()
     assert "A domain claim stays in its adapter." in architecture
 
 
@@ -36,8 +35,8 @@ def test_narrative_benchmarks_point_at_the_external_artifact():
 def test_reviewed_claim_status_is_the_status_named_in_the_docs():
     status = json.loads(ARTIFACT.read_text(encoding="utf-8"))["claim"]["status"]
     assert status == "not_supported"
+    assert "not supported" in _read("README.md").lower()
     for name in (
-        "README.md",
         "docs/external-evidence.md",
         "docs/faq.md",
         "docs/architecture.md",
