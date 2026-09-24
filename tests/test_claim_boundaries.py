@@ -35,8 +35,8 @@ def test_narrative_benchmarks_point_at_the_external_artifact():
 def test_reviewed_claim_status_is_the_status_named_in_the_docs():
     status = json.loads(ARTIFACT.read_text(encoding="utf-8"))["claim"]["status"]
     assert status == "not_supported"
+    assert "not supported" in _read("README.md").lower()
     for name in (
-        "README.md",
         "docs/external-evidence.md",
         "docs/faq.md",
         "docs/architecture.md",
