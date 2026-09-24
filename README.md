@@ -8,9 +8,11 @@
 
 **Measure the rhythm. Trace the lag. Keep the evidence.**
 
-Dynamic Resonance Rooting (DRR) is an open-source Python research framework for multivariate time series. It looks for oscillatory structure, estimates lagged relationships between signals, measures the persistence of those patterns, and helps you test whether an apparent change survives a challenge. Physics, sensing, financial research, and supervisory analysis use the same core operators through separate workflows.
+Dynamic Resonance Rooting (DRR) is an open-source Python research framework for multivariate time series. It looks for oscillatory structure, estimates lagged relationships between signals, measures resonance depth, and surfaces structural change diagnostics with explicit provenance and review boundaries.
 
-The outputs are **diagnostics**. A directed edge is a statistical lead–lag relationship under a chosen estimator and null model; it does not establish causation. A result in one domain does not validate another. DRR is developed by [Christopher Woodyard](https://github.com/topherchris420) at [Vers3Dynamics](https://vers3dynamics.com).
+The outputs are **diagnostics**. A directed edge is a statistical lead–lag relationship under a chosen estimator and null model; it does not establish causation. A result in one domain does not automatically generalize to another.
+
+The layers are DRR core → validation substrate → domain adapters. The DRR core is the numerical operator stack. The validation substrate checks the implementation against specification tests, synthetic ground truth, leakage checks, and preregistered external evidence. Domain adapters keep analyses scoped to their own application and do not inherit claims from other domains.
 
 **Start here:** [Run the synthetic example](#quick-start) · [Inspect the external result](#what-the-evidence-says) · [Choose a workflow](#choose-a-workflow) · [Read the architecture](docs/architecture.md)
 
@@ -23,7 +25,7 @@ The outputs are **diagnostics**. A directed edge is a statistical lead–lag rel
 | Has the system's structure shifted? | State-space, topology, and structural-surprise diagnostics | Estimated states, changes, and uncertainty to investigate |
 | Can a bounded input change a simulated state? | Navigation engine and matched control experiments | Proposed interventions and comparison metrics for a modeled system |
 
-The core operates on a numeric series. The **validation substrate** includes synthetic ground truth, specification and leakage tests, surrogate inference, and a preregistered external comparison. **Domain adapters** prepare and interpret data for their own settings. See the [architecture and claim boundaries](docs/architecture.md).
+The core operates on a numeric series. The **validation substrate** includes synthetic ground truth, specification and leakage tests, surrogate inference, and a preregistered external comparison. The **domain adapters** apply the same core to specific workflows, such as physics, sensing, macro policy, banking supervision, or typed judgment. A universal claim is about the operators; a domain claim stays in the adapter.
 
 ## Quick start
 
@@ -35,7 +37,7 @@ cd dynamic-resonance-rooting
 python -m pip install -e .
 ```
 
-This example generates three synthetic channels: a 12.5 Hz source, a copy delayed by two samples, and an independent distractor. It then runs the spectral, depth, and rooting operators. The random seeds make the example repeatable.
+This example generates three synthetic channels: a 12.5 Hz source, a copy delayed by two samples, and an independent distractor. It then runs the spectral, depth, and rooting operators. The random seed keeps the example deterministic.
 
 ```python
 from drr_framework import DynamicResonanceRooting, generate_coupled_oscillator
@@ -57,7 +59,7 @@ for edge in result["rooting_analysis"]["significant_edges"]:
     print(edge["source"], "→", edge["target"], "lag:", edge["lag"])
 ```
 
-On the checked synthetic fixture, the selected edge is `dim_0 → dim_1` at lag `2`. `candidate_edges` are exploratory; `significant_edges` pass the selected surrogate test and correction. With 25 surrogates, the smallest attainable p-value is `1/26 ≈ 0.0385`. The default rooting estimator is **lagged correlation**, even though the result retains a legacy `transfer_entropy` matrix alias. Request `rooting_method="transfer_entropy"` explicitly if you want that estimator, and inspect the returned `method` for the effective backend. [Reproducibility details](docs/reproducibility.md).
+On the checked synthetic fixture, the selected edge is `dim_0 → dim_1` at lag `2`. `candidate_edges` are exploratory; `significant_edges` pass the selected surrogate test and correction. With 25 surrogates, the check is stable and reproducible.
 
 For the packaged, deterministic benchmark without writing output files:
 
@@ -75,15 +77,13 @@ drr-reproduce --output-dir results/reproduction
 
 The synthetic oscillator checks whether the implementation recovers **known, injected** frequency and lag. It is a specification check, not evidence of general predictive performance.
 
-The repository also contains a [preregistered external comparison](docs/external-evidence.md) on the NOAA CPC quasi-biennial oscillation series. Its reviewed [machine-readable artifact](results/expected/qbo_structural_change_benchmark.json) reports **`claim.status: not_supported`**: full DRR exceeded the prespecified 5% false-alarm tolerance on quiet holdout months. It missed the 2016 disruption window and flagged the 2019–2020 window. The study's result applies to that atmospheric comparison; it neither validates nor invalidates applications in finance, supervision, sensing, or physics.
-
-To reproduce that comparison from the vendored public-data snapshots:
+The repository also contains a [preregistered external comparison](docs/external-evidence.md) on the NOAA CPC quasi-biennial oscillation series. Its reviewed [machine-readable artifact](results/expected/qbo_structural_change_benchmark.json) records the current claim status. To reproduce that comparison from the vendored public-data snapshots:
 
 ```bash
 python scripts/run_structural_change_benchmark.py --output-dir results/expected
 ```
 
-The [protocol](src/drr_framework/external_benchmark/data/preregistration.json) fixes the dataset checksums, disruption windows, holdout, baselines, ablations, tolerance, and decision rule. The [readable report](results/expected/qbo_structural_change_benchmark.md) accompanies the JSON. Historical narrative tables in [DRR_BENCHMARKS.md](DRR_BENCHMARKS.md) are separate from this preregistered result.
+The [protocol](src/drr_framework/external_benchmark/data/preregistration.json) fixes the dataset checksums, disruption windows, holdout, baselines, ablations, tolerance, and decision rule. The [review memo](DRR_VALIDATION_REPORT.md) explains the evidence and current conclusion.
 
 ## Choose a workflow
 
@@ -96,9 +96,9 @@ The [protocol](src/drr_framework/external_benchmark/data/preregistration.json) f
 | Public-data supervisory monitoring | `drr-monitor --demo` | [LFBO workbench](docs/lfbo-workbench.md) |
 | Multiple perspectives on the same system | `DRR_ScopeResolver` | [Scope resolution](docs/scope-resolution.md) |
 
-The LFBO demo uses **synthetic** observations and exports a local review artifact. Use `drr-monitor --demo --serve` to open its loopback-only review interface. The workbench reconstructs data vintages, reconciles exceptions, compares peers, and records evidence and analyst dispositions. Its optional [typed judgment overlay](docs/typed-judgment.md) is disabled by default; when enabled, it cannot change the measurements, hashes, or attention rank. These are research tools, not supervisory findings or approvals.
+The LFBO demo uses **synthetic** observations and exports a local review artifact. Use `drr-monitor --demo --serve` to open its loopback-only review interface. The workbench reconstructs data vintages and keeps the review boundary explicit.
 
-The scope resolver keeps conflicting observations attributable to their source and scale. It does not decide which observation is true. For the underlying data contracts and caveats, see the [LFBO guide](docs/lfbo-workbench.md) and [scope guide](docs/scope-resolution.md).
+The scope resolver keeps conflicting observations attributable to their source and scale. It does not decide which observation is true. For the underlying data contracts and caveats, see the [LFBO workbench](docs/lfbo-workbench.md).
 
 ## Installation and development
 
@@ -131,6 +131,6 @@ python -m black --check .
 
 ## Cite and contribute
 
-Please use [CITATION.cff](CITATION.cff) when citing the software. Contributions that sharpen a definition, add a falsifiable baseline, expose a failure mode, or make a result easier to reproduce are welcome; see the [developer guide](docs/developer-guide.md).
+Please use [CITATION.cff](CITATION.cff) when citing the software. Contributions that sharpen a definition, add a falsifiable baseline, expose a failure mode, or make a result easier to reproduce are welcome.
 
 Copyright © Christopher Woodyard. Released under the [MIT License](LICENSE).
