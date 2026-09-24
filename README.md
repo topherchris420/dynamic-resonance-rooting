@@ -1,373 +1,136 @@
-# Dynamic Resonance Rooting (DRR) Framework
+# Dynamic Resonance Rooting
+
+![Dynamic Resonance Rooting research banner](assets/drr-hero.svg)
 
 [![CI](https://github.com/topherchris420/dynamic-resonance-rooting/actions/workflows/python-app.yml/badge.svg)](https://github.com/topherchris420/dynamic-resonance-rooting/actions/workflows/python-app.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python Version](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
-[![Code Style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Linter: Ruff](https://img.shields.io/badge/linter-ruff-261230.svg)](https://github.com/astral-sh/ruff)
+[![Python 3.8+](https://img.shields.io/badge/Python-3.8%2B-0B5D63)](pyproject.toml)
+[![MIT license](https://img.shields.io/badge/license-MIT-0B5D63)](LICENSE)
 
-A modular, high-performance research framework and computational suite for complex adaptive systems — combining spectral resonance detection, directional transfer entropy rooting, state-space filtering, differential geometry, closed-loop control, and quantitative research adapters.
+**Measure the rhythm. Trace the lag. Keep the evidence.**
 
-**Version:** 4.3.0  
-**License:** MIT  
-**Author:** Christopher Woodyard
+Dynamic Resonance Rooting (DRR) is an open-source Python research framework for multivariate time series. It looks for oscillatory structure, estimates lagged relationships between signals, measures the persistence of those patterns, and helps you test whether an apparent change survives a challenge. Physics, sensing, financial research, and supervisory analysis use the same core operators through separate workflows.
 
----
+The outputs are **diagnostics**. A directed edge is a statistical lead–lag relationship under a chosen estimator and null model; it does not establish causation. A result in one domain does not validate another. DRR is developed by [Christopher Woodyard](https://github.com/topherchris420) at [Vers3Dynamics](https://vers3dynamics.com).
 
-## 📄 Framework Overview Flier
+**Start here:** [Run the synthetic example](#quick-start) · [Inspect the external result](#what-the-evidence-says) · [Choose a workflow](#choose-a-workflow) · [Read the architecture](docs/architecture.md)
 
-A one-page executive summary of the DRR framework — what it detects, who it's for, and how to get started.
+## What it does
 
-<p align="center">
-  <a href="docs/assets/drr-flier.png">
-    <img src="docs/assets/drr-flier.png" alt="Dynamic Resonance Rooting flier — resonance detection, directional rooting, stability diagnostics" width="600">
-  </a>
-</p>
-
-Print-ready (US Letter). Learn more at [Vers3Dynamics.com](https://vers3dynamics.com).
-
----
-
-## 📌 What is Dynamic Resonance Rooting?
-
-The **Dynamic Resonance Rooting (DRR) Framework** provides a unified computational pipeline to quantify, model, and navigate complex adaptive systems across physics, sensing, policy, banking supervision, and financial markets. It addresses three foundational questions:
-
-1. **Resonance Detection** — What oscillatory modes and phase-coherent structures exist in nonstationary multivariate data?
-2. **Directional Rooting** — What are the directed lead-lag relationships and information flows governing system dynamics?
-3. **Stability & Navigation** — How stable are these resonance structures over time, and how can closed-loop control steer system states?
-
-DRR combines multi-resolution spectral decomposition (FFT, Welch PSD, Morlet wavelets), non-parametric directional rooting (transfer entropy, surrogate null-hypothesis testing), state-space estimation (Kalman filtering, Hamilton/Koopman smoothers, tempered particle filters), and information-theoretic diagnostics to yield reproducible empirical evidence.
-
-Those operators are the **DRR core**. Physics, sensing, macro policy, banking supervision, financial markets, and machine-learning research are **domain adapters** that call the core. A result in one adapter stays in that adapter. The **validation substrate** is what sits between them: specification tests, synthetic ground truth, leakage checks, and the preregistered external comparison.
-
----
-
-## 🏗️ System Architecture
-
-The architecture is three layers:
-
-```text
-DRR core → validation substrate → domain adapters
-```
-
-```text
-DRR core
-  resonance detection · directional rooting · resonance depth
-  state-space estimation · geometry · control
-        |
-        v
-validation substrate
-  specification tests · synthetic ground truth
-  leakage checks · surrogate inference
-  preregistered external comparison
-        |
-        v
-domain adapters
-  physics · sensing · macro policy · banking supervision
-  financial markets · machine-learning research · typed judgment
-```
-
-| Claim | Where it lives | What this repository shows |
+| Question | DRR component | What you get |
 | --- | --- | --- |
-| Universal | DRR core. A property of the operators on a numeric series. | Definitions, checked by the specification tests. |
-| Validation | The substrate. A checkout implements those definitions, or a named comparison met its preregistered rule. | The test suite, plus one external artifact. |
-| Domain | One adapter. | Examples and adapter code. An adapter result does not move to another adapter. |
+| Which rhythms recur, and for how long? | FFT, Welch, wavelet, and resonance-depth operators | Frequencies, spectral power, and depth components |
+| Which signal tends to lead another? | Lagged correlation or transfer entropy with surrogate testing | Candidate edges, tested edges, lags, and p-values |
+| Has the system's structure shifted? | State-space, topology, and structural-surprise diagnostics | Estimated states, changes, and uncertainty to investigate |
+| Can a bounded input change a simulated state? | Navigation engine and matched control experiments | Proposed interventions and comparison metrics for a modeled system |
 
-The test suite shows that the implementation follows its specifications. The external comparison is the NOAA CPC quasi-biennial oscillation study. Its reviewed `claim_status` is `not_supported`: full DRR's holdout false-alarm rate is above the preregistered tolerance. The record is [`results/expected/qbo_structural_change_benchmark.json`](results/expected/qbo_structural_change_benchmark.json), with a readable report beside it. Narrative tables in `DRR_BENCHMARKS.md` are not that study. See [External evidence](docs/external-evidence.md) and [Architecture](docs/architecture.md).
+The core operates on a numeric series. The **validation substrate** includes synthetic ground truth, specification and leakage tests, surrogate inference, and a preregistered external comparison. **Domain adapters** prepare and interpret data for their own settings. See the [architecture and claim boundaries](docs/architecture.md).
 
----
+## Quick start
 
-## 📐 Mathematical Foundations
-
-| Concept | Formulation | Description |
-|---------|-------------|-------------|
-| **Resonance Depth** | $D_r = S_{\text{power}} \cdot T_{\text{persist}} \cdot C_{\text{phase}} \cdot A_{\text{stability}}$ | Composite score measuring spectral energy concentration, temporal persistence, channel phase coherence, and amplitude stability |
-| **Transfer Entropy** | $TE_{X \to Y} = \sum P(y_{t+1}, y_t, x_t) \log \frac{P(y_{t+1} \mid y_t, x_t)}{P(y_{t+1} \mid y_t)}$ | Directional information flow from variable $X$ to $Y$, filtered via surrogate null-distribution p-values |
-| **State-Space Filtering** | $x_t = A x_{t-1} + w_t, \quad y_t = C x_t + v_t$ | Gaussian state transitions and measurement equations evaluated via Kalman filter & RTS/Koopman disturbance smoothers |
-| **Structural Surprise** | $S = D_{\text{KL}}(P_{t} \parallel P_{t-1})$ | Kullback-Leibler divergence measuring unexpected shifts in system topology and parameter dynamics |
-
----
-
-## 💡 Key Capabilities Matrix
-
-### 1. Spectral & Oscillation Analysis
-- **Multimodal Wavelets**: Time-localized Morlet scalograms for nonstationary time series.
-- **Welch & FFT Power Spectra**: High-resolution spectral density estimation with real-valued FFT optimizations.
-- **Cross-Resonance Tensors**: Inter-channel phase coupling and collective oscillatory modes.
-
-### 2. Directional Rooting & Topology Dynamics
-- **Transfer Entropy**: Non-parametric directed information flow with PyInform acceleration and fallback estimators.
-- **Surrogate Testing**: Shuffle-based statistical significance testing for candidate directed graph edges.
-- **Topology Migration**: Rooting graph drift tracking, centrality shifts, and edge creation/destruction metrics.
-
-### 3. State-Space, Smoothers & Control
-- **Kalman Filtering**: Low-latency linear state estimation, innovation sequence diagnostics, and likelihood evaluation.
-- **Koopman & Hamilton Smoothers**: Disturbance smoothers extracting structural shocks and retrospective state estimates.
-- **Tempered Particle Filtering**: Herbst–Schorfheide particle filters for highly nonlinear resonance manifolds.
-- **Closed-Loop Navigation Engine**: `ResonanceNavigationEngine` for state estimation, sensitivity calculation, and bounded control interventions.
-
-### 4. Quant Research Lab
-- **Microsoft Qlib Integration**: Matched experiment engine evaluating feature incremental value (IC, Rank IC, ICIR) with ablation controls.
-- **Riskfolio-Lib Portfolio Engine**: DRR-conditioned regime switching (Mean-Variance vs. CVaR 95% tail risk minimization).
-- **VectorBT Robustness Engine**: Multi-parameter backtesting sweeps with Newey-West HAC standard errors and Benjamini-Hochberg FDR adjustments.
-- **Strict Anti-Leakage Invariants**: Automated point-in-time checks ensuring zero lookahead leakage.
-
-### 5. LFBO Supervisory Research Workbench
-- **Continuous Monitoring**: Public-data supervisory workflow answering *what changed, what deserves attention, and why?*
-- **Disagreement Principle & Scope Resolver**: `DRR_ScopeResolver` retains divergent observations across scales (`MACRO`, `MESO`, `MICRO`, `LOCAL`) without forced statistical erasure.
-- **Immutable Evidence Ledger**: Point-in-time reconstruction, content-addressed SHA-256 source hashes, and append-only audit passports.
-- **Optional typed judgment**: Disabled by default. When enabled, a provider-neutral overlay asks bounded questions about evidence the attention budget already selected. It does not change DRR mathematics, statistical tests, evidence hashes, or attention rank.
-
----
-
-## ⚡ Quick Start
-
-### 1. Basic Resonance & Directional Rooting Analysis
-
-```python
-from drr_framework import DynamicResonanceRooting, generate_coupled_oscillator
-
-# Generate multi-channel synthetic benchmark data
-sampling_rate = 200.0
-_, data = generate_coupled_oscillator(
-    sampling_rate=sampling_rate,
-    target_frequency_hz=12.5,
-    random_state=42,
-)
-
-# Initialize DRR pipeline
-drr = DynamicResonanceRooting(embedding_dim=3, tau=2, sampling_rate=sampling_rate)
-
-# Run full multivariate system analysis
-results = drr.analyze_system(
-    data,
-    multivariate=True,
-    window_size=256,
-    rooting_method="lagged_correlation",
-    rooting_n_surrogates=25,
-    rooting_random_state=42,
-)
-
-print("Resonance Depths:", results["resonance_depths"])
-print("Significant Edges:", results["rooting_analysis"]["significant_edges"])
-```
-
-### 2. Real-Time Circular Buffer Streaming
-
-```python
-import numpy as np
-from drr_framework.realtime import RealTimeDRR
-
-# Initialize real-time streaming engine for 4 input channels
-rt_drr = RealTimeDRR(n_variables=4, window_size=128, sampling_rate=100.0)
-
-# Simulate streaming data processing
-for t in range(500):
-    point = np.random.randn(4)
-    result = rt_drr.process_data_point(point)
-    if result["status"] == "ready":
-        print(f"Step {t}: Dominant Frequencies = {result['dominant_frequencies']}")
-```
-
-### 3. Closed-Loop Resonance Control
-
-```python
-from drr_framework.control_engine import ResonanceNavigationEngine
-
-# Initialize closed-loop navigation engine
-engine = ResonanceNavigationEngine(
-    state_dim=2,
-    control_dim=1,
-    target_depth=0.85,
-    max_intervention=0.5,
-)
-
-# Observe state, estimate sensitivity, and compute intervention
-current_state = [0.42, 0.18]
-control_output = engine.step(current_state=current_state)
-print("Recommended Control Action:", control_output["intervention"])
-```
-
-### 4. LFBO Workbench & Non-Erasure Scope Resolver
-
-```python
-from drr_framework.disagreement import DRR_ScopeResolver, ObservationalScale, ObservationalPerspective
-
-resolver = DRR_ScopeResolver()
-
-# Register macro quantitative perspective
-resolver.add_perspective(ObservationalPerspective(
-    name="Macro Quant Model",
-    scale=ObservationalScale.MACRO,
-    indicator="Capital Ratio",
-    value=0.125,
-    method="Call Report Ingestion",
-))
-
-# Register local operational perspective
-resolver.add_perspective(ObservationalPerspective(
-    name="Local Examiner Assessment",
-    scale=ObservationalScale.LOCAL,
-    indicator="Capital Ratio",
-    value=0.108,
-    method="On-site Examination",
-))
-
-# Resolve scopes while preserving disagreement
-resolution = resolver.resolve()
-print("Scope Disagreements Retained:", len(resolution["disagreements"]))
-```
-
----
-
-## 🛠️ Installation
-
-### From PyPI
-
-```bash
-pip install drr-framework
-```
-
-### Optional Extras
-
-```bash
-# Data Adapters (OpenBB)
-pip install "drr-framework[quant-data]"
-
-# Risk Engine (Riskfolio-Lib)
-pip install "drr-framework[quant-risk]"
-
-# Machine Learning Engine (Microsoft Qlib)
-pip install "drr-framework[quant-ml]"
-
-# Robustness & Backtesting (VectorBT)
-pip install "drr-framework[quant-validation]"
-
-# Full Quantitative Research Suite
-pip install "drr-framework[quant]"
-```
-
-### From Source
+Use Python 3.8 or newer. For a checkout of the current code:
 
 ```bash
 git clone https://github.com/topherchris420/dynamic-resonance-rooting.git
 cd dynamic-resonance-rooting
-python -m pip install -e ".[dev]"
-pre-commit install
+python -m pip install -e .
 ```
 
----
+This example generates three synthetic channels: a 12.5 Hz source, a copy delayed by two samples, and an independent distractor. It then runs the spectral, depth, and rooting operators. The random seeds make the example repeatable.
 
-## 💻 Command Line Interface (CLI)
+```python
+from drr_framework import DynamicResonanceRooting, generate_coupled_oscillator
 
-The framework installs two CLI executables:
+_, data = generate_coupled_oscillator(random_state=42)
+result = DynamicResonanceRooting(tau=2, sampling_rate=200).analyze_system(
+    data,
+    multivariate=True,
+    window_size=256,
+    state_space=False,
+    rooting_max_lag=4,
+    rooting_n_surrogates=25,
+    rooting_random_state=42,
+)
+
+print(result["resonances"]["dim_0"]["dominant_freq"])
+print(result["resonance_depths"])
+for edge in result["rooting_analysis"]["significant_edges"]:
+    print(edge["source"], "→", edge["target"], "lag:", edge["lag"])
+```
+
+On the checked synthetic fixture, the selected edge is `dim_0 → dim_1` at lag `2`. `candidate_edges` are exploratory; `significant_edges` pass the selected surrogate test and correction. With 25 surrogates, the smallest attainable p-value is `1/26 ≈ 0.0385`. The default rooting estimator is **lagged correlation**, even though the result retains a legacy `transfer_entropy` matrix alias. Request `rooting_method="transfer_entropy"` explicitly if you want that estimator, and inspect the returned `method` for the effective backend. [Reproducibility details](docs/reproducibility.md).
+
+For the packaged, deterministic benchmark without writing output files:
 
 ```bash
-# Run end-to-end deterministic reproduction & validation suite
-drr-reproduce --all
-
-# Launch LFBO Supervisory Research Workbench
-drr-monitor --demo --serve
+drr-reproduce --no-artifacts
 ```
 
----
+Or run the complete example and write JSON/CSV artifacts to a directory you choose:
 
-## 🔬 Lab Benchmarks & Applications Catalog
-
-| Lab Script | Domain | Description | Run Command |
-|------------|--------|-------------|-------------|
-| **`sonoluminescence_lab.py`** | Multimodal Physics | Multimodal acoustic driver, cavitation dynamics, optical flash emission, and electrical transduction | `python examples/sonoluminescence_lab.py` |
-| **`sensing_systems_resonance_depth.py`** | Sensing & Radar DSP | Micro-Doppler radar DSP analog time series, clutter rejection, and target mode tracking | `python examples/sensing_systems_resonance_depth.py` |
-| **`physics_lab.py`** | Dynamical Systems | Coupled oscillators, Lorenz, Rössler, Heston, and FitzHugh-Nagumo benchmark models | `python examples/physics_lab.py` |
-| **`policy_lab.py`** | Macro Policy | Macroeconomic indicator time series (FRED) and policy shock response analysis | `python examples/policy_lab.py` |
-| **`supervisory_policy_lab.py`** | Banking Supervision | FR Y-9C / FFIEC 002 data integration, risk domain scoring, and Tableau export generation | `python examples/supervisory_policy_lab.py` |
-| **`state_space_lab.py`** | State-Space Modeling | Kalman filtering, Koopman disturbance smoothers, and tempered particle filtering | `python examples/state_space_lab.py` |
-| **`quant_macro_lab.py`** | Quantitative Macro | Full multi-asset walk-forward portfolio allocation and research report generation | `python examples/quant_macro_lab.py --offline` |
-| **`qlib_drr_experiment.py`** | Machine Learning | Qlib matched experiments evaluating IC/Rank IC lift of DRR features | `python examples/qlib_drr_experiment.py --offline` |
-| **`drr_riskfolio_portfolio.py`** | Portfolio Risk | Riskfolio-Lib mean-variance and CVaR 95% regime switching optimization | `python examples/drr_riskfolio_portfolio.py --offline` |
-| **`drr_vectorbt_robustness.py`** | Validation & Backtest | VectorBT parameter sensitivity sweeps and anti-leakage verification | `python examples/drr_vectorbt_robustness.py --offline` |
-| **`lfbo_monitoring_workbench.py`** | Supervisory Workbench | Interactive supervisory workbench with point-in-time filing revisions and dispositions | `python examples/lfbo_monitoring_workbench.py` |
-| **`quickstart_resonance_export.py`** | Quickstart / Export | End-to-end dataset generation, analysis, and JSON/CSV/figure export | `python examples/quickstart_resonance_export.py` |
-
----
-
-## 📂 Project Structure
-
-```text
-dynamic-resonance-rooting/
-├── src/drr_framework/          # Core DRR Framework package
-│   ├── analysis.py             # DynamicResonanceRooting main orchestration class
-│   ├── modules.py              # ResonanceDetector, RootingAnalyzer, DepthCalculator
-│   ├── _spectral.py            # Optimized FFT & Morlet wavelet algorithms
-│   ├── benchmarks.py           # Physics, radar, & oscillator generators
-│   ├── sonoluminescence.py     # Multimodal sonoluminescence coupled system
-│   ├── control_engine.py       # Closed-loop ResonanceNavigationEngine
-│   ├── realtime.py             # Circular buffer O(1) RealTimeDRR streaming
-│   ├── state_space.py          # Linear state-space modeling & Kalman filter
-│   ├── smoothers.py            # Hamilton, Koopman, & Durbin-Koopman smoothers
-│   ├── particle_filter.py      # Tempered particle filter (Herbst–Schorfheide)
-│   ├── resonance_geometry.py   # Differential geometry & manifold curvature
-│   ├── cross_resonance.py      # Cross-resonance tensor & collective modes
-│   ├── topology_dynamics.py    # Rooting topology drift & migration metrics
-│   ├── structural_surprise.py  # Information-theoretic structural surprise
-│   ├── disagreement.py         # Non-erasure scope resolution & perspectives
-│   ├── supervision.py          # Regulatory profiles & supervisory risk domains
-│   ├── validation_readiness.py # Model risk cards & validation packets
-│   ├── finance/                # DRR Quant Research Lab
-│   │   ├── data/               # Adapters (OpenBB, Qlib, DataFrame)
-│   │   ├── features/           # DRR state & factor feature engineering
-│   │   ├── qlib/               # Qlib dataset & matched experiment engine
-│   │   ├── portfolio/          # Riskfolio adapter & regime allocation
-│   │   ├── validation/         # VectorBT adapter, walk-forward & HAC stats
-│   │   └── reporting/          # Research report generators & plotting
-│   ├── supervisory/            # LFBO Supervisory Workbench backend & CLI
-│   └── external_benchmark/    # Preregistered public-dataset comparison
-├── examples/                    # Runnable lab scripts and demonstrations
-├── tests/                       # Unit and integration test suite
-├── docs/                        # Framework documentation and guides
-└── pyproject.toml              # Package configuration and dependencies
+```bash
+drr-reproduce --output-dir results/reproduction
 ```
 
----
+## What the evidence says
 
-## 📚 Documentation Catalog
+The synthetic oscillator checks whether the implementation recovers **known, injected** frequency and lag. It is a specification check, not evidence of general predictive performance.
 
-Detailed technical documentation is available in the [`docs/`](docs/) directory:
+The repository also contains a [preregistered external comparison](docs/external-evidence.md) on the NOAA CPC quasi-biennial oscillation series. Its reviewed [machine-readable artifact](results/expected/qbo_structural_change_benchmark.json) reports **`claim.status: not_supported`**: full DRR exceeded the prespecified 5% false-alarm tolerance on quiet holdout months. It missed the 2016 disruption window and flagged the 2019–2020 window. The study's result applies to that atmospheric comparison; it neither validates nor invalidates applications in finance, supervision, sensing, or physics.
 
-- [**User Guide**](docs/user-guide.md) — Getting started with DRR.
-- [**Architecture**](docs/architecture.md) — Core, validation substrate, domain adapters, and module interaction.
-- [**External evidence**](docs/external-evidence.md) — Preregistered QBO comparison and how to read its claim status.
-- [**API Reference**](docs/api.md) — Function and class signatures.
-- [**Quant Research Lab Guide**](docs/quant-research.md) — Qlib, Riskfolio, and VectorBT integration.
-- [**LFBO Workbench Guide**](docs/lfbo-workbench.md) — Supervisory workbench, data contract, and evidence model.
-- [**Scope Resolution Guide**](docs/scope-resolution.md) — Non-erasure scope resolution and observational perspectives.
-- [**Validation Readiness Guide**](docs/validation-readiness-guide.md) — Model risk cards and SR 26-2 compliance profiles.
-- [**Resonance Geometry Guide**](docs/resonance-geometry.md) — Differential geometry, manifold dynamics, and curvature.
-- [**Method Crosswalk**](docs/method-crosswalk.md) — Comparison against traditional time-series methods.
-- [**Audience Guide**](docs/audience-guide.md) — Domain-specific entry points for researchers, quants, and risk managers.
-- [**Security Posture**](docs/security-posture.md) — Trust boundaries, local binding, and audit logging.
-- [**Developer Guide**](docs/developer-guide.md) — Guidelines for contributing and extending DRR.
-- [**Reproducibility Guide**](docs/reproducibility.md) — Ensuring deterministic reproduction across platforms.
-- [**FAQ**](docs/faq.md) — Frequently asked questions.
+To reproduce that comparison from the vendored public-data snapshots:
 
----
-
-## 📖 Citation
-
-If you use the DRR framework in your academic research or quantitative work, please cite:
-
-```bibtex
-@software{drr-framework,
-  author = {Christopher Woodyard},
-  title = {Dynamic Resonance Rooting (DRR) Framework},
-  url = {https://github.com/topherchris420/dynamic-resonance-rooting},
-  version = {4.3.0},
-  year = {2026}
-}
+```bash
+python scripts/run_structural_change_benchmark.py --output-dir results/expected
 ```
 
----
+The [protocol](src/drr_framework/external_benchmark/data/preregistration.json) fixes the dataset checksums, disruption windows, holdout, baselines, ablations, tolerance, and decision rule. The [readable report](results/expected/qbo_structural_change_benchmark.md) accompanies the JSON. Historical narrative tables in [DRR_BENCHMARKS.md](DRR_BENCHMARKS.md) are separate from this preregistered result.
 
-## ⚖️ License
+## Choose a workflow
 
-Distributed under the **MIT License**. See `LICENSE` for details.
+| If you're exploring… | Start with | Details |
+| --- | --- | --- |
+| Oscillators and nonlinear systems | `python examples/physics_lab.py` | [Physics and methods](docs/audience-guide.md) |
+| Sensing and micro-Doppler analog signals | `python examples/sensing_systems_resonance_depth.py` | [Examples](docs/examples.md) |
+| State estimation and filtering | `python examples/state_space_lab.py` | [API reference](docs/api.md) |
+| Macroeconomic and market research | `python examples/quant_macro_lab.py --offline` | [Quant research guide](docs/quant-research.md) |
+| Public-data supervisory monitoring | `drr-monitor --demo` | [LFBO workbench](docs/lfbo-workbench.md) |
+| Multiple perspectives on the same system | `DRR_ScopeResolver` | [Scope resolution](docs/scope-resolution.md) |
+
+The LFBO demo uses **synthetic** observations and exports a local review artifact. Use `drr-monitor --demo --serve` to open its loopback-only review interface. The workbench reconstructs data vintages, reconciles exceptions, compares peers, and records evidence and analyst dispositions. Its optional [typed judgment overlay](docs/typed-judgment.md) is disabled by default; when enabled, it cannot change the measurements, hashes, or attention rank. These are research tools, not supervisory findings or approvals.
+
+The scope resolver keeps conflicting observations attributable to their source and scale. It does not decide which observation is true. For the underlying data contracts and caveats, see the [LFBO guide](docs/lfbo-workbench.md) and [scope guide](docs/scope-resolution.md).
+
+## Installation and development
+
+The base package is `drr-framework`. Optional integrations can be installed separately:
+
+| Extra | Purpose |
+| --- | --- |
+| `quant-data`, `quant-risk`, `quant-ml`, `quant-validation` | OpenBB, Riskfolio-Lib, Qlib, and VectorBT adapters |
+| `quant` | All four quantitative research adapters |
+| `judgment` | Optional TypeSafe provider for the workbench (Python 3.10+) |
+| `econometrics`, `contingency` | Supplementary statistical and binary metrology workflows |
+| `dev` | Formatting, linting, and test tools |
+
+For example: `python -m pip install -e ".[dev]"`. Read [pyproject.toml](pyproject.toml) for exact dependencies and Python version markers. To run the project checks:
+
+```bash
+python -m pip install -e ".[dev]"
+python -m pytest
+python -m ruff check .
+python -m black --check .
+```
+
+## Reading map
+
+- [User guide](docs/user-guide.md) and [API reference](docs/api.md) for the core.
+- [Architecture](docs/architecture.md) and [method crosswalk](docs/method-crosswalk.md) for design and conventional comparators.
+- [External evidence](docs/external-evidence.md) and [reproducibility](docs/reproducibility.md) for claim scope and reproduction.
+- [Quant research](docs/quant-research.md), [LFBO workbench](docs/lfbo-workbench.md), and [validation readiness](docs/validation-readiness-guide.md) for domain workflows.
+- [Security posture](docs/security-posture.md) and [developer guide](docs/developer-guide.md) for operation and contributions.
+
+## Cite and contribute
+
+Please use [CITATION.cff](CITATION.cff) when citing the software. Contributions that sharpen a definition, add a falsifiable baseline, expose a failure mode, or make a result easier to reproduce are welcome; see the [developer guide](docs/developer-guide.md).
+
+Copyright © Christopher Woodyard. Released under the [MIT License](LICENSE).
