@@ -49,7 +49,7 @@ def test_depth_calculator_reports_composite_metric_components():
         resonance_frequencies=np.array([8.0]),
     )
 
-    assert result["method"] == "drr_composite_v1"
+    assert result["method"] == "drr_composite_v2"
     assert 0.0 <= result["resonance_depth"] <= 1.0
     assert set(result["components"]) == {
         "spectral_concentration",
