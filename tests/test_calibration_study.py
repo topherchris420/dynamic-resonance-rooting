@@ -195,4 +195,9 @@ def test_committed_depth_row_reproduces_exactly():
         tone_amplitudes=[],
         seed=config["seed"] + 200_000,
     )
-    assert fresh[0] == artifact["depth"][0]
+    committed = artifact["depth"][0]
+    assert fresh[0].keys() == committed.keys()
+    assert fresh[0]["signal"] == committed["signal"]
+    # Quantiles can differ in the last bit across NumPy/SciPy releases.
+    numeric = {key: value for key, value in committed.items() if key != "signal"}
+    assert {key: fresh[0][key] for key in numeric} == pytest.approx(numeric, rel=1e-9)
