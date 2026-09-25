@@ -128,6 +128,7 @@ def _tiny_config():
     config["n_surrogates"] = 19
     config["size"].update(n_trials=6, ar_coefficients=[0.0, 0.9])
     config["power"].update(n_trials=6, couplings=[0.0, 0.6])
+    config["memory"].update(n_trials=4, ar_coefficients=[0.0, 0.9])
     config["depth"].update(n_trials=4, window_size=64, tone_amplitudes=[1.0])
     return config
 
@@ -138,6 +139,7 @@ def test_study_is_deterministic_and_renders():
     assert first == second
     report = render_calibration_report(first)
     assert "## Size" in report and "## Power" in report and "## Checks" in report
+    assert "## Memory" in report
 
 
 def test_committed_study_is_complete_and_passes_its_checks():
@@ -150,6 +152,7 @@ def test_committed_study_is_complete_and_passes_its_checks():
         size_cfg["surrogate_methods"]
     )
     assert len(artifact["power"]) == len(DEFAULT_CONFIG["power"]["couplings"])
+    assert len(artifact["memory"]) == len(DEFAULT_CONFIG["memory"]["ar_coefficients"])
     assert REPORT.read_text(encoding="utf-8") == render_calibration_report(artifact)
 
 

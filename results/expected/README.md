@@ -8,3 +8,8 @@ against committed reference artifacts without downloading external data.
 on the vendored NOAA CPC QBO snapshots. The Markdown file beside it is rendered
 from that JSON. Regenerate both with
 `python scripts/run_structural_change_benchmark.py --output-dir results/expected`.
+
+`rooting_calibration_study.json` is the Monte Carlo calibration of the rooting
+test and the resonance-depth score on simulated systems with a known truth.
+Regenerate it and its Markdown companion with
+`python scripts/run_calibration_study.py --output-dir results/expected`.

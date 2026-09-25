@@ -23,6 +23,17 @@
       "window_size": 256
     },
     "max_lag": 4,
+    "memory": {
+      "ar_coefficients": [
+        0.0,
+        0.5,
+        0.8,
+        0.9
+      ],
+      "coupling": 0.3,
+      "lag": 2,
+      "n_trials": 200
+    },
     "n_samples": 512,
     "n_surrogates": 99,
     "power": {
@@ -54,7 +65,7 @@
       ]
     }
   },
-  "config_sha256": "42ae9269eb8bc0cfba474c0c094fc4cb956d3b78489811ba18011c575c390597",
+  "config_sha256": "9f63c3bf7f9b2d539ed33fa7a58eeb3fa94152d3d1ac88c30695fc840d04bfd4",
   "depth": [
     {
       "ar_coefficient": 0.0,
@@ -107,6 +118,168 @@
     "numpy": "2.4.6",
     "python": "3.11.15"
   },
+  "memory": [
+    {
+      "any_other_edge": {
+        "ci95": [
+          1.734723475976807e-18,
+          0.018845326377266575
+        ],
+        "count": 0,
+        "rate": 0.0,
+        "trials": 200
+      },
+      "ar_coefficient": 0.0,
+      "coupling": 0.3,
+      "reverse_edge": {
+        "ci95": [
+          1.734723475976807e-18,
+          0.018845326377266575
+        ],
+        "count": 0,
+        "rate": 0.0,
+        "trials": 200
+      },
+      "true_edge_at_any_lag": {
+        "ci95": [
+          0.9811546736227335,
+          1.0
+        ],
+        "count": 200,
+        "rate": 1.0,
+        "trials": 200
+      },
+      "true_edge_at_true_lag": {
+        "ci95": [
+          0.9811546736227335,
+          1.0
+        ],
+        "count": 200,
+        "rate": 1.0,
+        "trials": 200
+      }
+    },
+    {
+      "any_other_edge": {
+        "ci95": [
+          0.0027466581335444384,
+          0.0357217617161768
+        ],
+        "count": 2,
+        "rate": 0.01,
+        "trials": 200
+      },
+      "ar_coefficient": 0.5,
+      "coupling": 0.3,
+      "reverse_edge": {
+        "ci95": [
+          1.734723475976807e-18,
+          0.018845326377266575
+        ],
+        "count": 0,
+        "rate": 0.0,
+        "trials": 200
+      },
+      "true_edge_at_any_lag": {
+        "ci95": [
+          0.9722262956021069,
+          0.9991168312843989
+        ],
+        "count": 199,
+        "rate": 0.995,
+        "trials": 200
+      },
+      "true_edge_at_true_lag": {
+        "ci95": [
+          0.9722262956021069,
+          0.9991168312843989
+        ],
+        "count": 199,
+        "rate": 0.995,
+        "trials": 200
+      }
+    },
+    {
+      "any_other_edge": {
+        "ci95": [
+          0.0902820227966932,
+          0.18366351872248407
+        ],
+        "count": 26,
+        "rate": 0.13,
+        "trials": 200
+      },
+      "ar_coefficient": 0.8,
+      "coupling": 0.3,
+      "reverse_edge": {
+        "ci95": [
+          0.06166310271738653,
+          0.1436016116481994
+        ],
+        "count": 19,
+        "rate": 0.095,
+        "trials": 200
+      },
+      "true_edge_at_any_lag": {
+        "ci95": [
+          0.6962665902079583,
+          0.8139338400758631
+        ],
+        "count": 152,
+        "rate": 0.76,
+        "trials": 200
+      },
+      "true_edge_at_true_lag": {
+        "ci95": [
+          0.6962665902079583,
+          0.8139338400758631
+        ],
+        "count": 152,
+        "rate": 0.76,
+        "trials": 200
+      }
+    },
+    {
+      "any_other_edge": {
+        "ci95": [
+          0.13730192800616042,
+          0.2445706276115175
+        ],
+        "count": 37,
+        "rate": 0.185,
+        "trials": 200
+      },
+      "ar_coefficient": 0.9,
+      "coupling": 0.3,
+      "reverse_edge": {
+        "ci95": [
+          0.11139636927689314,
+          0.21160690592342077
+        ],
+        "count": 31,
+        "rate": 0.155,
+        "trials": 200
+      },
+      "true_edge_at_any_lag": {
+        "ci95": [
+          0.3250834313746962,
+          0.4590625404283025
+        ],
+        "count": 78,
+        "rate": 0.39,
+        "trials": 200
+      },
+      "true_edge_at_true_lag": {
+        "ci95": [
+          0.31559005848673627,
+          0.44893281984380773
+        ],
+        "count": 76,
+        "rate": 0.38,
+        "trials": 200
+      }
+    }
+  ],
   "power": [
     {
       "any_other_edge": {
@@ -119,6 +292,15 @@
         "trials": 200
       },
       "coupling": 0.0,
+      "reverse_edge": {
+        "ci95": [
+          0.0027466581335444384,
+          0.0357217617161768
+        ],
+        "count": 2,
+        "rate": 0.01,
+        "trials": 200
+      },
       "true_edge_at_any_lag": {
         "ci95": [
           0.0008831687156009814,
@@ -149,6 +331,15 @@
         "trials": 200
       },
       "coupling": 0.1,
+      "reverse_edge": {
+        "ci95": [
+          0.0027466581335444384,
+          0.0357217617161768
+        ],
+        "count": 2,
+        "rate": 0.01,
+        "trials": 200
+      },
       "true_edge_at_any_lag": {
         "ci95": [
           0.06970748792681017,
@@ -179,6 +370,15 @@
         "trials": 200
       },
       "coupling": 0.15,
+      "reverse_edge": {
+        "ci95": [
+          1.734723475976807e-18,
+          0.018845326377266575
+        ],
+        "count": 0,
+        "rate": 0.0,
+        "trials": 200
+      },
       "true_edge_at_any_lag": {
         "ci95": [
           0.2639157153923429,
@@ -209,6 +409,15 @@
         "trials": 200
       },
       "coupling": 0.2,
+      "reverse_edge": {
+        "ci95": [
+          1.734723475976807e-18,
+          0.018845326377266575
+        ],
+        "count": 0,
+        "rate": 0.0,
+        "trials": 200
+      },
       "true_edge_at_any_lag": {
         "ci95": [
           0.5918849552683626,
@@ -239,6 +448,15 @@
         "trials": 200
       },
       "coupling": 0.3,
+      "reverse_edge": {
+        "ci95": [
+          0.0008831687156009814,
+          0.02777370439789293
+        ],
+        "count": 1,
+        "rate": 0.005,
+        "trials": 200
+      },
       "true_edge_at_any_lag": {
         "ci95": [
           0.9722262956021069,
@@ -269,6 +487,15 @@
         "trials": 200
       },
       "coupling": 0.5,
+      "reverse_edge": {
+        "ci95": [
+          1.734723475976807e-18,
+          0.018845326377266575
+        ],
+        "count": 0,
+        "rate": 0.0,
+        "trials": 200
+      },
       "true_edge_at_any_lag": {
         "ci95": [
           0.9811546736227335,

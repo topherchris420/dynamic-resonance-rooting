@@ -79,6 +79,31 @@ The command reads the vendored NOAA CPC snapshots and
 the claim contained in that JSON. The protocol is described in
 [External evidence](external-evidence.md).
 
+## Calibration study
+
+```bash
+python scripts/run_calibration_study.py --output-dir results/expected
+```
+
+The study simulates systems with a known truth and writes
+`rooting_calibration_study.json` with a rendered Markdown companion: the rooting
+test's family-wise error on independent AR(1) series, its power to recover a
+known edge, the effect of memory in every channel, and resonance-depth reference
+distributions. It takes about four minutes. `--trials-scale 0.1` gives a quick
+look. `tests/test_calibration_study.py` reruns a prefix of the committed rows and
+requires an exact match.
+
+## Landing page evidence
+
+`index.html` embeds the calibration and QBO numbers it charts. After
+regenerating either artifact, run:
+
+```bash
+python scripts/sync_site_evidence.py
+```
+
+`tests/test_site_evidence.py` fails when the page and the artifacts disagree.
+
 ## Reviewer Checklist
 
 - Can the example run from a clean checkout?

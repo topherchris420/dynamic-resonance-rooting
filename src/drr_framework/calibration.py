@@ -8,6 +8,9 @@ Every number this module reports comes from simulation with a known truth:
 * **Power.** A source drives a target at a known lag and coupling. The study
   records how often the rooting test recovers that exact edge and how often it
   reports any other edge.
+* **Memory.** The same coupling is tested while every channel carries more
+  autocorrelation. Memory widens the null, which costs power, and it lets the
+  target appear to lead the source, which adds spurious edges.
 * **Depth reference.** Resonance depth is a descriptive score, not a test. The
   study records its distribution under white and red noise and for noisy
   tones, so a reader can see what a given depth value does and does not rule
@@ -47,6 +50,12 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "ar_coefficient": 0.5,
         "lag": 2,
         "couplings": [0.0, 0.1, 0.15, 0.2, 0.3, 0.5],
+    },
+    "memory": {
+        "n_trials": 200,
+        "coupling": 0.3,
+        "lag": 2,
+        "ar_coefficients": [0.0, 0.5, 0.8, 0.9],
     },
     "depth": {
         "n_trials": 200,
@@ -168,7 +177,7 @@ def rooting_power(
     """How often the true edge, and any other edge, is reported."""
     rng = np.random.default_rng(seed)
     analyzer = RootingAnalyzer()
-    exact, any_lag, other = 0, 0, 0
+    exact, any_lag, other, reverse = 0, 0, 0, 0
     for trial in range(n_trials):
         data = simulate_directed_pair(n_samples, coupling, lag, ar_coefficient, rng)
         result = analyzer.analyze(
@@ -186,11 +195,16 @@ def rooting_power(
         any_lag += bool(true_edges)
         exact += any(edge["lag"] == lag for edge in true_edges)
         other += len(result["significant_edges"]) > len(true_edges)
+        reverse += any(
+            edge["source"] == "dim_1" and edge["target"] == "dim_0"
+            for edge in result["significant_edges"]
+        )
     return {
         "coupling": coupling,
         "true_edge_at_true_lag": _rate(exact, n_trials),
         "true_edge_at_any_lag": _rate(any_lag, n_trials),
         "any_other_edge": _rate(other, n_trials),
+        "reverse_edge": _rate(reverse, n_trials),
     }
 
 
@@ -312,6 +326,22 @@ def run_calibration_study(config: Optional[Mapping[str, Any]] = None) -> Dict[st
         for k, coupling in enumerate(power_cfg["couplings"])
     ]
 
+    memory_cfg = cfg["memory"]
+    memory_rows = [
+        {
+            "ar_coefficient": float(coefficient),
+            **rooting_power(
+                n_trials=int(memory_cfg["n_trials"]),
+                coupling=float(memory_cfg["coupling"]),
+                lag=int(memory_cfg["lag"]),
+                ar_coefficient=float(coefficient),
+                seed=seed + 300_000 + 1_000 * k,
+                **shared,
+            ),
+        }
+        for k, coefficient in enumerate(memory_cfg["ar_coefficients"])
+    ]
+
     depth_cfg = cfg["depth"]
     depth_rows = depth_reference(
         n_trials=int(depth_cfg["n_trials"]),
@@ -332,6 +362,7 @@ def run_calibration_study(config: Optional[Mapping[str, Any]] = None) -> Dict[st
         "environment": {"python": platform.python_version(), "numpy": np.__version__},
         "size": size_rows,
         "power": power_rows,
+        "memory": memory_rows,
         "depth": depth_rows,
         "checks": _checks(size_rows, power_rows, float(cfg["alpha"])),
     }
@@ -387,6 +418,22 @@ def render_calibration_report(artifact: Mapping[str, Any]) -> str:
         lines.append(
             f"| {row['coupling']:.2f} | {row['true_edge_at_true_lag']['rate']:.3f} |"
             f" {row['true_edge_at_any_lag']['rate']:.3f} | {row['any_other_edge']['rate']:.3f} |"
+        )
+    memory_cfg = cfg["memory"]
+    lines += [
+        "",
+        "## Memory: the same edge when every channel is autocorrelated",
+        "",
+        f"Coupling {memory_cfg['coupling']} at lag {memory_cfg['lag']}; every channel is AR(1) with"
+        f" the coefficient shown. {memory_cfg['n_trials']} trials per row.",
+        "",
+        "| AR(1) coefficient | True edge at true lag | Any other edge | Reverse edge |",
+        "| ---: | ---: | ---: | ---: |",
+    ]
+    for row in artifact["memory"]:
+        lines.append(
+            f"| {row['ar_coefficient']:.2f} | {row['true_edge_at_true_lag']['rate']:.3f} |"
+            f" {row['any_other_edge']['rate']:.3f} | {row['reverse_edge']['rate']:.3f} |"
         )
     depth_cfg = cfg["depth"]
     lines += [

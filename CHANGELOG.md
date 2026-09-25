@@ -10,6 +10,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Monte Carlo calibration study (`drr_framework.calibration`,
+  `scripts/run_calibration_study.py`): family-wise false-alarm rate of the
+  rooting test on independent AR(1) series, power to recover a known edge,
+  the cost of memory in every channel, and reference distributions of
+  resonance depth, all with Wilson intervals. The committed artifact is
+  `results/expected/rooting_calibration_study.json`, and tests rerun parts of
+  it exactly.
+- Live browser lab on the landing page, backed by `assets/web-demo/drr-engine.js`,
+  a JavaScript port of `DepthCalculator` and `RootingAnalyzer`.
+  `tests/test_web_engine_parity.py` checks it against the Python package under
+  Node. The evidence section reads the committed artifacts through
+  `scripts/sync_site_evidence.py`.
+- Property tests for resonance depth: invariance to the time unit, the FFT grid
+  position, gain, and offset.
+- `mypy` runs in CI and is clean.
 - Preregistered external comparison on the NOAA CPC QBO zonal-wind index:
   fixed public snapshots, published disruption windows, conventional detectors,
   full DRR, spectral and rooting ablations, a temporal holdout, a block-bootstrap
@@ -83,6 +98,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (the figure is closed after optional saving instead of displayed)
 
 ### Changed
+- Resonance depth is now `drr_composite_v2`. The target frequency is refined to
+  sub-bin precision, and the temporal-persistence tolerance is one bin of the
+  segment spectrum instead of `max(bin, 0.5)` in the caller's units. Scores for
+  a fixed input differ from v1; the preregistered QBO artifact is unchanged.
+- Surrogate scoring for lagged-correlation rooting is batched. P-values are
+  identical to the one-at-a-time path for the same seed.
+- `DRR_BENCHMARKS.md` and `DRR_VALIDATION_REPORT.md` report only measured
+  results. The financial stress-episode tables and the "+6 to +10 days"
+  lead-time statement had no generating code or data and are withdrawn.
+- The validation runner's evidence card takes its p-value from the measured
+  rooting result instead of a hard-coded 0.01, and describes one experiment.
+- The reproduction summary adds `expected_edge_adjusted_p_value` and
+  `minimum_attainable_p_value`.
 - Typed-judgment policy `v2` emits `EVIDENCE_REVIEWABLE` where policy `v1`
   emitted `READY`. The decision rule is unchanged. `EVIDENCE_REVIEWABLE` means
   the packet is coherent enough for ordinary human review. Stored `v1` records
@@ -110,6 +138,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   previous versions)
 
 ### Fixed
+- Circular-shift surrogates were drawn from a multinomial split that placed
+  every surrogate near evenly spaced offsets. The null was far too narrow, and
+  the max-statistic test rejected 14% of true nulls on white noise and 19–30%
+  on red noise at a nominal 5%. Offsets are now uniform over every valid
+  configuration, and the measured family-wise error is 0.040–0.062.
+- Temporal persistence treated any series sampled at low rates (monthly, 1 Hz)
+  as persistent, so depth depended on the time unit.
+- A clean tone's phase coherence ranged from 0.76 to 0.996 depending on where
+  it fell on the FFT grid.
+- The placebo suite's phase shuffle was not a valid real-valued surrogate, and
+  `depth_reduction_from_shuffle` reported the surrogate's depth, not a
+  reduction.
+- Committed reproduction and quickstart summaries were stale; they are
+  regenerated and guarded by fresh-run tests.
+- The landing page displayed readings computed from the mouse position.
 - GitHub Actions `checkout`, `setup-python`, `upload-artifact`, and the PyPI
   publish action are pinned to releases that declare the Node 24 runtime.
   `ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION` is removed.

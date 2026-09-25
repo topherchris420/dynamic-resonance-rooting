@@ -43,7 +43,7 @@ def main(argv=None) -> int:
 
     config = json.loads(json.dumps(DEFAULT_CONFIG))
     if args.trials_scale != 1.0:
-        for section in ("size", "power", "depth"):
+        for section in ("size", "power", "memory", "depth"):
             scaled = int(round(config[section]["n_trials"] * args.trials_scale))
             config[section]["n_trials"] = max(10, scaled)
 
