@@ -14,7 +14,7 @@ The outputs are **diagnostics**. A directed edge is a statistical lead–lag rel
 
 The layers are DRR core → validation substrate → domain adapters. The DRR core is the numerical operator stack. The validation substrate checks the implementation against specification tests, synthetic ground truth, leakage checks, and preregistered external evidence. Domain adapters keep analyses scoped to their own application and do not inherit claims from other domains.
 
-**Start here:** [Run the synthetic example](#quick-start) · [Inspect the external result](#what-the-evidence-says) · [Choose a workflow](#choose-a-workflow) · [Read the architecture](docs/architecture.md)
+**Start here:** [Run the synthetic example](#quick-start) · [Inspect the evidence](#what-the-evidence-says) · [Try the live lab](index.html) · [Choose a workflow](#choose-a-workflow) · [Read the architecture](docs/architecture.md)
 
 ## What it does
 
@@ -77,6 +77,14 @@ drr-reproduce --output-dir results/reproduction
 
 The synthetic oscillator checks whether the implementation recovers **known, injected** frequency and lag. It is a specification check, not evidence of general predictive performance.
 
+A [Monte Carlo calibration study](DRR_BENCHMARKS.md) measures the statistical behavior of the operators on simulated systems where the answer is known. Its [artifact](results/expected/rooting_calibration_study.json) is regenerated with `python scripts/run_calibration_study.py`.
+
+| Question | Measured answer (512 samples, 99 surrogates, α = 0.05) |
+| --- | --- |
+| Does the rooting test keep its false-alarm rate? | Yes. Family-wise error is 0.040–0.062 on independent AR(1) series from white noise to 0.97. The legacy permutation null reaches 0.97 and is only for serially independent data. |
+| Does it find real lead–lag edges? | A 0.3 coupling is recovered in 99.5% of trials, 0.2 in 66%. Strong memory in every channel lowers power and makes the target appear to lead its source. |
+| Is resonance depth a test? | No. It separates a clear tone from white noise, but red noise at AR 0.9 scores above a −9 dB tone. Compare it against a surrogate or red-noise reference. |
+
 The repository also contains a [preregistered external comparison](docs/external-evidence.md) on the NOAA CPC quasi-biennial oscillation series. Its reviewed [machine-readable artifact](results/expected/qbo_structural_change_benchmark.json) records the current claim as **not supported** (`not_supported`): the full DRR holdout false-alarm rate exceeds the preregistered tolerance. This result is specific to the equatorial stratospheric zonal-wind comparison and does not establish results in other domains.
 
 To reproduce that comparison from the vendored public-data snapshots:
@@ -86,6 +94,10 @@ python scripts/run_structural_change_benchmark.py --output-dir results/expected
 ```
 
 The [protocol](src/drr_framework/external_benchmark/data/preregistration.json) fixes the dataset checksums, disruption windows, holdout, baselines, ablations, tolerance, and decision rule. The [review memo](DRR_VALIDATION_REPORT.md) explains the evidence and current conclusion.
+
+## Live lab
+
+Open [`index.html`](index.html) in a browser to run DRR on a streaming three-channel system whose truth you set: coupling, delay, rhythm, and noise. Each 512-sample window is analyzed in the page by [`drr-engine.js`](assets/web-demo/drr-engine.js), a port of the Python operators that [`tests/test_web_engine_parity.py`](tests/test_web_engine_parity.py) checks against this package to 1e-9. The lab keeps a running count of recovered edges, misses, and false alarms, so you can watch the test hold its 5% rate when you cut the link.
 
 ## Choose a workflow
 

@@ -23,8 +23,9 @@ DRR supports four resonance detection backends:
 ### 2.3 Resonance Metrics (Resonance Depth)
 The composite **Resonance Depth** $D_R \in [0, 1]$ integrates four normalized sub-metrics:
 $$D_R = 0.35 \cdot S_{\text{conc}} + 0.25 \cdot T_{\text{pers}} + 0.25 \cdot \Phi_{\text{coh}} + 0.15 \cdot A_{\text{stab}}$$
+* **Target frequency ($f_0$)**: The Welch peak refined to sub-bin precision by Gaussian (log-parabolic) interpolation (`drr_composite_v2`). Without refinement, a clean tone's phase coherence varied from 0.76 to 0.996 depending only on its position on the FFT grid.
 * **Spectral Concentration ($S_{\text{conc}}$)**: Ratio of power within a $\pm 1$ bin band around target frequency $f_0$ to total power $\sum P(f)$.
-* **Temporal Persistence ($T_{\text{pers}}$)**: Mean exponential decay score $\exp(-((f_k - f_0)/\delta)^2)$ of target frequency stability across sub-windows.
+* **Temporal Persistence ($T_{\text{pers}}$)**: Mean exponential decay score $\exp(-((f_k - f_0)/\delta)^2)$ of target frequency stability across sub-windows, where $\delta = f_s / n_{\text{seg}}$ is one bin of the segment spectrum. The v1 score floored $\delta$ at 0.5 in the caller's units, so series sampled monthly or at 1 Hz always looked persistent.
 * **Phase Coherence ($\Phi_{\text{coh}}$)**: Circular mean $\left| \frac{1}{N} \sum_{t=1}^N e^{i (\theta(t) - 2\pi f_0 t)} \right|$ where $\theta(t) = \text{angle}(\text{hilbert}(x(t)))$.
 * **Amplitude Stability ($A_{\text{stab}}$)**: Clamped coefficient of variation $1 - \frac{\sigma(A)}{\mu(A)}$ where $A(t) = |\text{hilbert}(x(t))|$.
 
@@ -36,7 +37,7 @@ $$D_R = 0.35 \cdot S_{\text{conc}} + 0.25 \cdot T_{\text{pers}} + 0.25 \cdot \Ph
 ### 2.5 Rooting & Directed Dependency Analysis
 * **Lagged Correlation**: Evaluates absolute cross-correlation $| \text{corr}(x_{i, t-\ell}, x_{j, t}) |$ across lags $\ell \in [1, \text{max\_lag}]$.
 * **Transfer Entropy (TE)**: Computes discrete transfer entropy $TE_{i \to j}^{(k)} = \sum P(y_{t}, y_{t-1}^{(k)}, x_{t-\ell}) \log \frac{P(y_{t} \mid y_{t-1}^{(k)}, x_{t-\ell})}{P(y_{t} \mid y_{t-1}^{(k)})}$. Uses PyInform backend when available, defaulting to lagged correlation fallback.
-* **Surrogate Significance Testing**: Permutation testing ($N_{\text{surrogates}}$) destroys temporal cross-dependence to construct null distribution $P$-values: $p = \frac{\sum \mathbb{I}(TE_{\text{surr}} \ge TE_{\text{obs}}) + 1}{N_{\text{surrogates}} + 1}$.
+* **Surrogate Significance Testing**: Each surrogate circularly shifts every series by an offset drawn uniformly over all configurations whose pairwise separation exceeds the maximum lag. This preserves each series' autocorrelation and destroys cross-dependence. Raw $p = \frac{\sum \mathbb{I}(S_{\text{surr}} \ge S_{\text{obs}}) + 1}{N_{\text{surrogates}} + 1}$; the default max-statistic adjustment compares each edge with the largest surrogate score over all edges and lags, which controls the family-wise error rate. The legacy permutation null is available but is invalid for autocorrelated series (family-wise error 0.85 at AR 0.9; see `DRR_BENCHMARKS.md`).
 
 ### 2.6 State-Space Diagnostics & Filtering
 * **Linear State Space**: Implements Kalman filtering, Chandrasekhar recursions, Hamilton (RTS) backward smoothing, Koopman disturbance smoothing, and Durbin-Koopman / Carter-Kohn simulation smoothing.
@@ -72,8 +73,10 @@ preregistered comparison against conventional detectors is the NOAA CPC QBO
 study in `results/expected/qbo_structural_change_benchmark.json`. The reviewed
 `claim_status` is `not_supported`: full DRR's holdout false-alarm rate exceeds
 the frozen tolerance. That statement is about equatorial stratospheric wind.
-It does not license a performance claim for another adapter, and the narrative
-tables in `DRR_BENCHMARKS.md` are not a substitute for the artifact.
+It does not license a performance claim for another adapter. The calibration
+study in `results/expected/rooting_calibration_study.json` measures the
+operators on simulated systems with a known truth. It supports statements about
+the tests' size and power, not about real-world usefulness.
 
 ## 5. Known Technical & Methodological Limitations
 
@@ -81,5 +84,9 @@ tables in `DRR_BENCHMARKS.md` are not a substitute for the artifact.
 2. **Discretization Artifacts in Transfer Entropy**: Discretizing continuous data into $N_{\text{bins}} = 10$ uniform bins creates boundary effects and information loss in high-volatility financial regimes.
 3. **Linearity Bottleneck in Composite Depth**: Hilbert transform phase unwrapping assumes single-component narrow-band signals. Multi-component broad-band financial signals cause Hilbert phase distortion.
 4. **Computational Complexity of Particle Filter**: Tempered particle filtering scales exponentially with state space dimension ($O(N_{\text{particles}} \cdot d^2)$), constraining real-time supervisory applications.
-5. **Heuristic Thresholding**: The QBism belief threshold ($b > 0.65$) and significant edge threshold ($\mu + \sigma$) are heuristics rather than strictly calibrated econometric rejection boundaries.
+5. **Heuristic Thresholding**: The QBism belief threshold ($b > 0.65$) and the candidate-edge gate ($\mu + \sigma$ of the score matrix) are heuristics. The surrogate test that follows the gate is calibrated; the gate itself only removes candidates, so it can cost power but cannot add false alarms.
 6. **Portfolio Scale & Manual Mapping Mitigation**: Broad portfolio deployment across hundreds of institutions and thousands of MDRM series historically required manual schema definition. The framework mitigates this via `AutomatedSchemaMapper` bulk expansion, `MDRMCrosswalk` cross-form translations, and pre-ingestion `validate_portfolio_dataset` auto-patching, though unmapped non-MDRM fields still require explicit synthetic (`SYN_`) namespace scoping to preserve strict auditability.
+7. **Depth Is Not a Test**: Resonance depth has no null distribution of its own. AR(1) noise at 0.9 has a median depth of 0.45, higher than a tone at −9 dB (0.36). A Fourier surrogate that keeps the power spectrum lowers a tone's depth by only about 0.005. Compare depth against a surrogate or red-noise reference, not a fixed cutoff.
+8. **Lead–Lag Under Memory**: When every channel is strongly autocorrelated, lagged correlation reports the target as leading its own source, and power falls (see the memory table in `DRR_BENCHMARKS.md`). DRR does not condition on each target's own past, as a Granger-style test would.
+9. **Short Series With Long Memory**: When the series is short relative to its autocorrelation time (effective sample size near 10), the circular-shift test runs slightly above nominal, at about 0.06 for a nominal 0.05.
+10. **Transfer-Entropy Surrogates**: The transfer-entropy backend is scored one surrogate at a time through `pyinform` and has not been through the calibration study. Its size is unmeasured.

@@ -26,9 +26,37 @@ except ImportError:
 
 _EPS = np.finfo(float).eps
 
+#: Identifier of the resonance-depth definition. ``v2`` estimates the target
+#: frequency to sub-bin precision and makes temporal persistence invariant to
+#: the time unit. Any change to a depth score for a fixed input bumps it.
+DEPTH_METHOD_VERSION = "drr_composite_v2"
+
 
 def _clip01(value: float) -> float:
     return float(np.clip(value, 0.0, 1.0))
+
+
+def _interpolate_peak(freqs: np.ndarray, power: np.ndarray, peak: int) -> float:
+    """Return a sub-bin frequency estimate for the spectral peak at ``peak``.
+
+    A parabola through the log power of the peak bin and its two neighbors
+    recovers the frequency of a windowed tone to a small fraction of a bin
+    (Gaussian interpolation). Without it every downstream score that compares
+    phases against the estimate inherits up to half a bin of error, so a clean
+    tone scores differently depending only on where it falls on the grid.
+    Edge bins and flat or degenerate neighborhoods return the bin center.
+    """
+    center_freq = float(freqs[peak])
+    if peak <= 0 or peak >= len(power) - 1:
+        return center_freq
+    tiny = np.finfo(float).tiny
+    left, center, right = np.log(np.maximum(power[peak - 1 : peak + 2], tiny))
+    curvature = left - 2.0 * center + right
+    if not np.isfinite(curvature) or curvature >= -_EPS:
+        return center_freq
+    offset = float(np.clip(0.5 * (left - right) / curvature, -0.5, 0.5))
+    step = float(freqs[peak + 1] - freqs[peak])
+    return center_freq + offset * step
 
 
 def _peak_confidence(values: np.ndarray, noise_floor: float) -> np.ndarray:
@@ -453,6 +481,33 @@ class RootingAnalyzer:
             effective_lag[improved] = lag
         return scores, effective_lag
 
+    @staticmethod
+    def _stacked_lagged_correlation_scores(stack: np.ndarray, max_lag: int) -> np.ndarray:
+        """Max-over-lags absolute correlation for a stack of series.
+
+        ``stack`` has shape ``(n_series_sets, n_samples, n_variables)``. The
+        arithmetic mirrors :meth:`_lagged_correlation_scores` for each set.
+        """
+        n_sets, n_samples, n_variables = stack.shape
+        scores = np.zeros((n_sets, n_variables, n_variables), dtype=float)
+        diagonal = np.eye(n_variables, dtype=bool)
+        for lag in range(1, max_lag + 1):
+            n_pairs = n_samples - lag
+            if n_pairs < 2:
+                break
+            x = stack[:, :-lag, :]
+            y = stack[:, lag:, :]
+            x_std = np.std(x, axis=1, keepdims=True)
+            y_std = np.std(y, axis=1, keepdims=True)
+            x_z = (x - np.mean(x, axis=1, keepdims=True)) / np.where(x_std > _EPS, x_std, 1.0)
+            y_z = (y - np.mean(y, axis=1, keepdims=True)) / np.where(y_std > _EPS, y_std, 1.0)
+            corr = np.abs(np.matmul(x_z.transpose(0, 2, 1), y_z)) / n_pairs
+            corr *= (x_std[:, 0, :] > _EPS)[:, :, None]
+            corr *= (y_std[:, 0, :] > _EPS)[:, None, :]
+            corr[:, diagonal] = 0.0
+            np.maximum(scores, corr, out=scores)
+        return scores
+
     def _transfer_entropy_scores(
         self, data: np.ndarray, max_lag: int
     ) -> Tuple[np.ndarray, np.ndarray]:
@@ -506,14 +561,32 @@ class RootingAnalyzer:
         max_exceedances = np.zeros_like(observed, dtype=float)
         off_diagonal = ~np.eye(observed.shape[0], dtype=bool)
 
-        for _ in range(n_surrogates):
-            surrogate = self._generate_surrogate(data, max_lag, rng, surrogate_method)
-            surrogate_scores, _, _ = self._score_matrix(surrogate, max_lag, method_used)
-            exceedances += surrogate_scores >= observed
-            family_max = (
-                float(np.max(surrogate_scores[off_diagonal])) if np.any(off_diagonal) else 0.0
-            )
-            max_exceedances += family_max >= observed
+        if method_used == "lagged_correlation":
+            # Score surrogates in batches: one stacked product per lag instead
+            # of a Python-level pass per surrogate. Surrogates are drawn in the
+            # same order as the one-at-a-time path, so seeds keep their meaning.
+            batch = max(1, min(n_surrogates, 4_000_000 // max(1, data.size)))
+            remaining = n_surrogates
+            while remaining:
+                size = min(batch, remaining)
+                stack = np.stack(
+                    [
+                        self._generate_surrogate(data, max_lag, rng, surrogate_method)
+                        for _ in range(size)
+                    ]
+                )
+                surrogate_scores = self._stacked_lagged_correlation_scores(stack, max_lag)
+                exceedances += np.sum(surrogate_scores >= observed, axis=0)
+                family_max = np.max(surrogate_scores[:, off_diagonal], axis=1)
+                max_exceedances += np.sum(family_max[:, None, None] >= observed, axis=0)
+                remaining -= size
+        else:
+            for _ in range(n_surrogates):
+                surrogate = self._generate_surrogate(data, max_lag, rng, surrogate_method)
+                surrogate_scores, _, _ = self._score_matrix(surrogate, max_lag, method_used)
+                exceedances += surrogate_scores >= observed
+                family_max = float(np.max(surrogate_scores[off_diagonal]))
+                max_exceedances += family_max >= observed
 
         p_values = (exceedances + 1.0) / (n_surrogates + 1.0)
         adjusted_p_values = (max_exceedances + 1.0) / (n_surrogates + 1.0)
@@ -544,18 +617,40 @@ class RootingAnalyzer:
                 "samples, fewer variables, or surrogate_method='permutation'."
             )
 
-        # Anchor the first series, then distribute the remaining samples among
-        # the circular gaps. Every adjacent gap is at least minimum_separation,
-        # so every pair of offsets is farther apart than max_lag.
-        gap_slack = rng.multinomial(
-            n_samples - required_samples,
-            np.full(n_variables, 1.0 / n_variables),
-        )
-        gaps = minimum_separation + gap_slack
-        offsets = np.concatenate(([0], np.cumsum(gaps[:-1])))
+        offsets = self._circular_shift_offsets(n_samples, n_variables, minimum_separation, rng)
         for index, shift in enumerate(offsets):
             surrogate[:, index] = np.roll(surrogate[:, index], int(shift))
         return surrogate
+
+    @staticmethod
+    def _circular_shift_offsets(
+        n_samples: int, n_variables: int, minimum_separation: int, rng: np.random.Generator
+    ) -> np.ndarray:
+        """Draw one valid shift configuration uniformly at random.
+
+        A configuration anchors series 0 at offset 0 and places every other
+        series so that all pairwise circular distances are at least
+        ``minimum_separation``. Walking the circle from 0 splits it into
+        ``n_variables`` gaps, so a configuration is exactly an ordering of the
+        remaining series plus a composition of ``n_samples`` into gaps of at
+        least ``minimum_separation``. Drawing the ordering uniformly and the
+        composition uniformly (stars and bars) is therefore uniform over every
+        valid configuration.
+
+        Uniformity is what makes the surrogate p-values valid. Splitting the
+        slack with a multinomial draw instead concentrates every surrogate near
+        evenly spaced offsets, so the surrogates are near copies of one
+        another, the null is too narrow, and the family-wise error rate on
+        independent white noise is about 0.12 at a nominal 0.05.
+        """
+        slack = n_samples - n_variables * minimum_separation
+        bars = np.sort(rng.choice(slack + n_variables - 1, size=n_variables - 1, replace=False))
+        edges = np.concatenate(([-1], bars, [slack + n_variables - 1]))
+        gaps = minimum_separation + np.diff(edges) - 1
+        positions = np.cumsum(gaps[:-1])
+        offsets = np.zeros(n_variables, dtype=int)
+        offsets[1 + rng.permutation(n_variables - 1)] = positions
+        return offsets
 
     def _candidate_edges(
         self, scores: np.ndarray, effective_lag: np.ndarray, edge_threshold: float
@@ -679,7 +774,7 @@ class DepthCalculator:
         confidence_interval = self._confidence_interval(resonance_depth, len(window_data))
 
         return {
-            "method": "drr_composite_v1",
+            "method": DEPTH_METHOD_VERSION,
             "resonance_depth": resonance_depth,
             "components": components,
             "confidence_interval": confidence_interval,
@@ -689,7 +784,7 @@ class DepthCalculator:
 
     def _empty_result(self) -> dict:
         return {
-            "method": "drr_composite_v1",
+            "method": DEPTH_METHOD_VERSION,
             "resonance_depth": 0.0,
             "components": {
                 "spectral_concentration": 0.0,
@@ -718,12 +813,11 @@ class DepthCalculator:
         if nperseg < 8:
             return 0.0
         freqs, psd = welch(data - np.mean(data), fs=sampling_rate, nperseg=nperseg)
-        positive = freqs > 0
-        if not np.any(positive):
+        positive = np.flatnonzero(freqs > 0)
+        if positive.size == 0:
             return 0.0
-        positive_freqs = freqs[positive]
-        positive_psd = psd[positive]
-        return float(positive_freqs[np.argmax(positive_psd)])
+        peak = int(positive[np.argmax(psd[positive])])
+        return max(_interpolate_peak(freqs, psd, peak), 0.0)
 
     def _spectral_concentration(
         self, data: np.ndarray, sampling_rate: float, target_frequency: float
@@ -756,7 +850,10 @@ class DepthCalculator:
             return 0.0
 
         scores = []
-        tolerance = max(sampling_rate / max(segment_size, 1), 0.5)
+        # One frequency bin of the segment spectrum. The tolerance is expressed
+        # in the same units as the sampling rate, so the score is unchanged when
+        # the series is relabeled from, say, Hz to cycles per month.
+        tolerance = sampling_rate / min(256, segment_size)
         for start in range(0, len(data) - segment_size + 1, segment_size):
             segment = data[start : start + segment_size]
             freq = self._select_target_frequency(segment, sampling_rate, None)

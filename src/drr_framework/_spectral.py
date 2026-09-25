@@ -39,7 +39,7 @@ except ImportError:
             properties["peak_heights"] = array[peaks]
 
         if prominence is not None:
-            prominences = np.array([_simple_prominence(array, peak) for peak in peaks])
+            prominences = np.array([_simple_prominence(array, int(peak)) for peak in peaks])
             keep = prominences >= float(prominence)
             peaks = peaks[keep]
             properties["prominences"] = prominences[keep]

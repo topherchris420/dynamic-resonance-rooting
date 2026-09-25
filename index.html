@@ -4,15 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#050807" />
-    <meta name="description" content="Dynamic Resonance Rooting — reveal the hidden structure inside complex systems." />
+    <meta name="description" content="Dynamic Resonance Rooting finds rhythms in multivariate time series, traces which signal leads which, and says how sure it can be. Everything on this page is computed live." />
     <title>DRR — Signal has a shape</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Manrope:wght@400;500;600&family=Syne:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Manrope:wght@400;500;600;700&family=Syne:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='9' fill='%23050807'/%3E%3Ccircle cx='20' cy='20' r='4' fill='%23c9ff45'/%3E%3Cpath d='M20 5a15 15 0 0 1 15 15M20 35A15 15 0 0 1 5 20' fill='none' stroke='%23c9ff45' stroke-width='2.4'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="assets/web-demo/style.css" />
   </head>
   <body>
-    <canvas id="noise-canvas" aria-hidden="true"></canvas>
+    <a class="skip-link" href="#lab">Skip to the live lab</a>
+    <canvas id="hero-canvas" aria-hidden="true"></canvas>
     <div class="grain" aria-hidden="true"></div>
 
     <header class="site-header">
@@ -21,72 +23,343 @@
         <span>DRR</span>
       </a>
       <nav aria-label="Main navigation">
-        <a href="#method">Method</a><a href="#field">Live field</a><a href="https://github.com/topherchris420/dynamic-resonance-rooting">GitHub <span>↗</span></a>
+        <a href="#lab">Live lab</a><a href="#evidence">Evidence</a><a href="#method">Method</a><a href="https://github.com/topherchris420/dynamic-resonance-rooting">GitHub <span aria-hidden="true">↗</span></a>
       </nav>
-      <div class="system-status"><i></i><span>Field online</span><b id="clock">00:00:00</b></div>
+      <div class="system-status" aria-live="off"><i></i><span id="engine-status">Engine starting</span></div>
     </header>
 
     <main id="top">
       <section class="hero" aria-labelledby="page-title">
         <div class="hero-copy">
-          <p class="overline"><span>01</span> Intelligence for complex systems</p>
+          <p class="overline"><span>01</span> Open-source research framework</p>
           <h1 id="page-title">Signal has<br />a <em>shape.</em></h1>
-          <p class="lede">Dynamic Resonance Rooting reveals the forces, feedback loops, and critical thresholds that conventional analysis leaves invisible.</p>
+          <p class="lede">Dynamic Resonance Rooting finds the rhythms in multivariate time series, traces which signal leads which, and tells you how sure it can be. Every number on this page is computed live, in your browser, by a port of the Python package that is tested against it.</p>
           <div class="hero-actions">
-            <button class="magnetic-button" id="enter-button" type="button"><span>Explore the field</span><i>↘</i></button>
-            <button class="sound-button" id="motion-button" type="button" aria-pressed="false"><span class="sound-bars"><i></i><i></i><i></i><i></i></span><span>Pause motion</span></button>
+            <a class="magnetic-button" href="#lab"><span>Open the live lab</span><i aria-hidden="true">↘</i></a>
+            <button class="sound-button" id="motion-button" type="button" aria-pressed="false"><span class="sound-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span>Pause stream</span></button>
           </div>
         </div>
 
-        <div class="hero-index" aria-label="Current field reading">
-          <span>Resonance index</span><strong id="hero-index">0.847</strong><small>Stable coupling</small>
-        </div>
+        <aside class="hero-readout" aria-label="Latest live reading">
+          <span class="readout-label">Resonance depth · dim_0</span>
+          <strong id="hero-depth">—</strong>
+          <span class="readout-verdict" id="hero-verdict">Waiting for the first analysis window</span>
+        </aside>
 
-        <div class="scroll-cue" aria-hidden="true"><span>Scroll to decode</span><i></i></div>
+        <div class="scroll-cue" aria-hidden="true"><span>Scroll to the lab</span><i></i></div>
       </section>
 
-      <section class="field-section" id="field" aria-labelledby="field-title">
+      <section class="lab-section" id="lab" aria-labelledby="lab-title">
         <div class="section-heading">
-          <div><p class="overline"><span>02</span> Live resonance engine</p><h2 id="field-title">Touch the system.<br /><em>Watch it answer.</em></h2></div>
-          <p>Move through the field to disturb its equilibrium. Every point is connected; every input leaves a trace.</p>
+          <div><p class="overline"><span>02</span> Live lab</p><h2 id="lab-title">Set the truth.<br /><em>See what DRR finds.</em></h2></div>
+          <p>Three channels stream at 100 Hz. <b>dim_0</b> mixes a 7 Hz rhythm with broadband noise, <b>dim_1</b> hears it through a delay you choose, and <b>dim_2</b> is an unrelated 11 Hz distractor. DRR only sees the numbers. Every 512 new samples it measures resonance depth and tests every directed edge against 99 circular-shift surrogates.</p>
         </div>
 
-        <div class="field-shell">
-          <div class="field-toolbar">
-            <div><i class="live-dot"></i><span>DRR / FIELD—001</span></div>
-            <p><span id="pointer-readout">X 50.0&nbsp;&nbsp;Y 50.0</span><b>● LIVE</b></p>
+        <div class="lab-shell">
+          <form class="lab-controls" id="lab-controls" aria-label="System parameters">
+            <div class="control">
+              <label for="coupling">Coupling <output id="coupling-out" for="coupling">0.50</output></label>
+              <input id="coupling" name="coupling" type="range" min="0" max="0.8" step="0.05" value="0.5" />
+              <small>How strongly dim_1 follows dim_0.</small>
+            </div>
+            <div class="control">
+              <label for="lag">Delay <output id="lag-out" for="lag">2 samples</output></label>
+              <input id="lag" name="lag" type="range" min="1" max="6" step="1" value="2" />
+              <small>DRR searches lags 1 to 6.</small>
+            </div>
+            <div class="control">
+              <label for="rhythm">Rhythm <output id="rhythm-out" for="rhythm">1.0</output></label>
+              <input id="rhythm" name="rhythm" type="range" min="0" max="3" step="0.1" value="1" />
+              <small>7 Hz amplitude in dim_0. Pure rhythm hides direction.</small>
+            </div>
+            <div class="control">
+              <label for="noise">Noise <output id="noise-out" for="noise">0.30</output></label>
+              <input id="noise" name="noise" type="range" min="0.05" max="1.5" step="0.05" value="0.3" />
+              <small>Measurement noise on every channel.</small>
+            </div>
+            <div class="control-actions">
+              <button type="button" id="cut-link" class="ghost-button">Cut the link</button>
+              <button type="button" id="new-window" class="ghost-button">New window</button>
+            </div>
+          </form>
+
+          <div class="lab-stage">
+            <div class="stage-toolbar">
+              <div><i class="live-dot"></i><span>Analysis window · 512 samples · 5.12 s</span></div>
+              <p><span id="next-analysis">next analysis in —</span></p>
+            </div>
+            <canvas id="trace-canvas" role="img" aria-label="Scrolling traces of the three channels"></canvas>
+            <div class="stage-progress" aria-hidden="true"><b id="window-progress"></b></div>
           </div>
-          <div class="field-stage" id="field-stage" tabindex="0" role="application" aria-label="Interactive resonance particle field. Move the pointer to influence nearby particles.">
-            <canvas id="field-canvas"></canvas>
-            <div class="field-reticle" id="reticle" aria-hidden="true"><i></i><i></i><span></span></div>
-            <p class="field-instruction">MOVE TO INFLUENCE / CLICK TO PULSE</p>
-            <div class="field-scale"><span>+1.0</span><i></i><span>0.0</span><i></i><span>−1.0</span></div>
+
+          <div class="lab-verdict" aria-live="polite">
+            <div class="verdict-row">
+              <span>DRR found</span>
+              <strong id="verdict-found">—</strong>
+            </div>
+            <div class="verdict-row">
+              <span>Ground truth</span>
+              <strong id="verdict-truth">dim_0 → dim_1 <small>lag 2</small></strong>
+            </div>
+            <p class="verdict-status" id="verdict-status" data-state="idle"><i aria-hidden="true"></i><span>Collecting samples</span></p>
+            <dl class="tally" aria-label="Record since the last parameter change">
+              <div><dt>Windows</dt><dd id="tally-runs">0</dd></div>
+              <div><dt>Recovered</dt><dd id="tally-hit">0</dd></div>
+              <div><dt>Missed</dt><dd id="tally-miss">0</dd></div>
+              <div><dt>False alarms</dt><dd id="tally-false">0</dd></div>
+            </dl>
+            <p class="verdict-note" id="verdict-note">Set coupling to 0 and every edge DRR reports is a false alarm. At α = 0.05 you should see about one in twenty.</p>
           </div>
-          <div class="field-data" aria-live="polite">
-            <div><span>Coupling strength</span><strong id="coupling-value">84.7%</strong><i><b id="coupling-bar"></b></i></div>
-            <div><span>Phase coherence</span><strong id="coherence-value">0.921</strong><i><b id="coherence-bar"></b></i></div>
-            <div><span>Root depth</span><strong id="depth-value">6.42</strong><i><b id="depth-bar"></b></i></div>
-            <div class="field-state"><span>System state</span><strong><i></i> Resonant</strong><small>Δ +0.024</small></div>
-          </div>
+
+          <figure class="lab-panel lab-graph">
+            <figcaption>Directed edges <span>max-statistic adjusted</span></figcaption>
+            <svg id="edge-graph" viewBox="0 0 320 240" role="img" aria-label="Rooting graph of the three channels"></svg>
+          </figure>
+
+          <figure class="lab-panel lab-spectrum">
+            <figcaption>dim_0 power spectrum <span id="spectrum-peak">Welch · 256-sample segments</span></figcaption>
+            <canvas id="spectrum-canvas" role="img" aria-label="Welch power spectral density of dim_0"></canvas>
+          </figure>
+
+          <figure class="lab-panel lab-depth">
+            <figcaption>Resonance depth <span>drr_composite_v2</span></figcaption>
+            <div class="depth-hero"><strong id="depth-value">—</strong><span>dim_0</span></div>
+            <ul class="depth-meters" id="depth-meters"></ul>
+            <p class="depth-others" id="depth-others">dim_1 — · dim_2 —</p>
+          </figure>
         </div>
+      </section>
+
+      <section class="evidence" id="evidence" aria-labelledby="evidence-title">
+        <div class="section-heading">
+          <div><p class="overline"><span>03</span> Evidence</p><h2 id="evidence-title">Numbers we can<br /><em>stand behind.</em></h2></div>
+          <p>Each figure below is read from a committed artifact that anyone can regenerate with one command. That includes the result that went against us.</p>
+        </div>
+
+        <div class="evidence-grid">
+          <figure class="evidence-card wide" id="size-card">
+            <figcaption>
+              <h3>False alarms stay near 5%</h3>
+              <p id="size-caption">Share of simulated null systems where the rooting test reported any edge.</p>
+            </figcaption>
+            <div class="legend" aria-hidden="true"><span><i class="swatch accent"></i>Circular-shift null (default)</span><span><i class="swatch neutral"></i>Permutation null</span></div>
+            <svg id="size-chart" class="chart" role="img" aria-labelledby="size-card"></svg>
+            <details><summary>Show the numbers</summary><table id="size-table"></table></details>
+          </figure>
+
+          <figure class="evidence-card" id="power-card">
+            <figcaption>
+              <h3>Real edges get found</h3>
+              <p id="power-caption">Share of trials that recovered the injected edge at its true lag.</p>
+            </figcaption>
+            <svg id="power-chart" class="chart" role="img" aria-labelledby="power-card"></svg>
+            <details><summary>Show the numbers</summary><table id="power-table"></table></details>
+          </figure>
+
+          <figure class="evidence-card" id="depth-card">
+            <figcaption>
+              <h3>Depth describes; it does not test</h3>
+              <p>Median and 5–95% range of resonance depth over 200 draws.</p>
+            </figcaption>
+            <div class="legend" aria-hidden="true"><span><i class="swatch neutral"></i>Noise</span><span><i class="swatch accent"></i>Tone in noise</span></div>
+            <svg id="depth-chart" class="chart" role="img" aria-labelledby="depth-card"></svg>
+            <details><summary>Show the numbers</summary><table id="depth-table"></table></details>
+          </figure>
+
+          <article class="evidence-card verdict-card wide" id="qbo-card" aria-labelledby="qbo-title">
+            <p class="claim-chip"><i aria-hidden="true">✕</i><span id="qbo-status">Not supported</span></p>
+            <h3 id="qbo-title">The preregistered external test did not pass</h3>
+            <div class="stat-pair">
+              <div><strong id="qbo-rate">—</strong><span>full DRR holdout false-alarm rate</span></div>
+              <div><strong id="qbo-tolerance">—</strong><span>preregistered tolerance</span></div>
+            </div>
+            <p id="qbo-text">On 572 months of NOAA stratospheric wind data, DRR raised too many alarms outside the published disruption windows. We record the claim as not supported, and it stays inside that one domain.</p>
+            <a href="https://github.com/topherchris420/dynamic-resonance-rooting/blob/main/docs/external-evidence.md">Read the protocol and the artifact <span aria-hidden="true">↗</span></a>
+          </article>
+        </div>
+        <div id="chart-tooltip" class="chart-tooltip" role="status" hidden></div>
       </section>
 
       <section class="method" id="method" aria-labelledby="method-title">
-        <div class="method-intro"><p class="overline"><span>03</span> The method</p><h2 id="method-title">From noise<br />to <em>knowing.</em></h2></div>
+        <div class="method-intro"><p class="overline"><span>04</span> The method</p><h2 id="method-title">Measure the rhythm.<br />Trace the lag.<br /><em>Keep the evidence.</em></h2></div>
         <ol class="method-list">
-          <li><span>01</span><div><h3>Detect</h3><p>Map recurring frequencies and relationships across time.</p></div><b>⌁</b></li>
-          <li><span>02</span><div><h3>Root</h3><p>Trace observed patterns back to their structural origins.</p></div><b>⌖</b></li>
-          <li><span>03</span><div><h3>Anticipate</h3><p>Identify thresholds before the system changes state.</p></div><b>⟶</b></li>
+          <li><span>01</span><div><h3>Detect</h3><p>FFT, Welch, and Morlet-wavelet spectra locate recurring frequencies. Peaks are refined below the grid spacing, so a tone scores the same wherever it falls.</p></div><b aria-hidden="true">⌁</b></li>
+          <li><span>02</span><div><h3>Root</h3><p>Lagged correlation or transfer entropy scores every directed pair. Circular-shift surrogates keep each series' own memory and give family-wise adjusted p-values.</p></div><b aria-hidden="true">⌖</b></li>
+          <li><span>03</span><div><h3>Measure</h3><p>Resonance depth combines spectral concentration, persistence, phase coherence, and amplitude stability. The score is unchanged if you relabel Hz as cycles per month.</p></div><b aria-hidden="true">⟶</b></li>
         </ol>
+        <p class="method-boundary">A directed edge is a lead–lag relationship under a chosen estimator and null model, not a proof of causation. A result in one domain does not carry over to another.</p>
       </section>
 
-      <section class="closing">
-        <p>The system is already speaking.</p><h2>Are you<br /><em>listening?</em></h2>
-        <a href="https://github.com/topherchris420/dynamic-resonance-rooting">Explore the research <span>↗</span></a>
+      <section class="closing" aria-labelledby="closing-title">
+        <p>Run it on your own data</p><h2 id="closing-title">Three commands<br />to <em>reproduce.</em></h2>
+        <pre class="install" tabindex="0"><code><span>$</span> pip install -e .
+<span>$</span> drr-reproduce --no-artifacts
+<span>$</span> python scripts/run_calibration_study.py</code></pre>
+        <a href="https://github.com/topherchris420/dynamic-resonance-rooting">Explore the research <span aria-hidden="true">↗</span></a>
       </section>
     </main>
 
-    <footer><a class="brand" href="#top"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="4"/><path d="M20 2a18 18 0 0 1 18 18M20 38A18 18 0 0 1 2 20M9 9a15.5 15.5 0 0 1 22 22"/></svg><span>DRR</span></a><p>Dynamic Resonance Rooting<br /><span>Open-source research framework</span></p><p>Observe / Root / Anticipate<br /><span>Built for complex realities</span></p></footer>
+    <footer><a class="brand" href="#top"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="4"/><path d="M20 2a18 18 0 0 1 18 18M20 38A18 18 0 0 1 2 20M9 9a15.5 15.5 0 0 1 22 22"/></svg><span>DRR</span></a><p>Dynamic Resonance Rooting<br /><span>MIT-licensed research framework</span></p><p>Detect / Root / Measure<br /><span>Diagnostics, not verdicts</span></p></footer>
+
+    <script type="application/json" id="evidence-data">
+{
+  "calibration": {
+    "alpha": 0.05,
+    "depth": {
+      "ar1_0.00": {
+        "median": 0.1443,
+        "q05": 0.1217,
+        "q95": 0.227
+      },
+      "ar1_0.50": {
+        "median": 0.2258,
+        "q05": 0.1484,
+        "q95": 0.3272
+      },
+      "ar1_0.90": {
+        "median": 0.4469,
+        "q05": 0.2861,
+        "q95": 0.6084
+      },
+      "tone_amp_0.25": {
+        "median": 0.1528,
+        "q05": 0.1257,
+        "q95": 0.2686
+      },
+      "tone_amp_0.50": {
+        "median": 0.3557,
+        "q05": 0.1931,
+        "q95": 0.459
+      },
+      "tone_amp_1.00": {
+        "median": 0.5805,
+        "q05": 0.533,
+        "q95": 0.6411
+      }
+    },
+    "n_samples": 512,
+    "n_surrogates": 99,
+    "power": [
+      {
+        "ci": [
+          0.0,
+          0.0188
+        ],
+        "coupling": 0.0,
+        "rate": 0.0
+      },
+      {
+        "ci": [
+          0.0697,
+          0.1552
+        ],
+        "coupling": 0.1,
+        "rate": 0.105
+      },
+      {
+        "ci": [
+          0.2546,
+          0.3823
+        ],
+        "coupling": 0.15,
+        "rate": 0.315
+      },
+      {
+        "ci": [
+          0.5919,
+          0.7221
+        ],
+        "coupling": 0.2,
+        "rate": 0.66
+      },
+      {
+        "ci": [
+          0.9722,
+          0.9991
+        ],
+        "coupling": 0.3,
+        "rate": 0.995
+      },
+      {
+        "ci": [
+          0.9812,
+          1.0
+        ],
+        "coupling": 0.5,
+        "rate": 1.0
+      }
+    ],
+    "power_lag": 2,
+    "power_trials": 200,
+    "size": [
+      {
+        "ar": 0.0,
+        "circular_shift": 0.0625,
+        "circular_shift_ci": [
+          0.0427,
+          0.0906
+        ],
+        "permutation": 0.05,
+        "permutation_ci": [
+          0.0326,
+          0.076
+        ]
+      },
+      {
+        "ar": 0.5,
+        "circular_shift": 0.04,
+        "circular_shift_ci": [
+          0.0248,
+          0.064
+        ],
+        "permutation": 0.2325,
+        "permutation_ci": [
+          0.1938,
+          0.2763
+        ]
+      },
+      {
+        "ar": 0.9,
+        "circular_shift": 0.0475,
+        "circular_shift_ci": [
+          0.0306,
+          0.073
+        ],
+        "permutation": 0.85,
+        "permutation_ci": [
+          0.8117,
+          0.8817
+        ]
+      },
+      {
+        "ar": 0.97,
+        "circular_shift": 0.0625,
+        "circular_shift_ci": [
+          0.0427,
+          0.0906
+        ],
+        "permutation": 0.9725,
+        "permutation_ci": [
+          0.9514,
+          0.9846
+        ]
+      }
+    ],
+    "size_trials": 400,
+    "source": "results/expected/rooting_calibration_study.json"
+  },
+  "qbo": {
+    "domain": "equatorial stratospheric zonal wind",
+    "drr_holdout_false_alarm_rate": 0.2722,
+    "reason": "drr_false_alarm_rate",
+    "source": "results/expected/qbo_structural_change_benchmark.json",
+    "status": "not_supported",
+    "tolerance": 0.05,
+    "unique_event_ids": []
+  }
+}
+    </script>
+    <script src="assets/web-demo/drr-engine.js"></script>
     <script src="assets/web-demo/script.js"></script>
   </body>
 </html>

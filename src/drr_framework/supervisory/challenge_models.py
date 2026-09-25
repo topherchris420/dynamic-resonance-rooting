@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from importlib import import_module
 from importlib.metadata import PackageNotFoundError, version as distribution_version
-from typing import Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -456,7 +456,9 @@ def walk_forward_var(
         target = _quarter(review.reporting_period)
         training_dates = _periods(target - 1, config.training_periods)
         dates = _periods(target, config.training_periods + config.lag_order + 1)
-        records, definitions, events = (), (), ()
+        records: Tuple[Any, ...] = ()
+        definitions: Tuple[Any, ...] = ()
+        events: Tuple[Any, ...] = ()
         reason = None
         values = np.full((len(dates), len(config.variables)), np.nan)
         try:
@@ -498,7 +500,7 @@ def walk_forward_var(
                 o.observation_id for o in records if o.reporting_period == review.reporting_period
             ),
         )
-        fit = dict(
+        fit: Dict[str, Any] = dict(
             selected_lag_order=config.lag_order,
             lag_selection="pre_specified_fixed",
             training_count=config.training_periods,
@@ -722,7 +724,11 @@ def walk_forward_panel_logit(
         )
         used_keys = tuple((label.institution_id, label.reporting_period) for label in used_labels)
         outcomes = tuple(label.value for label in used_labels)
-        records, definitions, events, frames, reasons = [], [], [], [], []
+        records: List[Any] = []
+        definitions: List[Any] = []
+        events: List[Any] = []
+        frames: List[Any] = []
+        reasons: List[str] = []
         for institution in config.institutions:
             try:
                 frame, facts, meanings = _snapshot(
@@ -771,8 +777,8 @@ def walk_forward_panel_logit(
                 "transform": "level",
             },
         )
-        definitions = tuple({stable_id(d): d for d in definitions}.values())
-        events = tuple({e.event_id: e for e in events}.values())
+        unique_definitions = tuple({stable_id(d): d for d in definitions}.values())
+        unique_events = tuple({e.event_id: e for e in events}.values())
         pooling_breaks, _ = _comparability(
             records, variables, None, cutoff, config.form, source_dates, None
         )
@@ -783,9 +789,9 @@ def walk_forward_panel_logit(
             cutoff,
             training_dates,
             records,
-            definitions,
+            unique_definitions,
             labels=used_labels,
-            events=events,
+            events=unique_events,
         )
         info.update(
             institutions=config.institutions,
@@ -818,7 +824,7 @@ def walk_forward_panel_logit(
         )
         missing_required = missing & required
         n, positives = len(outcomes), int(sum(outcomes))
-        fit = dict(
+        fit: Dict[str, Any] = dict(
             package="statsmodels",
             package_version=None,
             link="logit",
@@ -881,7 +887,7 @@ def walk_forward_panel_logit(
                     info,
                     fit,
                     reason,
-                    None if reason else float(scores[index]),
+                    None if reason or scores is None else float(scores[index]),
                 )
             )
     return tuple(results)

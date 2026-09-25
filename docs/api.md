@@ -128,6 +128,29 @@ method, inference flag, and the minimum attainable p-value. With
 Rooting graphs use `significant_edges` only. `candidate_edges` are retained for
 inspection, but they do not enter the NetworkX graph.
 
+The default `circular_shift` null keeps each series' autocorrelation, and its
+measured family-wise error stays near `alpha` (see `DRR_BENCHMARKS.md`). Use
+`surrogate_method="permutation"` only for serially independent data: on AR(1)
+series at 0.9 it reports a false edge 85% of the time.
+
+### Calibration
+
+```python
+from drr_framework.calibration import rooting_size, run_calibration_study
+
+row = rooting_size(
+    n_trials=200, n_samples=512, n_variables=3, ar_coefficient=0.9,
+    max_lag=4, n_surrogates=99, alpha=0.05,
+    surrogate_method="circular_shift", seed=1,
+)
+row["family_wise_error"]  # {"rate", "count", "trials", "ci95"}
+```
+
+`run_calibration_study()` runs the full size, power, memory, and depth study
+behind `results/expected/rooting_calibration_study.json`. Use `rooting_size` and
+`rooting_power` to check a configuration of your own (sample length, lags,
+surrogate count) before trusting its p-values.
+
 ## Dataset Adapters
 
 - `PolicyResonanceDataset`: prepares tabular policy observables.
