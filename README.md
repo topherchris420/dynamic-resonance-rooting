@@ -12,9 +12,22 @@ Dynamic Resonance Rooting (DRR) is an open-source Python research framework for 
 
 The outputs are **diagnostics**. A directed edge is a statistical lead–lag relationship under a chosen estimator and null model; it does not establish causation. A result in one domain does not automatically generalize to another.
 
-The layers are DRR core → validation substrate → domain adapters. The DRR core is the numerical operator stack. The validation substrate checks the implementation against specification tests, synthetic ground truth, leakage checks, and preregistered external evidence. Domain adapters keep analyses scoped to their own application and do not inherit claims from other domains.
+The layers are **DRR core → validation substrate → domain adapters**. The core contains numerical operators. The validation substrate tests specifications, synthetic ground truth, leakage and preregistered external evidence. Domain adapters scope a method to a particular application; **sharing an operator never transfers an evidence claim** from one domain to another.
 
 **Start here:** [Run the synthetic example](#quick-start) · [Inspect the evidence](#what-the-evidence-says) · [Try the live lab](index.html) · [Choose a workflow](#choose-a-workflow) · [Read the architecture](docs/architecture.md)
+
+## A rhythm is not yet a reason
+
+A time series can offer a compelling story and still be wrong. DRR treats that moment as the **start of an investigation**, not its conclusion.
+
+| Ask | Test | Resist the temptation to claim |
+| --- | --- | --- |
+| *What repeats?* | Spectral peaks and resonance depth under an explicit noise reference | A detected frequency is a mechanism |
+| *What tends to precede what?* | Lag search against a surrogate null with multiple-test control | A directed statistical edge is causation |
+| *What changed?* | State-space and structural-change methods under a declared holdout and false-alarm budget | An alarm on one dataset generalizes to another |
+| *Does the tool itself behave?* | Known-injection fixtures, calibration trials and adversarial counterexamples | Synthetic success proves external utility |
+
+**An experiment worth trying:** run the [synthetic quick start](#quick-start), where the correct lag is known. Then read the [NOAA QBO external comparison](docs/external-evidence.md), where the preregistered structural-change claim **was not supported**. Holding both results in view is the point of the project: an instrument should preserve its successes *and* the data that contradicts its ambitions.
 
 ## What it does
 
