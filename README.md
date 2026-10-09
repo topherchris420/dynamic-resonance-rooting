@@ -16,6 +16,10 @@ The layers are **DRR core → validation substrate → domain adapters**. The co
 
 **Start here:** [Run the synthetic example](#quick-start) · [Inspect the evidence](#what-the-evidence-says) · [Try the live lab](index.html) · [Choose a workflow](#choose-a-workflow) · [Read the architecture](docs/architecture.md)
 
+### Mathematical research question (experimental)
+
+**Which statistical assumptions keep lag-search false alarms controlled under long-memory or dependent noise?** This is a proposed experiment, **not a new verified capability**. [Read the assumptions, negative control and protocol](docs/MATH_RESEARCH.md) or use [R.A.I.N.'s shared mathematics scout](https://github.com/topherchris420/lop-nur-twin/blob/main/docs/MATH_PORTFOLIO.md) to inspect candidate `openai/math` references at its pinned revision. No OpenAI mathematics code or proof has been installed in this runtime.
+
 ## A rhythm is not yet a reason
 
 A time series can offer a compelling story and still be wrong. DRR treats that moment as the **start of an investigation**, not its conclusion.
