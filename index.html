@@ -147,6 +147,16 @@
             <details><summary>Show the numbers</summary><table id="size-table"></table></details>
           </figure>
 
+          <figure class="evidence-card wide" id="memory-card">
+            <figcaption>
+              <h3>Which null survives long memory?</h3>
+              <p id="memory-caption">Family-wise false-alarm rate of each surrogate null on independent channels whose dependence breaks its assumption by degrees.</p>
+            </figcaption>
+            <div class="legend" aria-hidden="true"><span><i class="swatch accent"></i>Circular shift · assumes stationarity</span><span><i class="swatch paper"></i>Phase randomization · assumes linear Gaussian</span><span><i class="swatch neutral"></i>Permutation · assumes independence</span></div>
+            <svg id="memory-chart" class="chart" role="img" aria-labelledby="memory-card"></svg>
+            <details><summary>Show the numbers</summary><table id="memory-table"></table></details>
+          </figure>
+
           <figure class="evidence-card" id="power-card">
             <figcaption>
               <h3>Real edges get found</h3>
@@ -347,6 +357,243 @@
     ],
     "size_trials": 400,
     "source": "results/expected/rooting_calibration_study.json"
+  },
+  "dependent_noise": {
+    "alpha": 0.05,
+    "coupled": [
+      {
+        "ci": [
+          0.9812,
+          1.0
+        ],
+        "hurst": 0.5,
+        "method": "circular_shift",
+        "rate": 1.0
+      },
+      {
+        "ci": [
+          0.9812,
+          1.0
+        ],
+        "hurst": 0.5,
+        "method": "phase_randomization",
+        "rate": 1.0
+      },
+      {
+        "ci": [
+          0.9643,
+          0.9973
+        ],
+        "hurst": 0.7,
+        "method": "circular_shift",
+        "rate": 0.99
+      },
+      {
+        "ci": [
+          0.9722,
+          0.9991
+        ],
+        "hurst": 0.7,
+        "method": "phase_randomization",
+        "rate": 0.995
+      },
+      {
+        "ci": [
+          0.7939,
+          0.8929
+        ],
+        "hurst": 0.85,
+        "method": "circular_shift",
+        "rate": 0.85
+      },
+      {
+        "ci": [
+          0.7995,
+          0.8971
+        ],
+        "hurst": 0.85,
+        "method": "phase_randomization",
+        "rate": 0.855
+      },
+      {
+        "ci": [
+          0.4314,
+          0.5686
+        ],
+        "hurst": 0.95,
+        "method": "circular_shift",
+        "rate": 0.5
+      },
+      {
+        "ci": [
+          0.4118,
+          0.549
+        ],
+        "hurst": 0.95,
+        "method": "phase_randomization",
+        "rate": 0.48
+      }
+    ],
+    "coupled_trials": 200,
+    "coupling": 0.3,
+    "hypotheses": [
+      {
+        "id": "H1",
+        "outcome": "supported"
+      },
+      {
+        "id": "H2",
+        "outcome": "supported"
+      },
+      {
+        "id": "H3",
+        "outcome": "supported"
+      },
+      {
+        "id": "H4",
+        "outcome": "supported"
+      },
+      {
+        "id": "H5",
+        "outcome": "supported"
+      },
+      {
+        "id": "H6",
+        "outcome": "supported"
+      }
+    ],
+    "lag": 2,
+    "methods": [
+      "circular_shift",
+      "phase_randomization",
+      "permutation"
+    ],
+    "n_samples": 512,
+    "n_surrogates": 99,
+    "size": [
+      {
+        "circular_shift": 0.055,
+        "circular_shift_ci": [
+          0.0366,
+          0.0819
+        ],
+        "label": "fGn H = 0.50 (white noise)",
+        "permutation": 0.0375,
+        "permutation_ci": [
+          0.0229,
+          0.0609
+        ],
+        "phase_randomization": 0.0525,
+        "phase_randomization_ci": [
+          0.0346,
+          0.0789
+        ],
+        "process": "fgn_0.50",
+        "stationary": true
+      },
+      {
+        "circular_shift": 0.0475,
+        "circular_shift_ci": [
+          0.0306,
+          0.073
+        ],
+        "label": "fGn H = 0.70",
+        "permutation": 0.1575,
+        "permutation_ci": [
+          0.1251,
+          0.1964
+        ],
+        "phase_randomization": 0.0425,
+        "phase_randomization_ci": [
+          0.0267,
+          0.067
+        ],
+        "process": "fgn_0.70",
+        "stationary": true
+      },
+      {
+        "circular_shift": 0.0525,
+        "circular_shift_ci": [
+          0.0346,
+          0.0789
+        ],
+        "label": "fGn H = 0.85",
+        "permutation": 0.5725,
+        "permutation_ci": [
+          0.5236,
+          0.6201
+        ],
+        "phase_randomization": 0.0575,
+        "phase_randomization_ci": [
+          0.0386,
+          0.0848
+        ],
+        "process": "fgn_0.85",
+        "stationary": true
+      },
+      {
+        "circular_shift": 0.06,
+        "circular_shift_ci": [
+          0.0406,
+          0.0877
+        ],
+        "label": "fGn H = 0.95",
+        "permutation": 0.7975,
+        "permutation_ci": [
+          0.7554,
+          0.834
+        ],
+        "phase_randomization": 0.0525,
+        "phase_randomization_ci": [
+          0.0346,
+          0.0789
+        ],
+        "process": "fgn_0.95",
+        "stationary": true
+      },
+      {
+        "circular_shift": 0.055,
+        "circular_shift_ci": [
+          0.0366,
+          0.0819
+        ],
+        "label": "GARCH(1,1) \u03b1 = 0.10, \u03b2 = 0.85",
+        "permutation": 0.0425,
+        "permutation_ci": [
+          0.0267,
+          0.067
+        ],
+        "phase_randomization": 0.0625,
+        "phase_randomization_ci": [
+          0.0427,
+          0.0906
+        ],
+        "process": "garch",
+        "stationary": true
+      },
+      {
+        "circular_shift": 0.2825,
+        "circular_shift_ci": [
+          0.2406,
+          0.3285
+        ],
+        "label": "Random walk",
+        "permutation": 0.885,
+        "permutation_ci": [
+          0.85,
+          0.9127
+        ],
+        "phase_randomization": 0.2725,
+        "phase_randomization_ci": [
+          0.2312,
+          0.3181
+        ],
+        "process": "random_walk",
+        "stationary": false
+      }
+    ],
+    "size_trials": 400,
+    "source": "results/expected/dependent_noise_null_study.json"
   },
   "qbo": {
     "domain": "equatorial stratospheric zonal wind",

@@ -206,8 +206,10 @@ class DynamicResonanceRooting:
                 significance testing. Set to ``0`` to disable inference.
             rooting_random_state: Seed for reproducible surrogate generation.
             rooting_alpha: Threshold applied to the selected p-value.
-            rooting_surrogate_method: Null model for surrogate generation,
-                either ``"circular_shift"`` or ``"permutation"``.
+            rooting_surrogate_method: Null model for surrogate generation:
+                ``"circular_shift"`` (stationary), ``"phase_randomization"``
+                (stationary linear Gaussian), or ``"permutation"`` (serially
+                independent).
             rooting_correction: P-value selection rule, either
                 ``"max_statistic"`` for adjusted p-values or ``"none"`` for raw
                 p-values.
@@ -307,8 +309,10 @@ class DynamicResonanceRooting:
             rooting_random_state (Optional[int]): Seed for reproducible
                 surrogate generation.
             rooting_alpha (float): Threshold applied to the selected p-value.
-            rooting_surrogate_method (str): Surrogate null model, either
-                ``"circular_shift"`` or ``"permutation"``.
+            rooting_surrogate_method (str): Surrogate null model:
+                ``"circular_shift"`` (stationary), ``"phase_randomization"``
+                (stationary linear Gaussian), or ``"permutation"`` (serially
+                independent).
             rooting_correction (str): P-value selection rule, either
                 ``"max_statistic"`` for adjusted p-values or ``"none"`` for raw
                 p-values.

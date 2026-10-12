@@ -8,7 +8,12 @@ from typing import Any, Dict, List, Optional, Tuple, cast
 import numpy as np
 
 from .analysis import DynamicResonanceRooting
-from .modules import DepthCalculator, ResonanceDetector, RootingAnalyzer
+from .modules import (
+    DepthCalculator,
+    ResonanceDetector,
+    RootingAnalyzer,
+    phase_randomized_surrogate,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -76,15 +81,12 @@ def run_parameter_sensitivity_experiment(
 
 
 def fourier_surrogate(series: np.ndarray, rng: np.random.Generator) -> np.ndarray:
-    """Real-valued phase-randomized surrogate with the same power spectrum."""
-    series = np.asarray(series, dtype=float)
-    n_samples = len(series)
-    spectrum = np.fft.rfft(series)
-    randomized = np.abs(spectrum) * np.exp(1j * rng.uniform(0.0, 2.0 * np.pi, spectrum.shape))
-    randomized[0] = spectrum[0]
-    if n_samples % 2 == 0:
-        randomized[-1] = spectrum[-1]
-    return np.fft.irfft(randomized, n=n_samples)
+    """Real-valued phase-randomized surrogate with the same power spectrum.
+
+    This is the one-series form of :func:`drr_framework.modules.phase_randomized_surrogate`,
+    which :class:`RootingAnalyzer` offers as ``surrogate_method="phase_randomization"``.
+    """
+    return phase_randomized_surrogate(np.asarray(series, dtype=float), rng)
 
 
 def run_placebo_and_null_tests(

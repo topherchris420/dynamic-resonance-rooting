@@ -13,3 +13,10 @@ from that JSON. Regenerate both with
 test and the resonance-depth score on simulated systems with a known truth.
 Regenerate it and its Markdown companion with
 `python scripts/run_calibration_study.py --output-dir results/expected`.
+
+`dependent_noise_null_study.json` is the preregistered null-model study: the
+family-wise error of the circular-shift, phase-randomization, and permutation
+nulls on fractional Gaussian noise, GARCH(1,1) noise, and random walks, with
+the power to recover a known edge under long memory and the outcome of each
+hypothesis fixed before the run. Regenerate it and its Markdown companion with
+`python scripts/run_dependent_noise_study.py --output-dir results/expected`.

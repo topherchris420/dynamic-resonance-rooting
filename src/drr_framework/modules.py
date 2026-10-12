@@ -31,6 +31,36 @@ _EPS = np.finfo(float).eps
 #: the time unit. Any change to a depth score for a fixed input bumps it.
 DEPTH_METHOD_VERSION = "drr_composite_v2"
 
+#: Surrogate nulls accepted by :meth:`RootingAnalyzer.analyze`, each named for
+#: the assumption it makes about a series.
+SURROGATE_METHODS = ("circular_shift", "phase_randomization", "permutation")
+
+
+def phase_randomized_surrogate(data: np.ndarray, rng: np.random.Generator) -> np.ndarray:
+    """Phase-randomized surrogate of each column of ``data``.
+
+    Each column keeps the magnitude of its real FFT exactly, so its periodogram
+    and sample autocorrelation at every lag are unchanged, and receives
+    independent uniform phases. The zero-frequency and Nyquist bins are kept
+    as they are so the result is real and the column mean is preserved.
+    Independent phases per column destroy any alignment between columns, which
+    is the null of no lead-lag relationship under a stationary linear Gaussian
+    model.
+    """
+    data = np.asarray(data, dtype=float)
+    squeeze = data.ndim == 1
+    if squeeze:
+        data = data[:, None]
+    n_samples = data.shape[0]
+    spectrum = np.fft.rfft(data, axis=0)
+    phases = rng.uniform(0.0, 2.0 * np.pi, spectrum.shape)
+    randomized = np.abs(spectrum) * np.exp(1j * phases)
+    randomized[0] = spectrum[0]
+    if n_samples % 2 == 0:
+        randomized[-1] = spectrum[-1]
+    surrogate = np.fft.irfft(randomized, n=n_samples, axis=0)
+    return surrogate[:, 0] if squeeze else surrogate
+
 
 def _clip01(value: float) -> float:
     return float(np.clip(value, 0.0, 1.0))
@@ -379,9 +409,22 @@ class RootingAnalyzer:
         ``transfer_entropy`` and ``pyinform`` is available, the analyzer uses that
         backend and otherwise reports the fallback method explicitly.
 
-        Surrogate inference uses either an independent circular-shift null
-        (default) or the legacy permutation null. Raw empirical p-values are
-        always reported, alongside max-statistic adjusted p-values for family-wise
+        Surrogate inference uses one of three nulls, each resting on a stated
+        assumption about the series:
+
+        * ``"circular_shift"`` (default) assumes stationarity. Every series is
+          rolled by its own random offset, so each keeps its joint distribution
+          except at one seam while the alignment between series is destroyed.
+        * ``"phase_randomization"`` assumes a stationary linear Gaussian
+          process. Every series keeps its periodogram exactly, hence its
+          sample autocorrelation at every lag, and receives new random phases.
+        * ``"permutation"`` assumes serial independence. Shuffling time points
+          destroys each series' memory, so it is valid only for white noise.
+
+        ``results/expected/dependent_noise_null_study.json`` measures the
+        family-wise error of each null under long memory, volatility
+        clustering, and a random walk. Raw empirical p-values are always
+        reported, alongside max-statistic adjusted p-values for family-wise
         control across all directed edges.
         """
 
@@ -393,8 +436,11 @@ class RootingAnalyzer:
             raise ValueError("n_surrogates must be non-negative")
         if not 0 < alpha < 1:
             raise ValueError("alpha must be in the interval (0, 1)")
-        if surrogate_method not in {"circular_shift", "permutation"}:
-            raise ValueError("surrogate_method must be 'circular_shift' or 'permutation'")
+        if surrogate_method not in SURROGATE_METHODS:
+            raise ValueError(
+                "surrogate_method must be one of 'circular_shift', 'phase_randomization', "
+                "or 'permutation'"
+            )
         if correction not in {"max_statistic", "none"}:
             raise ValueError("correction must be 'max_statistic' or 'none'")
 
@@ -608,6 +654,8 @@ class RootingAnalyzer:
             for index in range(n_variables):
                 surrogate[:, index] = rng.permutation(surrogate[:, index])
             return surrogate
+        if surrogate_method == "phase_randomization":
+            return phase_randomized_surrogate(surrogate, rng)
 
         minimum_separation = max_lag + 1
         required_samples = n_variables * minimum_separation

@@ -128,10 +128,19 @@ method, inference flag, and the minimum attainable p-value. With
 Rooting graphs use `significant_edges` only. `candidate_edges` are retained for
 inspection, but they do not enter the NetworkX graph.
 
-The default `circular_shift` null keeps each series' autocorrelation, and its
-measured family-wise error stays near `alpha` (see `DRR_BENCHMARKS.md`). Use
-`surrogate_method="permutation"` only for serially independent data: on AR(1)
-series at 0.9 it reports a false edge 85% of the time.
+Three nulls are available, each named for the assumption it makes about a
+series. `DRR_BENCHMARKS.md` reports the measured family-wise error of each.
+
+| `surrogate_method` | Assumes | Keeps | Use when |
+| --- | --- | --- | --- |
+| `circular_shift` (default) | stationarity | each series' joint distribution, except at one seam | the series are stationary, whatever their memory or marginal |
+| `phase_randomization` | a stationary linear Gaussian process | each series' periodogram, hence its sample autocorrelation at every lag | a Gaussian linear null is the right comparison and the seam is a concern |
+| `permutation` | serial independence | each series' marginal distribution | the series are white noise; on AR(1) at 0.9 it reports a false edge 85% of the time |
+
+All three assume at least stationarity. On a random walk every one is
+inflated (family-wise error 0.27–0.89 at a nominal 0.05 in
+`results/expected/dependent_noise_null_study.json`), so difference or detrend
+such series first.
 
 ### Calibration
 
@@ -150,6 +159,29 @@ row["family_wise_error"]  # {"rate", "count", "trials", "ci95"}
 behind `results/expected/rooting_calibration_study.json`. Use `rooting_size` and
 `rooting_power` to check a configuration of your own (sample length, lags,
 surrogate count) before trusting its p-values.
+
+### Dependent-noise nulls
+
+```python
+from drr_framework.dependent_noise import make_null_process, null_false_alarms
+
+draw = make_null_process({"family": "fractional_gaussian_noise", "hurst": 0.9}, 512, 3)
+row = null_false_alarms(
+    draw, n_trials=200, max_lag=4, n_surrogates=99, alpha=0.05,
+    surrogate_method="circular_shift", seed=1,
+)
+row["family_wise_error"]  # {"rate", "count", "trials", "ci95"}
+```
+
+`drr_framework.dependent_noise` holds exact simulators for fractional Gaussian
+noise (`simulate_fractional_gaussian_noise`, Davies–Harte embedding, any Hurst
+exponent in (0, 1)), GARCH(1,1) noise (`simulate_garch`), random walks
+(`simulate_random_walk`), and a lag-coupled long-memory triple
+(`simulate_long_memory_pair`). `null_false_alarms` measures the family-wise
+error of any null on any draw function; `coupled_edge_recovery` measures power.
+`run_dependent_noise_study()` runs the preregistered study behind
+`results/expected/dependent_noise_null_study.json`, whose hypotheses and decision
+rule are fixed in `DEFAULT_CONFIG` before the rows are seen.
 
 ## Dataset Adapters
 

@@ -1,15 +1,17 @@
 # DRR benchmarks
 
 Every number in this file is produced by code in this repository and recorded
-in a committed artifact. There are two:
+in a committed artifact. There are three:
 
 | Artifact | What it measures | Regenerate |
 | --- | --- | --- |
 | [`results/expected/rooting_calibration_study.json`](results/expected/rooting_calibration_study.json) | Size, power, and reference distributions of the DRR operators on simulated systems with a known truth | `python scripts/run_calibration_study.py --output-dir results/expected` |
+| [`results/expected/dependent_noise_null_study.json`](results/expected/dependent_noise_null_study.json) | Family-wise error of each surrogate null under long memory, volatility clustering, and a random walk, power under long memory, and six preregistered hypotheses | `python scripts/run_dependent_noise_study.py --output-dir results/expected` |
 | [`results/expected/qbo_structural_change_benchmark.json`](results/expected/qbo_structural_change_benchmark.json) | The preregistered external comparison on NOAA CPC QBO zonal wind | `python scripts/run_structural_change_benchmark.py --output-dir results/expected` |
 
-`tests/test_calibration_study.py` and `tests/test_structural_change_benchmark.py`
-rerun parts of both and fail if a committed number no longer reproduces.
+`tests/test_calibration_study.py`, `tests/test_dependent_noise_study.py`, and
+`tests/test_structural_change_benchmark.py` rerun parts of all three and fail if
+a committed number no longer reproduces.
 
 ## 1. Does the rooting test keep its promised false-alarm rate?
 
@@ -128,6 +130,76 @@ conventional detector misses. The result is confined to equatorial
 stratospheric wind. It neither supports nor refutes DRR in another domain. The
 [protocol](docs/external-evidence.md) and [memo](DRR_VALIDATION_REPORT.md) have
 the details.
+
+## 5. Which null assumptions survive long memory?
+
+Each surrogate null is an assumption about a series. The circular-shift null
+assumes stationarity; phase randomization assumes a stationary linear Gaussian
+process; permutation assumes serial independence. The processes below break
+those assumptions by degrees: fractional Gaussian noise (fGn) with Hurst
+exponent H has autocorrelation that decays like k^(2H−2) and never sums to a
+finite total, GARCH(1,1) is uncorrelated but its volatility clusters, and the
+random walk is not stationary. Three independent channels, 512 samples, lags
+1–4, 99 surrogates, alpha = 0.05, 400 systems per row. *Controlled* means the
+Wilson 95% lower bound is at most 0.05; *inflated* means it is above. The rule
+was fixed before the run.
+
+| Process | Null | Family-wise error | 95% interval | Verdict |
+| --- | --- | ---: | --- | --- |
+| fGn H = 0.50 (white noise) | circular_shift | 0.055 | 0.037–0.082 | controlled |
+| fGn H = 0.50 (white noise) | phase_randomization | 0.052 | 0.035–0.079 | controlled |
+| fGn H = 0.50 (white noise) | permutation | 0.037 | 0.023–0.061 | controlled |
+| fGn H = 0.70 | circular_shift | 0.048 | 0.031–0.073 | controlled |
+| fGn H = 0.70 | phase_randomization | 0.043 | 0.027–0.067 | controlled |
+| fGn H = 0.70 | permutation | 0.158 | 0.125–0.196 | inflated |
+| fGn H = 0.85 | circular_shift | 0.052 | 0.035–0.079 | controlled |
+| fGn H = 0.85 | phase_randomization | 0.058 | 0.039–0.085 | controlled |
+| fGn H = 0.85 | permutation | 0.573 | 0.524–0.620 | inflated |
+| fGn H = 0.95 | circular_shift | 0.060 | 0.041–0.088 | controlled |
+| fGn H = 0.95 | phase_randomization | 0.052 | 0.035–0.079 | controlled |
+| fGn H = 0.95 | permutation | 0.797 | 0.755–0.834 | inflated |
+| GARCH(1,1) α = 0.10, β = 0.85 | circular_shift | 0.055 | 0.037–0.082 | controlled |
+| GARCH(1,1) α = 0.10, β = 0.85 | phase_randomization | 0.062 | 0.043–0.091 | controlled |
+| GARCH(1,1) α = 0.10, β = 0.85 | permutation | 0.043 | 0.027–0.067 | controlled |
+| Random walk | circular_shift | 0.282 | 0.241–0.329 | inflated |
+| Random walk | phase_randomization | 0.273 | 0.231–0.318 | inflated |
+| Random walk | permutation | 0.885 | 0.850–0.913 | inflated |
+
+**Reading.** Stationarity is the assumption that matters, not short memory.
+The default null holds 0.048–0.060 through H = 0.95, where the lag-20
+autocorrelation is still 0.63, and 0.055 on GARCH(1,1). Phase randomization
+matches it, including on GARCH (0.062) even though it Gaussianizes each series.
+The permutation null is inflated at every long-memory level and reaches 0.797.
+On a random walk every null fails: 0.282, 0.273, and 0.885. Difference or
+detrend nonstationary series before rooting.
+
+### Long memory costs power, not size
+
+Channel 0 drives channel 1 at lag 2 with coupling 0.3, a third channel is an
+independent distractor, and all three are fGn at the H shown. 200 trials per
+row. The size rows above at the same H are the negative control.
+
+| Process | Null | True edge at true lag | Any other edge | Reverse edge |
+| --- | --- | ---: | ---: | ---: |
+| fGn H = 0.50 | circular_shift | 1.000 | 0.005 | 0.000 |
+| fGn H = 0.50 | phase_randomization | 1.000 | 0.005 | 0.000 |
+| fGn H = 0.70 | circular_shift | 0.990 | 0.020 | 0.005 |
+| fGn H = 0.70 | phase_randomization | 0.995 | 0.010 | 0.000 |
+| fGn H = 0.85 | circular_shift | 0.850 | 0.040 | 0.015 |
+| fGn H = 0.85 | phase_randomization | 0.855 | 0.070 | 0.045 |
+| fGn H = 0.95 | circular_shift | 0.500 | 0.135 | 0.105 |
+| fGn H = 0.95 | phase_randomization | 0.480 | 0.080 | 0.060 |
+
+**Reading.** The same 0.3 coupling that is always found on white noise is found
+half the time at H = 0.95, and spurious edges rise with it, most of them the
+reverse edge. Phase randomization reports fewer spurious edges at H = 0.95 in
+this run; the gap is within the intervals and is an observation, not a
+preregistered result.
+
+**Hypotheses.** Six were fixed before the run and 6 were supported, including
+the two that predicted the method's own failure on a random walk. The
+statements, rules, and outcomes are in [`docs/MATH_RESEARCH.md`](docs/MATH_RESEARCH.md)
+and in the artifact.
 
 ## Withdrawn material
 

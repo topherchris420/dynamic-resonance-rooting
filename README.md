@@ -16,10 +16,6 @@ The layers are **DRR core → validation substrate → domain adapters**. The co
 
 **Start here:** [Run the synthetic example](#quick-start) · [Inspect the evidence](#what-the-evidence-says) · [Try the live lab](index.html) · [Choose a workflow](#choose-a-workflow) · [Read the architecture](docs/architecture.md)
 
-### Mathematical research question (experimental)
-
-**Which statistical assumptions keep lag-search false alarms controlled under long-memory or dependent noise?** This is a proposed experiment, **not a new verified capability**. [Read the assumptions, negative control and protocol](docs/MATH_RESEARCH.md) or use [R.A.I.N.'s shared mathematics scout](https://github.com/topherchris420/lop-nur-twin/blob/main/docs/MATH_PORTFOLIO.md) to inspect candidate `openai/math` references at its pinned revision. No OpenAI mathematics code or proof has been installed in this runtime.
-
 ## A rhythm is not yet a reason
 
 A time series can offer a compelling story and still be wrong. DRR treats that moment as the **start of an investigation**, not its conclusion.
@@ -27,7 +23,7 @@ A time series can offer a compelling story and still be wrong. DRR treats that m
 | Ask | Test | Resist the temptation to claim |
 | --- | --- | --- |
 | *What repeats?* | Spectral peaks and resonance depth under an explicit noise reference | A detected frequency is a mechanism |
-| *What tends to precede what?* | Lag search against a surrogate null with multiple-test control | A directed statistical edge is causation |
+| *What tends to precede what?* | Lag search against a surrogate null whose assumption is named and measured, with multiple-test control | A directed statistical edge is causation |
 | *What changed?* | State-space and structural-change methods under a declared holdout and false-alarm budget | An alarm on one dataset generalizes to another |
 | *Does the tool itself behave?* | Known-injection fixtures, calibration trials and adversarial counterexamples | Synthetic success proves external utility |
 
@@ -38,7 +34,7 @@ A time series can offer a compelling story and still be wrong. DRR treats that m
 | Question | DRR component | What you get |
 | --- | --- | --- |
 | Which rhythms recur, and for how long? | FFT, Welch, wavelet, and resonance-depth operators | Frequencies, spectral power, and depth components |
-| Which signal tends to lead another? | Lagged correlation or transfer entropy with surrogate testing | Candidate edges, tested edges, lags, and p-values |
+| Which signal tends to lead another? | Lagged correlation or transfer entropy against a circular-shift, phase-randomization, or permutation null | Candidate edges, tested edges, lags, and p-values |
 | Has the system's structure shifted? | State-space, topology, and structural-surprise diagnostics | Estimated states, changes, and uncertainty to investigate |
 | Can a bounded input change a simulated state? | Navigation engine and matched control experiments | Proposed interventions and comparison metrics for a modeled system |
 
@@ -101,6 +97,9 @@ A [Monte Carlo calibration study](DRR_BENCHMARKS.md) measures the statistical be
 | Does the rooting test keep its false-alarm rate? | Yes. Family-wise error is 0.040–0.062 on independent AR(1) series from white noise to 0.97. The legacy permutation null reaches 0.97 and is only for serially independent data. |
 | Does it find real lead–lag edges? | A 0.3 coupling is recovered in 99.5% of trials, 0.2 in 66%. Strong memory in every channel lowers power and makes the target appear to lead its source. |
 | Is resonance depth a test? | No. It separates a clear tone from white noise, but red noise at AR 0.9 scores above a −9 dB tone. Compare it against a surrogate or red-noise reference. |
+| Does the null survive long memory? | While the series are stationary, yes. The default circular-shift null measures 0.048–0.060 on fractional Gaussian noise from white noise to Hurst 0.95 and 0.055 on GARCH(1,1) noise; the permutation null reaches 0.797 at Hurst 0.95. On a random walk every null fails (0.27–0.89), so difference or detrend nonstationary series first. |
+
+The last row is a second preregistered study, and it asks the question the method itself depends on: **which null assumptions keep lag-search false alarms controlled when the noise never forgets?** Six hypotheses were fixed before the run, two of them predicting the method's own failure, and all six were supported. The [study record](docs/MATH_RESEARCH.md) has the protocol and every row; its [artifact](results/expected/dependent_noise_null_study.json) is regenerated with `python scripts/run_dependent_noise_study.py`.
 
 The repository also contains a [preregistered external comparison](docs/external-evidence.md) on the NOAA CPC quasi-biennial oscillation series. Its reviewed [machine-readable artifact](results/expected/qbo_structural_change_benchmark.json) records the current claim as **not supported** (`not_supported`): the full DRR holdout false-alarm rate exceeds the preregistered tolerance. This result is specific to the equatorial stratospheric zonal-wind comparison and does not establish results in other domains.
 
@@ -114,7 +113,7 @@ The [protocol](src/drr_framework/external_benchmark/data/preregistration.json) f
 
 ## Live lab
 
-Open [`index.html`](index.html) in a browser to run DRR on a streaming three-channel system whose truth you set: coupling, delay, rhythm, and noise. Each 512-sample window is analyzed in the page by [`drr-engine.js`](assets/web-demo/drr-engine.js), a port of the Python operators that [`tests/test_web_engine_parity.py`](tests/test_web_engine_parity.py) checks against this package to 1e-9. The lab keeps a running count of recovered edges, misses, and false alarms, so you can watch the test hold its 5% rate when you cut the link.
+Open [`index.html`](index.html) in a browser to run DRR on a streaming three-channel system whose truth you set: coupling, delay, rhythm, and noise. Each 512-sample window is analyzed in the page by [`drr-engine.js`](assets/web-demo/drr-engine.js), a port of the Python operators that [`tests/test_web_engine_parity.py`](tests/test_web_engine_parity.py) checks against this package to 1e-9. The lab keeps a running count of recovered edges, misses, and false alarms, so you can watch the test hold its 5% rate when you cut the link. Below it, every evidence chart is drawn from the committed artifacts, including the null-model study and the external result that went against us.
 
 ## Choose a workflow
 
@@ -156,7 +155,7 @@ python -m black --check .
 
 - [User guide](docs/user-guide.md) and [API reference](docs/api.md) for the core.
 - [Architecture](docs/architecture.md) and [method crosswalk](docs/method-crosswalk.md) for design and conventional comparators.
-- [External evidence](docs/external-evidence.md) and [reproducibility](docs/reproducibility.md) for claim scope and reproduction.
+- [External evidence](docs/external-evidence.md), the [null-model study](docs/MATH_RESEARCH.md), and [reproducibility](docs/reproducibility.md) for claim scope and reproduction.
 - [Quant research](docs/quant-research.md), [LFBO workbench](docs/lfbo-workbench.md), and [validation readiness](docs/validation-readiness-guide.md) for domain workflows.
 - [Security posture](docs/security-posture.md) and [developer guide](docs/developer-guide.md) for operation and contributions.
 
