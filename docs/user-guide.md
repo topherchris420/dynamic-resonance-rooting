@@ -49,7 +49,9 @@ print(results["rooting_analysis"]["significant_edges"])
 - `resonances`: dominant frequencies and spectral evidence.
 - `resonance_depths`: scalar persistence/stability scores by dimension.
 - `resonance_depth_details`: component-level scores and confidence intervals.
-- `rooting_analysis`: directed lagged relationships and edge metadata.
+- `rooting_analysis`: directed lagged relationships and edge metadata. Its
+  `surrogate_method` names the null the edges survived; the default circular
+  shift assumes stationarity, and the [FAQ](faq.md) says when to use another.
 - `state_space_analysis`: transition, measurement, likelihood, stability, and
   impulse-response diagnostics.
 

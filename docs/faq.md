@@ -6,6 +6,19 @@ No. Rooting edges are directed diagnostic signals based on lagged structure or
 transfer entropy when available. They should be interpreted as leads for review,
 not as causal proof.
 
+## Which surrogate null should I use?
+
+The default `circular_shift` for stationary series, whatever their memory or
+marginal distribution. Its measured family-wise error is 0.040–0.062 on AR(1)
+series up to 0.97, 0.048–0.060 on fractional Gaussian noise up to Hurst 0.95,
+and 0.055 on GARCH(1,1) noise. `phase_randomization` is a stationary linear
+Gaussian null that measured the same on those processes. `permutation` is for
+white noise only: it reports a false edge in 16% of long-memory systems at
+Hurst 0.7 and 80% at 0.95. No null survives a random walk (27–89% false
+alarms), so difference or detrend nonstationary series first. The numbers are
+in [DRR_BENCHMARKS.md](../DRR_BENCHMARKS.md) and the protocol in
+[MATH_RESEARCH.md](MATH_RESEARCH.md).
+
 ## Is DRR validated supervisory methodology?
 
 No. The repository includes validation-readiness artifacts to support model-risk

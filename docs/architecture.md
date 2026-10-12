@@ -142,6 +142,9 @@ flowchart TD
     API --> StateSpace[state_space.py]
     API --> Validation[validation.py]
     API --> Supervision[supervision.py]
+    Calibration[calibration.py] --> Modules
+    DependentNoise[dependent_noise.py] --> Modules
+    DependentNoise --> Calibration
     Analysis --> Modules
     Analysis --> StateSpace
     Analysis --> Reporting
@@ -150,7 +153,14 @@ flowchart TD
     Examples[examples/] --> API
     Tests[tests/] --> API
     Docs[docs/] --> API
+    Calibration --> Artifacts[results/expected/]
+    DependentNoise --> Artifacts
 ```
+
+`calibration.py` and `dependent_noise.py` are the validation substrate's
+Monte Carlo instruments. They import the operators, never the other way round,
+and every number they produce is written to `results/expected/` with the seed
+schedule that reproduces it.
 
 ## Design Boundaries
 
@@ -159,10 +169,14 @@ flowchart TD
   fallback and is reported explicitly.
 - The rooting result separates exploratory `candidate_edges` from
   `significant_edges`, and the public graph includes significant edges only.
-- Circular-shift surrogates are the default null model. They preserve each
-  series' marginal distribution and cyclic ordering, and they approximately
-  preserve within-series dependence for reasonably stationary series. They are
-  not a good fit for strongly nonstationary series.
+- Circular-shift surrogates are the default null model. They assume
+  stationarity and keep each series' own joint distribution except at one seam.
+  Their measured family-wise error is 0.048–0.060 on fractional Gaussian noise
+  through Hurst 0.95 and 0.055 on GARCH(1,1) noise, and 0.282 on a random walk,
+  so nonstationary series must be differenced or detrended first
+  (`results/expected/dependent_noise_null_study.json`). A phase-randomization
+  null that assumes a stationary linear Gaussian process is available; the
+  permutation null assumes serial independence and is for white noise only.
 - State-space diagnostics are Python-native and inspired by modeling discipline,
   not a copy of external DSGE implementations.
 - Supervisory workflows are validation-ready artifacts, not validated

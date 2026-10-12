@@ -93,10 +93,31 @@ distributions. It takes about four minutes. `--trials-scale 0.1` gives a quick
 look. `tests/test_calibration_study.py` reruns a prefix of the committed rows and
 requires an exact match.
 
+## Dependent-noise null study
+
+```bash
+python scripts/run_dependent_noise_study.py --output-dir results/expected
+```
+
+The study answers the question in [MATH_RESEARCH.md](MATH_RESEARCH.md): which
+surrogate assumptions keep lag-search false alarms controlled under long memory
+or dependent noise. It simulates independent channels of fractional Gaussian
+noise (exact Davies–Harte embedding, Hurst exponent 0.5 to 0.95), GARCH(1,1)
+noise, and random walks, measures the family-wise error of the circular-shift,
+phase-randomization, and permutation nulls on each, and measures power to
+recover a lag-2 edge when every channel has long memory. The six hypotheses
+and the decision rule are fixed in `drr_framework.dependent_noise.DEFAULT_CONFIG`
+before the run, and the artifact `dependent_noise_null_study.json` records each
+outcome beside its rule. It takes about ten minutes. `--trials-scale 0.1` gives
+a quick look. The exit code reports the integrity checks only; a hypothesis
+that is not supported is recorded, not hidden. `tests/test_dependent_noise_study.py`
+reruns a prefix of committed rows exactly and recomputes every outcome from the
+rows.
+
 ## Landing page evidence
 
-`index.html` embeds the calibration and QBO numbers it charts. After
-regenerating either artifact, run:
+`index.html` embeds the calibration, null-study, and QBO numbers it charts.
+After regenerating any artifact, run:
 
 ```bash
 python scripts/sync_site_evidence.py

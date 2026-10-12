@@ -3,7 +3,9 @@
 This is the review memo for the evidence in this repository. It states what is
 measured, where the measurement lives, and what the measurement does and does
 not support. The machine-readable records are
-[`results/expected/rooting_calibration_study.json`](results/expected/rooting_calibration_study.json)
+[`results/expected/rooting_calibration_study.json`](results/expected/rooting_calibration_study.json),
+the preregistered null-model study
+[`results/expected/dependent_noise_null_study.json`](results/expected/dependent_noise_null_study.json),
 and the preregistered
 [`results/expected/qbo_structural_change_benchmark.json`](results/expected/qbo_structural_change_benchmark.json),
 whose reviewed `claim_status` is `not_supported`. The tables are in
@@ -22,6 +24,12 @@ the evidence?
 - **The rooting test is calibrated.** On independent series its family-wise
   false-alarm rate stays near the nominal 5% from white noise to AR(1) at 0.97,
   and it recovers a 0.3 lead–lag coupling almost every time at 512 samples.
+- **Its null assumptions are named and measured.** Six hypotheses fixed
+  before the run were all supported: the circular-shift and phase-randomization
+  nulls hold near 5% on fractional Gaussian noise through Hurst 0.95 and on
+  GARCH(1,1) noise, the permutation null reaches 0.80 under long memory, and
+  every null fails on a random walk (0.27–0.89), the boundary the stationarity
+  assumption predicts.
 - **Resonance depth is descriptive.** It separates a clear tone from white
   noise. It does not separate red noise from a weak resonance, and it is carried
   almost entirely by the power spectrum.
@@ -38,6 +46,9 @@ the evidence?
 | A clean tone scores the same wherever it falls on the FFT grid | `tests/test_depth_invariants.py` |
 | Depth ignores gain and offset | `tests/test_depth_invariants.py` |
 | Circular-shift surrogates are uniform over every valid shift configuration | `tests/test_calibration_study.py` |
+| Phase-randomized surrogates keep each series' periodogram and mean exactly and destroy alignment between series | `tests/test_dependent_noise_study.py` |
+| Simulated fractional Gaussian noise has the fGn autocovariance at every tested Hurst exponent, and its circulant embedding is a valid covariance | `tests/test_dependent_noise_study.py` |
+| Hypothesis outcomes in the committed null study recompute from its rows | `tests/test_dependent_noise_study.py` |
 | Committed reproduction and quickstart outputs match a fresh run | `tests/test_depth_invariants.py` |
 | The browser engine matches the Python operators | `tests/test_web_engine_parity.py` |
 | The preregistered artifact matches a fresh run and its own decision rule | `tests/test_structural_change_benchmark.py` |
@@ -59,7 +70,23 @@ Measured by `python scripts/run_calibration_study.py`. Section numbers refer to
 - **Depth reference (§3).** White noise has a median depth of 0.14. AR(1) noise
   at 0.9 has 0.45, above a tone at −9 dB (0.36).
 
-## 3. Placebo checks, corrected
+## 3. Null-model assumptions under long memory
+
+Measured by `python scripts/run_dependent_noise_study.py` and tabulated in
+[`DRR_BENCHMARKS.md`](DRR_BENCHMARKS.md) §5; the protocol and hypotheses are in
+[`docs/MATH_RESEARCH.md`](docs/MATH_RESEARCH.md).
+
+- **Stationary processes.** Circular-shift family-wise error is 0.048–0.060 on
+  fractional Gaussian noise from H = 0.50 to 0.95 and 0.055 on GARCH(1,1).
+  Phase randomization is 0.043–0.062 on the same rows.
+- **Permutation.** Inflated at every long-memory level: 0.158, 0.573, 0.797 at
+  H = 0.70, 0.85, 0.95. Valid only for white noise.
+- **Random walk.** Every null fails: 0.282, 0.273, 0.885. Nonstationary series
+  must be differenced or detrended before rooting.
+- **Power.** The lag-2 edge at coupling 0.3 is recovered in 100% of trials at
+  H = 0.50 and 50% at H = 0.95, with spurious edges rising to 13.5%.
+
+## 4. Placebo checks, corrected
 
 `drr_framework.sensitivity_tests.run_placebo_and_null_tests` now uses a valid
 Fourier surrogate. The surrogate is real-valued, keeps the power spectrum
@@ -72,7 +99,7 @@ surrogate's own depth under the name `depth_reduction_from_shuffle`.
 | "In pure Gaussian i.i.d. noise, DRR returns $D_R < 0.25$ with 0 false positive edges." | Depth of white noise has median 0.14 and 95th percentile 0.23, so it holds for the v2 score. Before the unit fix it failed at low sampling rates (mean 0.37 at 1 Hz). False edges occur at about the nominal 5% rate, as a calibrated test must. The claim of zero was never a property of the test. |
 | "Phase-shuffled signals show a significant drop in phase coherence, confirming that $D_R$ isolates phase organization rather than static power spectral density." | Not supported. Phase randomization lowers the depth of a tone by about 0.005. Depth is carried by the spectrum. |
 
-## 4. External evidence
+## 5. External evidence
 
 The preregistered QBO comparison asks whether full DRR flags repeated,
 published disruptions that rolling volatility, rolling correlation, and a VAR
@@ -81,7 +108,7 @@ the rate is 0.272, and there are no unique full-DRR detections. The status is
 `not_supported`, confined to equatorial stratospheric zonal wind. See
 [`docs/external-evidence.md`](docs/external-evidence.md).
 
-## 5. Withdrawn statements
+## 6. Withdrawn statements
 
 The previous version of this memo reported incremental early-warning lead time
 of "+6 to +10 days" ahead of rolling-volatility and VAR models across the
@@ -91,11 +118,12 @@ code or data in this repository produced those figures. They are withdrawn.
 Any future claim about financial stress episodes needs its own preregistered
 protocol, like the QBO study.
 
-## 6. Deliverables
+## 7. Deliverables
 
 | File | Role |
 | --- | --- |
 | `src/drr_framework/calibration.py`, `scripts/run_calibration_study.py` | Monte Carlo size, power, memory, and depth study |
+| `src/drr_framework/dependent_noise.py`, `scripts/run_dependent_noise_study.py` | Preregistered null-model study under long memory, volatility clustering, and a random walk |
 | `src/drr_framework/external_benchmark/`, `scripts/run_structural_change_benchmark.py` | Preregistered external comparison |
 | `src/drr_framework/sensitivity_tests.py` | Parameter sweeps and placebo checks |
 | `src/drr_framework/evidence_card.py`, `scripts/run_drr_validation.py` | Evidence cards whose statistics come from the measured run |

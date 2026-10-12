@@ -10,6 +10,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Dependent-noise null study (`drr_framework.dependent_noise`,
+  `scripts/run_dependent_noise_study.py`): the experiment proposed in
+  `docs/MATH_RESEARCH.md`, executed. Exact fractional Gaussian noise
+  (Davies–Harte circulant embedding), GARCH(1,1), and random-walk simulators;
+  the family-wise error of the circular-shift, phase-randomization, and
+  permutation nulls on independent channels of each; power to recover a lag-2
+  edge when every channel has long memory; six hypotheses and a decision rule
+  fixed before the run, with each outcome recorded beside its rule. The
+  committed artifact is `results/expected/dependent_noise_null_study.json`.
+  All six hypotheses were supported: the circular-shift and
+  phase-randomization nulls hold their 5% family-wise error through Hurst 0.95
+  and GARCH(1,1) noise, the permutation null reaches 0.80, and every null is
+  inflated on a random walk (0.27–0.89).
+  `tests/test_dependent_noise_study.py` reruns a prefix of committed rows
+  exactly and recomputes every hypothesis outcome from the rows.
+- `surrogate_method="phase_randomization"` for `RootingAnalyzer` and
+  `analyze_system`: each series keeps its periodogram exactly, hence its sample
+  autocorrelation at every lag, and receives new random phases. It is the null
+  of no lead–lag relationship under a stationary linear Gaussian model. The
+  placebo module's `fourier_surrogate` now shares the implementation.
+- Landing-page evidence card charting the null study, read from the committed
+  artifact through `scripts/sync_site_evidence.py` like the other cards.
 - Monte Carlo calibration study (`drr_framework.calibration`,
   `scripts/run_calibration_study.py`): family-wise false-alarm rate of the
   rooting test on independent AR(1) series, power to recover a known edge,

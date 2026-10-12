@@ -5,7 +5,9 @@
  * and every WINDOW new samples runs the real operators from drr-engine.js:
  * resonance depth for each channel and lagged-correlation rooting with 99
  * circular-shift surrogates. Evidence charts read the JSON block that
- * scripts/sync_site_evidence.py copies from results/expected.
+ * scripts/sync_site_evidence.py copies from results/expected, including the
+ * dependent-noise null study that asks which surrogate assumptions survive
+ * long memory.
  */
 (() => {
   'use strict';
@@ -667,6 +669,64 @@
       rows.map(([key, label]) => { const d = data.depth[key]; return `<tr><td>${label}</td><td>${d.q05.toFixed(3)}</td><td>${d.median.toFixed(3)}</td><td>${d.q95.toFixed(3)}</td></tr>`; }).join('');
   }
 
+  function memoryChart(data) {
+    const svg = $('#memory-chart');
+    if (!svg || !data) return;
+    const W = chartWidth(svg); const H = W < 600 ? 290 : 320;
+    const m = { left: 44, right: 56, top: 18, bottom: 58 };
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    const y = (v) => m.top + (1 - v) * (H - m.top - m.bottom);
+    for (const t of [0, 0.25, 0.5, 0.75, 1]) {
+      svg.append(el('line', { class: 'grid', x1: m.left, x2: W - m.right, y1: y(t), y2: y(t) }));
+      svg.append(el('text', { x: m.left - 8, y: y(t) + 4, 'text-anchor': 'end' }, pct(t, 0)));
+    }
+    const series = [
+      ['circular_shift', COLORS.acid, 'Circular shift'],
+      ['phase_randomization', COLORS.paper, 'Phase randomization'],
+      ['permutation', COLORS.neutral, 'Permutation'],
+    ].filter(([key]) => data.methods.includes(key));
+    const groups = data.size;
+    const band = (W - m.left - m.right) / groups.length;
+    const bar = Math.max(6, Math.min(20, Math.floor((band - 14) / series.length)));
+    const shortLabel = (row) => {
+      if (row.process === 'random_walk') return 'random walk';
+      if (row.process.startsWith('garch')) return 'GARCH';
+      const h = row.process.split('_')[1];
+      return h === '0.50' ? 'white' : (W < 600 ? `H ${h}` : `fGn H ${h}`);
+    };
+    groups.forEach((row, g) => {
+      const cx = m.left + band * (g + 0.5);
+      const start = cx - (series.length * bar + (series.length - 1) * 2) / 2;
+      series.forEach(([key, color, label], s) => {
+        const value = row[key];
+        if (value === undefined) return;
+        const x = start + s * (bar + 2);
+        const h = Math.max(1.5, y(0) - y(value));
+        const ci = row[`${key}_ci`];
+        const tip = `<b>${label} · ${row.label}</b>False-alarm rate ${pct(value)}<br>95% interval ${pct(ci[0])}–${pct(ci[1])}`;
+        svg.append(el('path', { class: 'mark', d: barPath(x, y(0) - h, bar, h), fill: color }));
+        svg.append(el('rect', { class: 'hit', x: x - 2, y: m.top, width: bar + 4, height: y(0) - m.top, 'data-tip': tip, 'aria-label': `${label}, ${row.label}: ${pct(value)}` }));
+        const inflated = ci[0] > data.alpha;
+        if (inflated && (value > 0.3 || !row.stationary)) {
+          svg.append(el('text', { class: 'value', x: x + bar / 2, y: y(value) - 8, 'text-anchor': 'middle' }, pct(value, 0)));
+        }
+      });
+      svg.append(el('text', { x: cx, y: H - 32, 'text-anchor': 'middle' }, shortLabel(row)));
+      if (!row.stationary) {
+        svg.append(el('text', { class: 'value', x: cx, y: H - 18, 'text-anchor': 'middle' }, 'not stationary'));
+      }
+    });
+    svg.append(el('text', { x: m.left + (W - m.left - m.right) / 2, y: H - 2, 'text-anchor': 'middle' }, 'longer memory →'));
+    svg.append(el('line', { class: 'ref', x1: m.left, x2: W - m.right, y1: y(data.alpha), y2: y(data.alpha) }));
+    svg.append(el('text', { class: 'value', x: W - m.right + 8, y: y(data.alpha) + 4, 'text-anchor': 'start' }, `α ${pct(data.alpha, 0)}`));
+    bindTips(svg);
+
+    const supported = data.hypotheses.filter((h) => h.outcome === 'supported').length;
+    $('#memory-caption').textContent = `${data.size_trials} simulated systems of three independent channels per bar, ${data.n_samples} samples, ${data.n_surrogates} surrogates. Fractional Gaussian noise with Hurst exponent H has memory whose sum never converges; GARCH is uncorrelated but its volatility clusters; the random walk is not stationary. Each null is named for the assumption it makes, and a bar whose interval clears the α line is that assumption failing. ${supported} of ${data.hypotheses.length} hypotheses fixed before the run were supported.`;
+    const head = ['<th>Process</th>'].concat(series.map(([, , label]) => `<th>${label}</th><th>95% interval</th>`)).join('');
+    $('#memory-table').innerHTML = `<tr>${head}</tr>` + groups.map((r) => `<tr><td>${r.label}</td>` + series.map(([key]) => `<td>${pct(r[key])}</td><td>${pct(r[`${key}_ci`][0])}–${pct(r[`${key}_ci`][1])}</td>`).join('') + '</tr>').join('');
+  }
+
   function qboCard(qbo) {
     $('#qbo-status').textContent = qbo.status === 'not_supported' ? 'Not supported' : qbo.status.replace(/_/g, ' ');
     $('#qbo-rate').textContent = pct(qbo.drr_holdout_false_alarm_rate);
@@ -678,6 +738,7 @@
     sizeChart(evidence.calibration);
     powerChart(evidence.calibration);
     depthChart(evidence.calibration);
+    memoryChart(evidence.dependent_noise);
     qboCard(evidence.qbo);
   }
   renderEvidence();
