@@ -10,6 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Added `drr-analyze`, a local CSV-to-evidence workflow with explicit signal selection,
+  sampling checks, finite-value and constant-channel validation, and opt-in differencing.
+- Added deterministic JSON and Markdown bundles with named edges, lag units, source
+  checksums, run parameters, environment versions, and explicit inference limitations.
+- Preserve existing output directories and reject invalid input before exporting results.
+- Documented real-data onboarding and added end-to-end and malformed-input regression tests.
+- Fixed NumPy trapezoidal-integration compatibility typing under current NumPy stubs.
 - Dependent-noise null study (`drr_framework.dependent_noise`,
   `scripts/run_dependent_noise_study.py`): the experiment proposed in
   `docs/MATH_RESEARCH.md`, executed. Exact fractional Gaussian noise

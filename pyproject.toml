@@ -86,6 +86,7 @@ judgment = [
 ]
 
 [project.scripts]
+drr-analyze = "drr_framework.csv_analysis:main"
 drr-reproduce = "drr_framework.experiments:main"
 drr-monitor = "drr_framework.supervisory.cli:main"
 

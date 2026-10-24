@@ -86,6 +86,28 @@ Or run the complete example and write JSON/CSV artifacts to a directory you choo
 drr-reproduce --output-dir results/reproduction
 ```
 
+## Analyze your own data
+
+Turn a regularly sampled CSV into a readable report and complete JSON evidence bundle:
+
+```bash
+drr-analyze data/raw/coupled_oscillator_sample.csv \
+  --columns dim_0 dim_1 dim_2 --sampling-rate 200 \
+  --time-column time_seconds --output-dir results/my-first-analysis
+```
+
+Replace the file, signal column names, and sampling rate with your own. The command
+checks data integrity, preserves channel names, and exports `report.md` and
+`analysis.json`. Each run records the input SHA-256, parameters, random seed,
+versions, null assumption, and both exploratory and significant edges. Output
+must be a **new directory**, so an earlier evidence bundle is never overwritten.
+
+No rows are silently dropped or imputed. If supplied, timestamps must be numeric
+seconds with uniform spacing matching the sampling rate. The default 99 surrogates
+use max-statistic correction; `--n-surrogates 0` explicitly disables inference.
+See the [CSV analysis guide](docs/user-guide.md#analyze-a-csv) for assumptions,
+preprocessing, and troubleshooting.
+
 ## What the evidence says
 
 The synthetic oscillator checks whether the implementation recovers **known, injected** frequency and lag. It is a specification check, not evidence of general predictive performance.
