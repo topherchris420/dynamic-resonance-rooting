@@ -191,7 +191,10 @@ FEATURE_DEFINITIONS: Dict[str, FeatureDefinition] = {
             units="Hz; rad^2/s; turns",
             value_range="real; >= 0; integer",
             version=_PHASE_VERSION,
-            references=("Pikovsky, Rosenblum and Kurths (2001), Synchronization, Chapter 9",),
+            references=(
+                "Pikovsky, Rosenblum and Kurths (2001), Synchronization: A Universal Concept in "
+                "Nonlinear Sciences",
+            ),
             assumptions=("per-sample phase increments below pi (no aliasing)",),
             limitations=("descriptive; no test is attached",),
         ),
@@ -256,7 +259,7 @@ FEATURE_DEFINITIONS: Dict[str, FeatureDefinition] = {
             units="Hz; s; dimensionless",
             value_range="frequency in (0, fs/2)",
             version=_RECURRENCE_VERSION,
-            references=("Box, Jenkins and Reinsel, Time Series Analysis, Section 3.2",),
+            references=("Box, Jenkins and Reinsel, Time Series Analysis: Forecasting and Control",),
             assumptions=("an AR(2) resonance describes the series",),
             limitations=("additive noise biases rho toward zero (overstates damping)",),
         ),
@@ -307,11 +310,13 @@ PROVEN_STATEMENTS: Tuple[MathematicalStatement, ...] = (
         "their sum; docs/mathematical-extensions.md gives the argument.",
     ),
     MathematicalStatement(
-        "Choosing the ratio n:m from each channel's own spectrum leaves the null distribution of "
-        "the shift test unchanged.",
+        "Choosing the ratio n:m from each channel's mean frequency, a symmetric function of its "
+        "phase increments, keeps the increments exchangeable and the shift test exact. DRR "
+        "chooses it from the Welch peak, which only approximates the mean frequency.",
         "proven",
-        "A circular shift leaves a channel's periodogram, hence its dominant frequency, "
-        "unchanged, so the choice is constant on every orbit of the shift group.",
+        "Conditioning exchangeable variables on a symmetric function of them leaves them "
+        "exchangeable; the effect of DRR's approximation on size is measured on independent "
+        "oscillators at exact 1:2 and 2:3 ratios in the benchmark.",
     ),
     MathematicalStatement(
         "Two pure tones at the same frequency have a phase-locking value of 1 whether or not they "

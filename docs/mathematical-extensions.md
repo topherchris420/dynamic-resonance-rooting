@@ -1,0 +1,390 @@
+# Mathematical extensions: phase, ratio, recurrence, and evidence
+
+**Status:** experimental and off by default. Nothing here changes an existing
+DRR output unless it is requested. The measured behavior is in
+[`results/expected/resonance_math_benchmark.json`](../results/expected/resonance_math_benchmark.json),
+summarized in the [performance and limitations report](resonance-math-report.md).
+
+This page defines every new quantity, states its assumptions, proves the
+statements that can be proved, and marks the ones that can only be measured.
+
+## What is DRR's and what is new
+
+Dynamic Resonance Rooting is Christopher Woodyard's framework: resonance
+detection, directional rooting, the composite resonance depth, the QBist belief
+layer, the core → validation substrate → domain adapter architecture, and the
+calibrated studies that already test it. None of that is altered here.
+
+The additions are established mathematics, implemented independently for DRR:
+the `n:m` phase-locking value (Tass et al. 1998; Lachaux et al. 1999), Farey
+fractions (Hardy and Wright, Chapter 3), randomization tests (Lehmann and
+Romano, *Testing Statistical Hypotheses*, 3rd ed., Section 15.2), Bartlett's
+variance formula (Bartlett 1935), detrended fluctuation analysis (Peng et al.
+1994), recurrence quantification (Eckmann, Kamphorst and Ruelle 1987; Marwan et
+al. 2007), second-order linear recurrences, and the oriented area of cyclicity
+analysis (Baryshnikov and Schlafly 2016). Two compositions were derived for
+this work: the seam-corrected shift test (§1.4) and the quadratic-phase drift
+test (§3.2). No novelty is claimed for either until a literature review says
+otherwise.
+
+The framing follows four volumes of
+[Discovering the Art of Mathematics](https://www.artofmathematics.org/books)
+by Julian Fleron, Phil Hotchkiss, Volker Ecke and Christine von Renesse:
+*Music* (frequency ratios), *Patterns* (recurrence and recursive sequences),
+*Ideas of Calculus* (rates of change and accumulation), and *Geometry*
+(oriented area). The books are credited as inspiration only. No text,
+figures, or exercises from them are reproduced, and every definition below is
+the standard one from the literature cited beside it.
+
+## 1. Harmonic and rhythmic structure: `n:m` phase synchronization
+
+Module: `drr_framework.phase_sync`.
+
+### 1.1 Phase
+
+For a channel `x` with dominant frequency `f0` (the Welch peak refined to
+sub-bin precision, the same estimate `DepthCalculator` uses), the analytic
+signal of a Gaussian pass band is
+
+    z(t) = IFFT[ 2 exp(-(f - f0)^2 / (2 sigma^2)) 1[f > 0] X(f) ],   sigma = f0 / 6,
+
+computed on a reflect-padded copy. `z(t) = A(t) exp(i phi(t))` gives the
+envelope `A` and phase `phi`. The response of this band is that of the Morlet
+wavelet with `omega0 = 6` that `ResonanceDetector(method="wavelet")` uses, so
+`|z|^2` is four times that detector's scalogram at `f0`
+(`tests/test_phase_sync.py` checks this to a relative 1e-5 away from the edges).
+Samples within `2 fs / (2 pi sigma)` of either end carry edge effects and are
+trimmed before inference.
+
+### 1.2 Frequency ratio
+
+The frequency ratio `r = f_y / f_x` is compared with the coprime fractions
+`n / m`, `n, m <= 3`. These are the Farey fractions of order 3 and their
+reciprocals: 1/3, 1/2, 2/3, 1, 3/2, 2, 3. Any fraction with
+`|n/m - r| <= 0.08 r` is a candidate. The neighbours in that set differ by a
+factor of at least 4/3, so at most one fraction is ever a candidate at this
+tolerance. When none is a candidate the pair is *not tested*: small-integer
+locking is implausible.
+
+### 1.3 Statistic
+
+With `psi(t) = n phi_x(t) - m phi_y(t)`,
+
+    PLV_{n:m} = | (1/T) sum_t exp(i psi(t)) |.
+
+*Proven:* `0 <= PLV <= 1` (triangle inequality); PLV does not depend on `A(t)`;
+adding a constant to `psi` multiplies the mean phasor by a unit complex number
+and leaves PLV unchanged, so a delay shorter than the phase-coherence time acts
+as a phase offset and is invisible to PLV.
+
+### 1.4 Exact test with seam correction
+
+Let `a(t) = exp(i n phi_x(t))` and `b(t) = exp(i m phi_y(t))` on the trimmed
+window, `t = 0..M-1`, with `b(M)` the next sample. The seam jump is
+`J = arg(b(M) conj(b(0)))` and the corrected phasor is
+
+    b~(t) = b(t) exp(-i J t / M).
+
+The statistic for shift `s` is `T(s) = |(1/M) sum_t a(t) conj(b~((t + s) mod M))|`,
+computed for all `M` shifts with one FFT. The p-value is
+`#{s : T(s) >= T(0)} / M`. With several candidate ratios, each shift's
+per-ratio ranks are combined by the single-step min-p rule (Westfall and Young
+1993). Across channel pairs, p-values are adjusted by Holm's procedure.
+
+**Proposition 1 (validity).** If, under the null hypothesis, `a` is independent
+of the corrected increments of `b~` and the law of those increments is
+invariant under cyclic shifts, then `P(p <= alpha) <= alpha`.
+*Proof.* `T(s)` depends on `b~` only through the cyclically shifted increment
+sequence, because a cyclic shift of `b~` equals the phasor generated by the
+shifted increments times a unit constant, which `|.|` ignores. The data's law
+is therefore invariant under the cyclic group acting on the increments, and
+the randomization p-value over the whole group is valid (Lehmann and Romano,
+Section 15.2). ∎
+
+**Proposition 2 (the ramp makes the hypothesis hold).** If the phase increments
+`delta_j = phi_y(j + 1) - phi_y(j)`, `j = 0..M-1`, are exchangeable, then so are
+the corrected increments `m delta_j - J / M`, and they sum to a multiple of
+`2 pi`, so `b~` is exactly `M`-periodic.
+*Proof.* `J` is the wrapped value of `m sum_j delta_j`, a symmetric function of
+the increments. Subtracting the same symmetric quantity from every term keeps
+the sequence exchangeable, and `sum_j (m delta_j - J / M) = m sum_j delta_j - J`,
+which lies in `2 pi Z` because `J` is that sum wrapped into `(-pi, pi]`. ∎
+
+A Wiener phase sampled at regular intervals has independent, identically
+distributed increments, so for pure phase diffusion the test is exact
+(`tests/test_phase_sync.py::test_shift_test_is_exact_for_iid_phase_increments`).
+Without the ramp, a circular shift splices `b(M - 1)` to `b(0)` with a jump `J`.
+Shifted copies then look less locked than the original and the test rejects too
+often on highly coherent, unrelated oscillators. The ablation
+`phase_sync_no_seam` measures how often. Band-pass filtering makes increments
+dependent over about one impulse-response width, so for filtered data the
+invariance, and with it the exactness, is approximate. Its size is measured.
+
+**On the choice of ratio.** Conditioning exchangeable variables on a symmetric
+function of them leaves them exchangeable. A ratio chosen from each channel's
+mean frequency, which is the mean phase increment, would therefore leave the
+test exact. DRR chooses it from the Welch peak, which approximates the mean
+frequency. Independent oscillators at exact 1:2 and 2:3 frequency ratios in the
+benchmark measure the effect of that approximation on size.
+
+### 1.5 Identifiability and the inconclusive label
+
+**Proposition 3.** Two pure tones at one frequency have `PLV = 1` whether or not
+they interact. *Proof.* `psi` is constant. ∎
+
+Coupling can only be told from coincidence when phases wander during the
+record. Under independence of stationary phasors,
+
+    E|mean_t a(t) conj(b(t))|^2 = (1/N) sum_{|k| < N} (1 - |k|/N) g_a(k) conj(g_b(k)),
+
+where `g` is the autocovariance (Bartlett 1935). The *effective number of phase
+samples* is `N` divided by that sum, estimated with sample autocovariances and a
+Bartlett lag window to `N / 4`. It equals `N` for independent phases and about
+`T D` for two phase-diffusing oscillators with diffusion `D` rad²/s observed
+for `T` seconds. A pair that is not significant with fewer than 20 effective
+samples is reported *inconclusive*, never as evidence of no relationship. The
+threshold of 20 is a judgment, not a theorem.
+
+*Empirical (development runs):* the attainable p-value is bounded below by
+roughly the phase-coherence time divided by the record length. Shifts within one
+coherence time of zero reproduce the observed alignment and count toward the
+p-value. Exactness costs resolution, and a Bonferroni split across two tests
+costs power accordingly (see the report).
+
+### 1.6 Phase-difference dynamics
+
+`psi` is unwrapped by summing each channel's per-sample increment
+`arg(z[k+1] conj(z[k]))`, which is exact while the true increment is below `pi`
+(below Nyquist). Then
+
+- **frequency mismatch** `= slope of psi(t) / (2 pi) = n f_x - m f_y` (Hz),
+  by least squares;
+- **phase diffusion** `= Var[r(t + tau) - r(t)] / (2 tau)` for the detrended
+  residual `r` at lag `tau` (default an eighth of the record), in rad²/s;
+- **net slips** `= round((psi_end - psi_start) / 2 pi)`.
+
+Locked pairs have all three near zero. These are descriptive; no test is
+attached.
+
+### 1.7 Windowed locking and a change point
+
+`windowed_phase_locking` returns PLV in sliding windows, and
+`single_change_point` the least-squares split of a sequence into two constant
+segments. Both are descriptive. The best split is reported even when nothing
+changed, and overlapping windows are strongly dependent.
+
+### 1.8 Assumptions
+
+| Assumption | Checked by | If it fails |
+| --- | --- | --- |
+| Each channel is a band-limited oscillation | band-power fraction, usable-band check | warning; phase describes the band only |
+| No aliasing | cannot be checked from samples (`f` and `fs - f` give identical samples) | warning near Nyquist |
+| Stationary phase dynamics under the null | DFA exponent, frequency-drift test (§3.2) | the gate abstains |
+| Phases vary during the record | effective phase samples | non-significant pairs are inconclusive |
+| Independence under the null | this is the hypothesis tested | — |
+
+## 2. Patterns, recurrence and multiscale behavior
+
+### 2.1 Detrended fluctuation analysis
+
+Module: `drr_framework.data_quality`. The profile
+`Y(k) = sum_{t <= k} (x_t - mean x)` is cut into windows of `s` samples taken
+from both ends; a least-squares line is removed from each, and `F(s)` is the
+rms residual. `alpha` is the slope of `log F` against `log s`, fitted over
+scales from two periods of the dominant oscillation to `N / 4`.
+*Proven (asymptotically):* `alpha = H` for fractional Gaussian noise and
+`alpha = H + 1` for fractional Brownian motion (Bardet and Kammoun 2008), so a
+random walk has 1.5. The gate abstains above 1.2, which leaves room for the
+finite-sample error of about 0.1 (`tests/test_data_quality.py` recovers
+`H = 0.5, 0.8, 0.95` to within 0.1 at 8192 samples). The scale range matters:
+below one period an oscillation's smooth profile pushes the slope toward 2.
+
+### 2.2 Recurrence quantification
+
+Module: `drr_framework.recurrence`. Delay vectors
+`v_t = (x_t, x_{t + tau}, x_{t + 2 tau})` of the z-scored series recur when
+`||v_i - v_j|| <= epsilon`. Pairs with `|i - j|` within the Theiler window
+`2 tau + 1` are excluded (Theiler 1986). `epsilon` fixes the recurrence rate at
+5% (Marwan et al. 2007). The measures are determinism (share of recurrent
+points on diagonal lines of at least two points), laminarity (the same for
+vertical lines), mean diagonal length, and a recurrence period (the first
+offset recurring within 90% as densely as the densest one, reported only when
+that density is at least twice the median).
+
+`tau` defaults to a quarter period, and never to one sample. *Measured:* with a
+one-sample delay, consecutive delay vectors share coordinates, and white noise
+reaches a determinism of 0.57 instead of about 0.09 at two samples or more.
+
+### 2.3 Second-order linear recurrences
+
+`x_t = a1 x_{t-1} + a2 x_{t-2} + e_t` is fitted by least squares. The roots
+`rho exp(+-i omega)` of `z^2 - a1 z - a2` give frequency `omega fs / 2 pi`,
+damping time `-1 / (fs ln rho)` and quality factor `pi f` times the damping
+time. Fibonacci is the noiseless case `a1 = a2 = 1`, with real roots
+`(1 +- sqrt 5) / 2`: growth, not oscillation. *Measured:* additive noise biases
+`rho` toward zero. For a unit tone at 0.05 cycles per sample, noise of standard
+deviation 0.1 moves the fitted frequency by about 20%, and from 0.2 the roots
+stop being complex. Use it only on high signal-to-noise records.
+
+### 2.4 Deliberately not implemented
+
+- **Correlation dimension and Lyapunov exponents.** With `N` points, no
+  dimension above about `2 log10 N` can be estimated (Eckmann and Ruelle 1992),
+  and both estimates are dominated by noise at the record lengths DRR sees.
+- **Recursive integer sequences as features.** No defensible statistical use for
+  relationship detection was found; the linear-recurrence model in §2.3 is the
+  part of that idea that applies to time series.
+- **Twin surrogates.** These recurrence-based surrogates (Thiel et al. 2006)
+  could test synchronization without assuming stationary phase dynamics, but
+  they depend on embedding and threshold choices that this slice could not
+  validate. They are listed as future work.
+
+## 3. Calculus and dynamic transitions
+
+### 3.1 Instantaneous frequency
+
+`f(t) = (1 / 2 pi) d phi / dt` from the averaged per-sample increments
+`arg(z[k+1] conj(z[k]))`, a second-order central difference that needs no
+unwrapping. The phase of a vanishing amplitude is undefined, so samples whose
+amplitude is below a tenth of the median are returned as `NaN`. This is the
+numerical-stability rule: the derivative is reported only where it is
+conditioned.
+
+### 3.2 Frequency-drift test
+
+A linear drift makes the phase quadratic: `phi(t) = a + 2 pi f t + pi beta t^2`.
+The band phase (pass band `f0 / 6`) is fitted with a quadratic, giving the
+drift across the record, `beta T`. Under a stationary phase-diffusing
+oscillator the phase is `sigma W(t)` plus a line, with `sigma^2 = 2D`. Its
+projection onto the shifted Legendre polynomial `P2(u) = 6u^2 - 6u + 1` has
+variance `25 sigma^2 T I`, where
+
+    I = integral_0^1 integral_0^1 P2(u) P2(v) min(u, v) du dv
+      = integral_0^1 (integral_s^1 P2)^2 ds = integral_0^1 s^2 (s - 1)^2 (2s - 1)^2 ds = 1/210.
+
+Converting to the `t^2` coefficient and then to hertz,
+
+    sd(beta T) = (6 / pi) sqrt(50 D / (210 T)) ≈ 0.932 sqrt(D / T).
+
+`D` is estimated from the detrended phase's increments at a lag of four filter
+time constants. The gate abstains when `|beta T / sd| > 3` and the drift exceeds
+1% of the frequency. *Measured on development data:* the z statistic of
+stationary oscillators has a spread of 1.1 to 1.3, slightly wider than the unit
+spread of the Brownian approximation, and the gate abstained on 0–4.0% of
+stationary development pairs against 96–100% of swept and random-walk pairs.
+An earlier segment-based drift check abstained on up to 33% of stationary
+development pairs and was replaced before the held-out run.
+
+### 3.3 Accumulation
+
+The phase diffusion of §1.6 is the accumulated variance of the integrated
+frequency mismatch, the calculus counterpart of the effective sample size: the
+faster the accumulated phase difference spreads, the more independent evidence
+a record holds.
+
+## 4. Geometry of reconstructed trajectories
+
+Module: `drr_framework.trajectory_geometry`. For centred samples the oriented
+area is
+
+    A_xy = (1/2) sum_{t=0}^{N-2} [x_t (y_{t+1} - y_t) - y_t (x_{t+1} - x_t)].
+
+**Proposition 4.** `A_xy = ((N - 1) / 2) (C_xy(1) - C_yx(1))` with
+`C_xy(1) = (1 / (N - 1)) sum_t x_t y_{t+1}`. *Proof.* The terms `x_t y_t` and
+`y_t x_t` cancel, which leaves `(1/2) sum_t (x_t y_{t+1} - y_t x_{t+1})`. ∎
+
+The oriented area, and every quantity built from it (the lead matrix, its
+cyclic order), is therefore a function of the lag-one cross-covariance. It
+cannot carry information beyond second-order statistics. For
+`x_t = cos(omega t)` and `y_t = cos(omega t - theta)` the normalized area is
+`sin(omega) sin(theta)`. It is zero for in-phase and anti-phase coupling. It
+mixes frequency with phase lag, and its sign names a leader only modulo a
+period. In the benchmark the driven oscillator's natural frequency was the
+higher one, so it ran ahead of its driver in phase: every development
+detection (17 of 17) named the driven channel as the leader, and so did all 9
+held-out detections on the undelayed 1:1 coupling. With a 0.15 s delay, 8 of 9
+named the driver. The sign follows the phase lag, which detuning and delay push
+in opposite directions, not the direction of coupling. Geometric resemblance is
+not evidence of causation.
+
+## 5. Evidence records and abstention
+
+Module: `drr_framework.math_evidence`, assembled by
+`drr_framework.math_features.analyze_mathematical_features`. A record holds:
+
+| Field | Content |
+| --- | --- |
+| `feature_definitions` | equation, units, range, version, references, assumptions, limitations |
+| `data_provenance` | SHA-256 of the input and of the analysed array, shape, sampling rate, interpolation report |
+| `assumptions` | each assumption as `checked_passed`, `checked_failed`, `unverifiable`, or `not_applicable` |
+| `configuration`, `measurements` | every parameter; PLV, p-values, effective samples, DFA exponents, frequencies |
+| `negative_controls` | 19 phase-randomized copies tested like the data; flagged when the number with any synchronized pair has a binomial upper tail below 0.01 at `alpha` |
+| `statements` | each `proven` (with reference), `empirical` (with the artifact), or `hypothesis` (untested) |
+| `conclusion` | `supported`, `not_detected`, `inconclusive`, or `not_applicable`, with reasons |
+| `reproducibility` | versions and the configuration hash |
+
+The record holds no wall-clock time, and `record_id` is the SHA-256 of its
+canonical JSON, so the same input gives the same record. The conclusion is
+`inconclusive` whenever the data-quality gate abstains or the negative controls
+fail. A supported conclusion always carries the hypothesis that the channels
+interact physically, labelled untested.
+
+The gate's thresholds, all in `drr_framework.data_quality.DEFAULT_THRESHOLDS`:
+
+| Check | Abstains when |
+| --- | --- |
+| Length | fewer than 128 samples |
+| Constant channel | any channel is constant |
+| Scaling | DFA exponent above 1.2 |
+| Frequency drift | drift beyond 3 standard errors and 1% of the frequency |
+| Interpolation | more than 20% of values interpolated, or a gap longer than one cycle |
+
+Negative controls are phase-randomized, so they are stationary by
+construction. They check the test on data with these spectra. They do not
+check whether the data themselves are stationary; the gate does that, for the
+two kinds of nonstationarity it can see.
+
+## 6. Use
+
+```python
+from drr_framework import DynamicResonanceRooting, analyze_mathematical_features
+
+results = DynamicResonanceRooting(sampling_rate=250.0).analyze_system(
+    data, multivariate=True, mathematical_features=True
+)
+record = results["mathematical_features"]["evidence_record"]
+print(record["conclusion"])
+
+# Or directly, with gaps (NaN) or irregular timestamps:
+features = analyze_mathematical_features(data, 250.0, timestamps=times, column_names=names)
+```
+
+```bash
+drr-analyze data.csv --columns a b --sampling-rate 250 --mathematical-features --output-dir out
+python scripts/run_resonance_math_benchmark.py --output-dir results/expected --workers 4
+```
+
+## 7. Connections to the existing DRR models
+
+| Existing DRR element | Connection | Checked by |
+| --- | --- | --- |
+| `ResonanceDetector(method="wavelet")` | the phase band is its Morlet wavelet at `f0` | `test_band_is_the_morlet_wavelet_of_the_resonance_detector` |
+| `DepthCalculator` target frequency | the phase test uses the same estimate | `test_dominant_frequency_matches_the_depth_calculator_target` |
+| Depth's `phase_coherence` component | it is the 1:1 PLV between the raw Hilbert phase and a tone at `f0` | `test_depth_phase_coherence_is_the_plv_against_a_reference_tone` |
+| `time_delay_embedding` | now calls the shared `delay_embedding` | `test_delay_embedding_is_the_reconstruction_drr_already_uses` |
+| Dependent-noise null study | every null fails on random walks; the gate's DFA check abstains on them | `test_gate_abstains_on_random_walks_and_shared_sweeps` |
+
+## References
+
+Bardet and Kammoun (2008), IEEE Trans. Inf. Theory 54, 2041. Bartlett (1935),
+J. R. Stat. Soc. 98, 536. Baryshnikov and Schlafly (2016), IEEE Conference on
+Decision and Control. Eckmann, Kamphorst and Ruelle (1987), Europhys. Lett. 4,
+973. Eckmann and Ruelle (1992), Physica D 56, 185. Hardy and Wright, *An
+Introduction to the Theory of Numbers*, Chapter 3. Holm (1979), Scand. J. Stat.
+6, 65. Lachaux et al. (1999), Hum. Brain Mapp. 8, 194. Lehmann and Romano,
+*Testing Statistical Hypotheses*, 3rd ed., Section 15.2. Marwan et al. (2007),
+Phys. Rep. 438, 237. Peng et al. (1994), Phys. Rev. E 49, 1685. Pikovsky,
+Rosenblum and Kurths (2001), *Synchronization: A Universal Concept in Nonlinear
+Sciences*. Tass et al. (1998), Phys. Rev. Lett. 81, 3291. Theiler (1986), Phys.
+Rev. A 34, 2427. Thiel et al. (2006), Europhys. Lett. 75, 535. Westfall and
+Young (1993), *Resampling-Based Multiple Testing*.

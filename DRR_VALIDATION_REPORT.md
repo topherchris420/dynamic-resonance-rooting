@@ -6,6 +6,8 @@ not support. The machine-readable records are
 [`results/expected/rooting_calibration_study.json`](results/expected/rooting_calibration_study.json),
 the preregistered null-model study
 [`results/expected/dependent_noise_null_study.json`](results/expected/dependent_noise_null_study.json),
+the preregistered phase and harmonic benchmark
+[`results/expected/resonance_math_benchmark.json`](results/expected/resonance_math_benchmark.json),
 and the preregistered
 [`results/expected/qbo_structural_change_benchmark.json`](results/expected/qbo_structural_change_benchmark.json),
 whose reviewed `claim_status` is `not_supported`. The tables are in
@@ -30,6 +32,13 @@ the evidence?
   GARCH(1,1) noise, the permutation null reaches 0.80 under long memory, and
   every null fails on a random walk (0.27–0.89), the boundary the stationarity
   assumption predicts.
+- **Phase mathematics helps where rooting is blind, not where it is strong.**
+  On held-out simulations an experimental `n:m` phase test stayed near 5% on
+  every stationary unrelated condition and detected 1:2 and 2:3 coupling in
+  28.0–35.5% of pairs, where rooting detected 2.5–5.0%. It was weaker than rooting
+  for 1:1 coupling (0.26 against 0.44 on average), a preregistered hypothesis
+  that was not supported. The same study found DRR rooting inflated on
+  coherent oscillators (0.145).
 - **Resonance depth is descriptive.** It separates a clear tone from white
   noise. It does not separate red noise from a weak resonance, and it is carried
   almost entirely by the power spectrum.
@@ -86,6 +95,25 @@ Measured by `python scripts/run_dependent_noise_study.py` and tabulated in
 - **Power.** The lag-2 edge at coupling 0.3 is recovered in 100% of trials at
   H = 0.50 and 50% at H = 0.95, with spurious edges rising to 13.5%.
 
+## 3b. Phase and harmonic mathematics
+
+Measured by `python scripts/run_resonance_math_benchmark.py` and tabulated in
+[`DRR_BENCHMARKS.md`](DRR_BENCHMARKS.md) §6; the definitions, proofs and full
+report are in [`docs/mathematical-extensions.md`](docs/mathematical-extensions.md)
+and [`docs/resonance-math-report.md`](docs/resonance-math-report.md). Nine
+hypotheses were committed with their fingerprint before the held-out run.
+
+- **Size.** The phase test held 0.003–0.058 on all nine stationary unrelated
+  held-out conditions, including a phase-randomized negative control.
+- **Harmonic coupling.** Detected in 35.5% (1:2) and 28.0% (2:3) of pairs
+  against 5.0% and 2.5% for rooting; the ratio search carries the gain.
+- **1:1 coupling.** Mean detection 0.263 against 0.441 for rooting: not
+  supported. The Bonferroni union of both tests did not improve on rooting.
+- **Existing rooting.** Inflated on coherent oscillators (0.145), on a common
+  jittered clock (0.072) and on a shared amplitude trend (0.150).
+- **Gate.** Abstained on all random walks and 88.5% of shared sweeps, and on
+  0.5–9% of stationary pairs; it does not see amplitude trends.
+
 ## 4. Placebo checks, corrected
 
 `drr_framework.sensitivity_tests.run_placebo_and_null_tests` now uses a valid
@@ -125,6 +153,8 @@ protocol, like the QBO study.
 | `src/drr_framework/calibration.py`, `scripts/run_calibration_study.py` | Monte Carlo size, power, memory, and depth study |
 | `src/drr_framework/dependent_noise.py`, `scripts/run_dependent_noise_study.py` | Preregistered null-model study under long memory, volatility clustering, and a random walk |
 | `src/drr_framework/external_benchmark/`, `scripts/run_structural_change_benchmark.py` | Preregistered external comparison |
+| `src/drr_framework/resonance_math_benchmark.py`, `scripts/run_resonance_math_benchmark.py` | Preregistered phase and harmonic benchmark |
+| `src/drr_framework/phase_sync.py`, `data_quality.py`, `math_evidence.py` | Experimental phase test, data-quality gate, evidence records |
 | `src/drr_framework/sensitivity_tests.py` | Parameter sweeps and placebo checks |
 | `src/drr_framework/evidence_card.py`, `scripts/run_drr_validation.py` | Evidence cards whose statistics come from the measured run |
 | `assets/web-demo/drr-engine.js`, `index.html` | Live browser lab running the tested port |

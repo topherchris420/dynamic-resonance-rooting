@@ -314,3 +314,23 @@ def test_dominant_frequency_matches_the_depth_calculator_target():
     assert dominant_frequency(data, FS) == DepthCalculator()._select_target_frequency(
         data, FS, None
     )
+
+
+def test_depth_phase_coherence_is_the_plv_against_a_reference_tone():
+    """DRR's existing depth component is the 1:1 PLV between the raw Hilbert phase and a tone."""
+    from drr_framework._spectral import hilbert
+    from drr_framework.modules import DepthCalculator
+
+    data = _pair(16)[:512, 0]
+    target = 10.1
+    reference = 2 * np.pi * target * np.arange(data.size) / FS
+    plv, _ = phase_locking_value(np.angle(hilbert(data - data.mean())), reference)
+    assert plv == pytest.approx(DepthCalculator()._phase_coherence(data, FS, target), abs=1e-12)
+
+
+def test_a_constant_channel_is_unusable_not_synchronized():
+    data = np.column_stack((_pair(17)[:, 0], np.full(2048, 3.0)))
+    result = PhaseSynchronyAnalyzer(FS).analyze(data)
+    assert result["channels"]["dim_1"]["reason"] == "constant channel"
+    pair = result["pairs"][0]
+    assert pair["status"] == "inconclusive" and pair["p_value"] is None

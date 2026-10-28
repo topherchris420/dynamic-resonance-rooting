@@ -12,7 +12,7 @@ import platform
 import tempfile
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
-from typing import Any, Dict, Optional, Sequence
+from typing import Any, Callable, Dict, List, Optional, Sequence
 
 import numpy as np
 
@@ -63,12 +63,17 @@ def analyze_csv(
     alpha: float = 0.05,
     surrogate_method: str = "circular_shift",
     difference: bool = False,
+    mathematical_features: bool = False,
 ) -> Dict[str, Any]:
     """Analyze explicit signal columns without dropping, imputing, or sorting rows.
 
     Optional timestamps must be numeric seconds, strictly increasing, and agree
     with the declared sample rate to relative tolerance 1e-4 (absolute 1e-9 s).
     First differencing is opt-in and recorded; it does not prove stationarity.
+    ``mathematical_features`` adds the experimental data-quality checks, phase
+    synchronization tests, and evidence record of
+    :func:`drr_framework.math_features.analyze_mathematical_features`; without
+    it the output is unchanged.
     """
     if len(columns) < 2 or len(set(columns)) != len(columns):
         raise ValueError("Select at least two distinct signal columns with --columns.")
@@ -208,6 +213,22 @@ def analyze_csv(
         "rooting_method": "lagged_correlation",
         "correction": "max_statistic",
     }
+    features = None
+    if mathematical_features:
+        from .math_features import analyze_mathematical_features
+
+        parameters["mathematical_features"] = True
+        features = analyze_mathematical_features(
+            data,
+            sampling_rate,
+            column_names=list(columns),
+            random_state=random_state,
+            data_source=Path(path).name,
+        )
+        warnings.append(
+            "Mathematical features are experimental; their measured behavior on synthetic data "
+            "is in results/expected/resonance_math_benchmark.json."
+        )
     provenance = {
         "input_sha256": hashlib.sha256(raw).hexdigest(),
         "input_rows": len(rows),
@@ -218,17 +239,65 @@ def analyze_csv(
     run_id = hashlib.sha256(
         json.dumps(provenance, sort_keys=True, allow_nan=False).encode("utf-8")
     ).hexdigest()
-    return _json_safe(
-        {
-            "schema_version": "1.0",
-            "run_id": run_id,
-            "provenance": provenance,
-            "null_assumption": NULL_ASSUMPTIONS[surrogate_method],
-            "warnings": warnings,
-            "channels": channels,
-            "rooting": rooting,
-        }
-    )
+    payload = {
+        "schema_version": "1.0",
+        "run_id": run_id,
+        "provenance": provenance,
+        "null_assumption": NULL_ASSUMPTIONS[surrogate_method],
+        "warnings": warnings,
+        "channels": channels,
+        "rooting": rooting,
+    }
+    if features is not None:
+        payload["mathematical_features"] = features
+    return _json_safe(payload)
+
+
+def _number(value: Any) -> str:
+    return f"{value:.4g}" if isinstance(value, (int, float)) else "n/a"
+
+
+def _feature_lines(features: Dict[str, Any], cell: Callable[[Any], str]) -> List[str]:
+    """Report section for the experimental mathematical features."""
+    quality = features["data_quality"]
+    record = features["evidence_record"]
+    lines = [
+        "",
+        "## Experimental mathematical features",
+        "",
+        f"Evidence record `{record['record_id']}`: **{record['conclusion']['status']}**.",
+        "",
+        *[f"- {cell(reason)}" for reason in record["conclusion"]["reasons"]],
+        "",
+        "Data-quality gate: "
+        + (
+            "**abstains**: relationship tests are not interpretable here."
+            if quality["abstain"]
+            else "passes."
+        ),
+        "",
+        *[f"- {cell(item)}" for item in quality["reasons"] + quality["warnings"]],
+    ]
+    phase = features.get("phase_synchrony")
+    if phase:
+        lines += [
+            "",
+            "| Channel pair | Status | Ratio n:m | PLV | Holm-adjusted p | Effective phase samples |",
+            "| --- | --- | --- | ---: | ---: | ---: |",
+        ]
+        for pair in phase["pairs"]:
+            ratio = pair["selected_ratio"]
+            lines.append(
+                f"| {cell(pair['channels'][0])} – {cell(pair['channels'][1])} | {pair['status']} |"
+                f" {f'{ratio[0]}:{ratio[1]}' if ratio else 'n/a'} | {_number(pair['plv'])} |"
+                f" {_number(pair['adjusted_p_value'])} | {_number(pair['effective_samples'])} |"
+            )
+        lines += [
+            "",
+            "Phase synchronization is undirected. An inconclusive pair is not evidence of no "
+            "relationship.",
+        ]
+    return lines
 
 
 def render_report(payload: Dict[str, Any]) -> str:
@@ -295,6 +364,8 @@ def render_report(payload: Dict[str, Any]) -> str:
                 f"| {cell(edge['source'])} | {cell(edge['target'])} | {edge['lag']} | "
                 f"{edge['lag_seconds']:.6g} | {edge['adjusted_p_value']:.6g} |"
             )
+    if "mathematical_features" in payload:
+        lines.extend(_feature_lines(payload["mathematical_features"], cell))
     lines.extend(
         [
             "",
@@ -361,6 +432,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         "--difference",
         action="store_true",
         help="Analyze first differences; recorded in provenance.",
+    )
+    parser.add_argument(
+        "--mathematical-features",
+        action="store_true",
+        help="Add experimental data-quality checks, phase-synchronization tests, and an evidence record.",
     )
     args = parser.parse_args(argv)
     options = vars(args).copy()

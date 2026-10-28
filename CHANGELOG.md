@@ -10,6 +10,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Experimental mathematical features, off by default
+  (`analyze_system(mathematical_features=...)`, `drr-analyze --mathematical-features`):
+  `drr_framework.phase_sync` tests channel pairs for `n:m` phase synchronization
+  on the Morlet phase at each dominant frequency, with a Farey ratio search and
+  an exact randomization test over every circular shift. A linear phase ramp
+  makes the shifted phasor periodic, which removes the seam that inflated shift
+  nulls on coherent oscillators. Non-significant pairs with too little phase
+  variability are reported inconclusive. `drr_framework.data_quality` adds DFA,
+  a quadratic-phase frequency-drift test, linear regularization of gaps and
+  irregular timestamps, and abstention. `drr_framework.recurrence` adds
+  recurrence quantification and second-order linear recurrences;
+  `drr_framework.trajectory_geometry` adds oriented areas with the proof that
+  they equal the antisymmetrized lag-one cross-covariance.
+  `drr_framework.math_evidence` and `drr_framework.math_features` produce
+  deterministic evidence records that separate proven, empirical and hypothetical
+  statements and include in-data phase-randomized negative controls.
+- Preregistered phase and harmonic benchmark (`drr_framework.resonance_math_benchmark`,
+  `scripts/run_resonance_math_benchmark.py`, `results/expected/resonance_math_benchmark.json`).
+  On held-out simulations the phase test held 0.003–0.058 on every stationary
+  unrelated condition and detected 1:2 and 2:3 coupling in 28.0–35.5% of pairs,
+  where DRR rooting detected 2.5–5.0%. It was weaker than rooting for 1:1
+  coupling (mean 0.263 against 0.441), so that hypothesis was not supported;
+  eight of nine were supported. The study also measured DRR rooting inflated on
+  coherent oscillators (0.145), a common jittered clock (0.072) and a shared
+  amplitude trend (0.150).
+- `docs/mathematical-extensions.md` (definitions and proofs) and
+  `docs/resonance-math-report.md` (performance, limitations, Heilmeier review,
+  integration recommendations). The framing credits Discovering the Art of
+  Mathematics (https://www.artofmathematics.org/books); no content is reproduced.
+
 - Added `drr-analyze`, a local CSV-to-evidence workflow with explicit signal selection,
   sampling checks, finite-value and constant-channel validation, and opt-in differencing.
 - Added deterministic JSON and Markdown bundles with named edges, lag units, source
@@ -127,6 +157,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (the figure is closed after optional saving instead of displayed)
 
 ### Changed
+- `DynamicResonanceRooting.time_delay_embedding` calls the shared
+  `recurrence.delay_embedding`; results and error messages are unchanged.
+- `tests/test_depth_invariants.py` compares committed edges one at a time,
+  because pytest 9.2 rejects `pytest.approx` on a list of dicts.
 - Resonance depth is now `drr_composite_v2`. The target frequency is refined to
   sub-bin precision, and the temporal-persistence tolerance is one bin of the
   segment spectrum instead of `max(bin, 0.5)` in the caller's units. Scores for

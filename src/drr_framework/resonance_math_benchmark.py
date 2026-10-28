@@ -1439,7 +1439,9 @@ def render_benchmark_report(artifact: Mapping[str, Any]) -> str:
         "| Method | Family | What it does |",
         "| --- | --- | --- |",
     ]
-    for name, method in artifact["methods"].items():
+    # METHODS fixes the order; the artifact's own mapping is sorted by JSON.
+    for name in [m for m in METHODS if m in artifact["methods"]]:
+        method = artifact["methods"][name]
         lines.append(f"| `{name}` | {method['family']} | {method['description']} |")
 
     null_methods = [
@@ -1575,7 +1577,7 @@ def render_benchmark_report(artifact: Mapping[str, Any]) -> str:
             entry = row["summary"].get(method, {}).get("direction_correct_among_declared")
             cells.append("n/a" if entry is None else f"{entry['rate']:.3f} ({entry['trials']})")
         lines.append(f"| {row['label']} | " + " | ".join(cells) + " |")
-    runtime = artifact["runtime"].get("holdout", {})
+    runtime = artifact.get("runtime", {}).get("holdout", {})
     if runtime:
         names = sorted({name for timing in runtime.values() for name in timing})
         lines += [

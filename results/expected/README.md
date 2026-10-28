@@ -20,3 +20,10 @@ nulls on fractional Gaussian noise, GARCH(1,1) noise, and random walks, with
 the power to recover a known edge under long memory and the outcome of each
 hypothesis fixed before the run. Regenerate it and its Markdown companion with
 `python scripts/run_dependent_noise_study.py --output-dir results/expected`.
+
+`resonance_math_benchmark.json` is the preregistered phase and harmonic
+benchmark: false-relationship and detection rates of DRR rooting, conventional
+baselines, the experimental phase-synchrony test and its ablations on held-out
+simulated channel pairs, one character per trial, with nine hypotheses fixed
+before the held-out run. Regenerate it and its Markdown companion with
+`python scripts/run_resonance_math_benchmark.py --output-dir results/expected --workers 4`.

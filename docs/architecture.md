@@ -155,12 +155,30 @@ flowchart TD
     Docs[docs/] --> API
     Calibration --> Artifacts[results/expected/]
     DependentNoise --> Artifacts
+    MathFeatures[math_features.py] --> PhaseSync[phase_sync.py]
+    MathFeatures --> DataQuality[data_quality.py]
+    MathFeatures --> Recurrence[recurrence.py]
+    MathFeatures --> Geometry[trajectory_geometry.py]
+    MathFeatures --> MathEvidence[math_evidence.py]
+    PhaseSync --> Modules
+    Analysis -. opt-in .-> MathFeatures
+    MathBenchmark[resonance_math_benchmark.py] --> PhaseSync
+    MathBenchmark --> DataQuality
+    MathBenchmark --> Modules
+    MathBenchmark --> Artifacts
 ```
 
-`calibration.py` and `dependent_noise.py` are the validation substrate's
-Monte Carlo instruments. They import the operators, never the other way round,
+`calibration.py`, `dependent_noise.py`, and `resonance_math_benchmark.py` are
+the validation substrate's Monte Carlo instruments. They import the operators, never the other way round,
 and every number they produce is written to `results/expected/` with the seed
 schedule that reproduces it.
+
+The experimental mathematical features (`phase_sync.py`, `data_quality.py`,
+`recurrence.py`, `trajectory_geometry.py`, `math_evidence.py`, assembled by
+`math_features.py`) are core operators that run only when
+`analyze_system(mathematical_features=...)` or `drr-analyze
+--mathematical-features` asks for them. `analysis.py` imports them lazily, so
+the default workflow's imports and outputs are unchanged.
 
 ## Design Boundaries
 

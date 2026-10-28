@@ -17,7 +17,10 @@ integers ``n, m <= max_order`` (the Farey fractions of that order and their
 reciprocals), the generalized phase difference ``psi(t) = n phi_x(t) - m phi_y(t)``
 is formed. Locked oscillators keep ``psi`` bounded; unrelated ones let it
 wander. The ratio is chosen from each channel's own spectrum, never from the
-alignment between channels, so choosing it does not bias the test below.
+alignment between channels. Had it been chosen from each channel's mean
+frequency, a symmetric function of its phase increments, the test below would
+stay exact; the Welch peak used here approximates that, and its effect on size
+is measured on independent oscillators at exact 1:2 and 2:3 ratios.
 
 **Statistic.** ``PLV_{n:m} = |mean_t exp(i psi(t))|``, the phase-locking value.
 It is 1 for a constant ``psi`` and near 0 for a ``psi`` spread evenly around the
@@ -558,6 +561,9 @@ class PhaseSynchronyAnalyzer:
             "reason": None,
             "band": None,
         }
+        if np.ptp(series) == 0:
+            record["reason"] = "constant channel"
+            return record
         if not 0.0 < frequency < nyquist:
             record["reason"] = "no positive spectral peak below Nyquist"
             return record
