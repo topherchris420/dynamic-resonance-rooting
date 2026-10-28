@@ -183,6 +183,85 @@ error of any null on any draw function; `coupled_edge_recovery` measures power.
 `results/expected/dependent_noise_null_study.json`, whose hypotheses and decision
 rule are fixed in `DEFAULT_CONFIG` before the rows are seen.
 
+## Experimental mathematical features
+
+Off by default and experimental. Definitions, assumptions and proofs are in
+[mathematical-extensions.md](mathematical-extensions.md); measured behavior is in
+[resonance-math-report.md](resonance-math-report.md).
+
+```python
+from drr_framework import DynamicResonanceRooting, analyze_mathematical_features
+
+results = DynamicResonanceRooting(sampling_rate=250.0).analyze_system(
+    data, multivariate=True, mathematical_features=True
+)
+features = results["mathematical_features"]
+features["evidence_record"]["conclusion"]  # {"status": ..., "reasons": [...]}
+```
+
+`mathematical_features` also accepts a mapping of keyword arguments for
+`analyze_mathematical_features(data, sampling_rate, *, column_names=None,
+timestamps=None, phase_options=None, quality_thresholds=None,
+negative_controls=19, recurrence_points=1000, random_state=0, data_source=None)`.
+That function interpolates `NaN` gaps or irregular `timestamps` onto a regular
+grid (recorded), runs the data-quality gate, tests every channel pair for phase
+synchronization, runs the same test on phase-randomized copies as negative
+controls, describes each channel with recurrence quantification and a
+second-order linear recurrence, and returns a deterministic evidence record.
+Every other result of `analyze_system` is unchanged. On the command line,
+`drr-analyze ... --mathematical-features` adds the same section to the report.
+
+### `PhaseSynchronyAnalyzer`
+
+```python
+from drr_framework.phase_sync import PhaseSynchronyAnalyzer
+
+result = PhaseSynchronyAnalyzer(sampling_rate=250.0).analyze(data, column_names=("a", "b"))
+pair = result["pairs"][0]
+pair["status"]          # synchronized | not_detected | inconclusive | not_tested
+pair["selected_ratio"]  # [n, m] with f_b / f_a close to n / m
+pair["plv"], pair["adjusted_p_value"], pair["effective_samples"]
+```
+
+The p-value counts every circular shift of the seam-corrected phasor, so it is
+deterministic and its smallest value is `1 / n_shifts`. Holm's procedure adjusts
+across pairs. A pair that is not significant with fewer than
+`min_effective_samples` (20) effective phase samples is `inconclusive`, never
+evidence of no relationship. The module also exposes
+`band_limited_analytic_signal`, `instantaneous_frequency`, `phase_locking_value`,
+`farey_ratio_candidates`, `phase_shift_test`, `effective_phase_samples`,
+`phase_difference_dynamics`, `windowed_phase_locking`, and `single_change_point`.
+
+### Data quality and abstention
+
+```python
+from drr_framework.data_quality import assess_series_quality, regularize_series
+
+values, report = regularize_series(raw_with_nans, timestamps=times, sampling_rate=250.0)
+quality = assess_series_quality(values, 250.0, regularization=report)
+quality["abstain"], quality["reasons"], quality["warnings"]
+```
+
+`detrended_fluctuation` returns the DFA exponent and `frequency_drift` the
+quadratic-phase drift test. The thresholds are in `DEFAULT_THRESHOLDS`.
+
+### Recurrence, geometry and evidence
+
+- `recurrence.recurrence_quantification(x, ...)`: determinism, laminarity, mean
+  diagonal length, recurrence period at a fixed recurrence rate.
+- `recurrence.second_order_recurrence(x, sampling_rate)`: AR(2) roots, frequency,
+  damping time, quality factor.
+- `trajectory_geometry.oriented_area_matrix(data)`: equal to the antisymmetrized
+  lag-one cross-covariance, so no information beyond second-order statistics.
+- `math_evidence.MathematicalEvidenceRecord` and `MathematicalStatement`: typed
+  records whose statements are `proven`, `empirical`, or `hypothesis`.
+
+### Benchmark
+
+`drr_framework.resonance_math_benchmark.run_benchmark(config=None, workers=1)`
+runs the preregistered study behind `results/expected/resonance_math_benchmark.json`.
+`run_condition` and `run_trial` rerun any row or trial with its seed schedule.
+
 ## Dataset Adapters
 
 - `PolicyResonanceDataset`: prepares tabular policy observables.

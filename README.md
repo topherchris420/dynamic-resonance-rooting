@@ -37,6 +37,7 @@ A time series can offer a compelling story and still be wrong. DRR treats that m
 | Which signal tends to lead another? | Lagged correlation or transfer entropy against a circular-shift, phase-randomization, or permutation null | Candidate edges, tested edges, lags, and p-values |
 | Has the system's structure shifted? | State-space, topology, and structural-surprise diagnostics | Estimated states, changes, and uncertainty to investigate |
 | Can a bounded input change a simulated state? | Navigation engine and matched control experiments | Proposed interventions and comparison metrics for a modeled system |
+| Do two rhythms keep time, even at 1:2 or 2:3? | Experimental `n:m` phase-synchrony test with a data-quality gate (opt-in) | Phase-locking value, an exact shift p-value, an inconclusive label, and an evidence record |
 
 The core operates on a numeric series. The **validation substrate** includes synthetic ground truth, specification and leakage tests, surrogate inference, and a preregistered external comparison. The **domain adapters** apply the same core to specific workflows, such as physics, sensing, macro policy, banking supervision, or typed judgment. A universal claim is about the operators; a domain claim stays in the adapter.
 
@@ -123,6 +124,8 @@ A [Monte Carlo calibration study](DRR_BENCHMARKS.md) measures the statistical be
 
 The last row is a second preregistered study, and it asks the question the method itself depends on: **which null assumptions keep lag-search false alarms controlled when the noise never forgets?** Six hypotheses were fixed before the run, two of them predicting the method's own failure, and all six were supported. The [study record](docs/MATH_RESEARCH.md) has the protocol and every row; its [artifact](results/expected/dependent_noise_null_study.json) is regenerated with `python scripts/run_dependent_noise_study.py`.
 
+Another preregistered study asks whether phase and harmonic mathematics add measurable value to the relationship tests. On held-out simulations (mostly 2048 samples) the new phase test held 0.003–0.058 on every stationary unrelated condition, including coherent oscillators where existing rooting reported false edges in 14.5% of independent pairs, and it detected 1:2 and 2:3 coupling in 28.0–35.5% of pairs, where rooting detected 2.5–5.0%. For ordinary 1:1 coupling it detected less than rooting (0.26 against 0.44 on average), so that preregistered hypothesis was **not supported**; the [report](docs/resonance-math-report.md) has every row. These features are experimental and off by default; the definitions and proofs are in [mathematical extensions](docs/mathematical-extensions.md), and the [artifact](results/expected/resonance_math_benchmark.json) is regenerated with `python scripts/run_resonance_math_benchmark.py`.
+
 The repository also contains a [preregistered external comparison](docs/external-evidence.md) on the NOAA CPC quasi-biennial oscillation series. Its reviewed [machine-readable artifact](results/expected/qbo_structural_change_benchmark.json) records the current claim as **not supported** (`not_supported`): the full DRR holdout false-alarm rate exceeds the preregistered tolerance. This result is specific to the equatorial stratospheric zonal-wind comparison and does not establish results in other domains.
 
 To reproduce that comparison from the vendored public-data snapshots:
@@ -178,6 +181,7 @@ python -m black --check .
 - [User guide](docs/user-guide.md) and [API reference](docs/api.md) for the core.
 - [Architecture](docs/architecture.md) and [method crosswalk](docs/method-crosswalk.md) for design and conventional comparators.
 - [External evidence](docs/external-evidence.md), the [null-model study](docs/MATH_RESEARCH.md), and [reproducibility](docs/reproducibility.md) for claim scope and reproduction.
+- [Mathematical extensions](docs/mathematical-extensions.md) and the [phase and harmonic benchmark report](docs/resonance-math-report.md) for the experimental phase, recurrence, and evidence features.
 - [Quant research](docs/quant-research.md), [LFBO workbench](docs/lfbo-workbench.md), and [validation readiness](docs/validation-readiness-guide.md) for domain workflows.
 - [Security posture](docs/security-posture.md) and [developer guide](docs/developer-guide.md) for operation and contributions.
 

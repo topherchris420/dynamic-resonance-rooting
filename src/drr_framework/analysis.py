@@ -6,10 +6,11 @@ Author: Christopher Woodyard (2025)
 from .qbism_agent import QBistAgent
 import numpy as np
 import networkx as nx
-from typing import Dict, Optional
+from typing import Any, Dict, Mapping, Optional, Union
 import logging
 
 from .modules import ResonanceDetector, RootingAnalyzer, DepthCalculator
+from .recurrence import delay_embedding
 from .state_space import analyze_resonance_state_space
 from .benchmarks import BenchmarkSystems
 
@@ -75,20 +76,7 @@ class DynamicResonanceRooting:
         """
         if data.ndim != 1:
             raise ValueError("Input data must be 1-dimensional for embedding")
-
-        n = len(data)
-        m = self.embedding_dim
-
-        if n <= (m - 1) * self.tau:
-            raise ValueError("Data too short for specified embedding parameters")
-
-        embedded = np.zeros((n - (m - 1) * self.tau, m))
-        for i in range(m):
-            start_idx = i * self.tau
-            end_idx = n - (m - 1 - i) * self.tau
-            embedded[:, i] = data[start_idx:end_idx]
-
-        return embedded
+        return delay_embedding(data, self.embedding_dim, self.tau)
 
     def detect_resonances(
         self, data: np.ndarray, method: str = "fft", peak_height_ratio: float = 0.1
@@ -285,6 +273,7 @@ class DynamicResonanceRooting:
         rooting_alpha: float = 0.05,
         rooting_surrogate_method: str = "circular_shift",
         rooting_correction: str = "max_statistic",
+        mathematical_features: Union[bool, Mapping[str, Any], None] = None,
     ) -> Dict[str, object]:
         """
         Perform complete DRR analysis on system data.
@@ -316,6 +305,15 @@ class DynamicResonanceRooting:
             rooting_correction (str): P-value selection rule, either
                 ``"max_statistic"`` for adjusted p-values or ``"none"`` for raw
                 p-values.
+            mathematical_features (bool or Mapping): Experimental and off by
+                default. ``True``, or a mapping of keyword arguments for
+                :func:`drr_framework.math_features.analyze_mathematical_features`,
+                adds ``mathematical_features`` to the result: data-quality
+                checks with abstention, ``n:m`` phase-synchronization tests,
+                negative controls, recurrence and geometry descriptions, and a
+                mathematical evidence record. The features read the input
+                ``data`` (not the delay embedding of a one-dimensional input)
+                and leave every other result unchanged.
 
         Example:
             >>> results = drr.analyze_system(
@@ -392,6 +390,23 @@ class DynamicResonanceRooting:
                 except Exception as exc:
                     logger.warning("State-space diagnostics failed: %s", exc)
                     results["state_space_analysis"] = {"error": str(exc)}
+
+            # Step 5 (opt-in): experimental mathematical features and evidence record
+            if mathematical_features:
+                from .math_features import analyze_mathematical_features
+
+                options = (
+                    dict(mathematical_features)
+                    if isinstance(mathematical_features, Mapping)
+                    else {}
+                )
+                try:
+                    results["mathematical_features"] = analyze_mathematical_features(
+                        data, self.sampling_rate, **options
+                    )
+                except Exception as exc:
+                    logger.warning("Mathematical features failed: %s", exc)
+                    results["mathematical_features"] = {"error": str(exc)}
             logger.info("DRR analysis complete.")
             return results
 

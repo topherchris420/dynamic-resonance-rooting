@@ -1,17 +1,19 @@
 # DRR benchmarks
 
 Every number in this file is produced by code in this repository and recorded
-in a committed artifact. There are three:
+in a committed artifact. There are four:
 
 | Artifact | What it measures | Regenerate |
 | --- | --- | --- |
 | [`results/expected/rooting_calibration_study.json`](results/expected/rooting_calibration_study.json) | Size, power, and reference distributions of the DRR operators on simulated systems with a known truth | `python scripts/run_calibration_study.py --output-dir results/expected` |
 | [`results/expected/dependent_noise_null_study.json`](results/expected/dependent_noise_null_study.json) | Family-wise error of each surrogate null under long memory, volatility clustering, and a random walk, power under long memory, and six preregistered hypotheses | `python scripts/run_dependent_noise_study.py --output-dir results/expected` |
 | [`results/expected/qbo_structural_change_benchmark.json`](results/expected/qbo_structural_change_benchmark.json) | The preregistered external comparison on NOAA CPC QBO zonal wind | `python scripts/run_structural_change_benchmark.py --output-dir results/expected` |
+| [`results/expected/resonance_math_benchmark.json`](results/expected/resonance_math_benchmark.json) | Whether experimental phase and harmonic mathematics add value to the relationship tests: false-relationship and detection rates of DRR rooting, conventional baselines, the new phase test and its ablations on held-out simulations, with nine preregistered hypotheses | `python scripts/run_resonance_math_benchmark.py --output-dir results/expected --workers 4` |
 
-`tests/test_calibration_study.py`, `tests/test_dependent_noise_study.py`, and
-`tests/test_structural_change_benchmark.py` rerun parts of all three and fail if
-a committed number no longer reproduces.
+`tests/test_calibration_study.py`, `tests/test_dependent_noise_study.py`,
+`tests/test_structural_change_benchmark.py`, and
+`tests/test_resonance_math_benchmark.py` rerun parts of all four and fail if a
+committed number no longer reproduces.
 
 ## 1. Does the rooting test keep its promised false-alarm rate?
 
@@ -200,6 +202,85 @@ preregistered result.
 the two that predicted the method's own failure on a random walk. The
 statements, rules, and outcomes are in [`docs/MATH_RESEARCH.md`](docs/MATH_RESEARCH.md)
 and in the artifact.
+
+## 6. Do phase and harmonic mathematics add measurable value?
+
+The question, frozen before the held-out run: can an `n:m` phase-synchrony test
+find relationships that DRR rooting misses, without adding false ones, and does a
+data-quality gate catch the nonstationarity that breaks every shift-based null?
+Pairs of simulated channels are coupled phase oscillators (1:1, 1:2, 2:3, with
+delay, amplitude modulation, gaps, jittered timestamps, or a frequency sweep) or
+deliberately misleading unrelated pairs. The held-out conditions differ from the
+development ones in sampling rate, length, frequency, coupling, noise and seeds.
+Bold marks inflation: the Wilson 95% lower bound exceeds 0.05. The features are
+experimental and off by default. Definitions, proofs and the full report are in
+[`docs/mathematical-extensions.md`](docs/mathematical-extensions.md) and
+[`docs/resonance-math-report.md`](docs/resonance-math-report.md).
+
+### False relationships on stationary unrelated pairs (400 per row)
+
+| Condition | `drr_rooting` | `drr_rooting_te` | `pearson_analytic` | `coherence_analytic` | `coherence_shift` | `plv_rayleigh` | `phase_sync` | `oriented_area` |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Independent, similar frequencies | 0.048 | 0.037 | **0.595** | **0.128** | 0.043 | **0.970** | 0.058 | 0.065 |
+| Independent, identical frequency, coherent | **0.145** | **0.077** | **0.895** | **0.618** | 0.068 | **0.998** | 0.040 | 0.070 |
+| Independent, exact 1:2 frequencies | 0.043 | 0.058 | 0.062 | **0.077** | 0.048 | 0.000 | 0.052 | 0.065 |
+| Independent, exact 2:3 frequencies | 0.045 | 0.060 | **0.185** | 0.048 | 0.048 | **0.158** | 0.050 | 0.050 |
+| Independent AR(1), coefficient 0.95 | 0.058 | 0.037 | **0.627** | **0.072** | 0.040 | **0.955** | 0.003 | 0.050 |
+| Phase-randomized coupled 1:1 (negative control) | 0.065 | 0.037 | **0.600** | **0.220** | 0.068 | **0.980** | 0.045 | **0.087** |
+| Independent, 15% missing | 0.035 | 0.045 | **0.618** | **0.120** | 0.040 | **0.975** | 0.035 | 0.045 |
+| Independent, irregular timestamps | **0.072** | 0.040 | **0.645** | **0.105** | 0.060 | **0.990** | 0.052 | 0.040 |
+| Independent, 50 Hz, 512 samples | 0.065 | 0.065 | **0.425** | **0.077** | 0.028 | **0.920** | 0.030 | 0.050 |
+
+**Reading.** The phase test held 0.003–0.058 on every row. DRR rooting was
+inflated on coherent oscillators at one frequency (0.145) and on independent
+channels sampled with a common jittered clock and interpolated (0.072). The
+textbook thresholds fail on oscillations: Pearson correlation reached 0.895,
+analytic coherence 0.618, and the Rayleigh phase-locking value 0.998. The same
+coherence against circular shifts stayed controlled, so the null, not the
+statistic, makes the difference.
+
+### Detection on related pairs (200 per row)
+
+| Condition | `drr_rooting` | `drr_rooting_te` | `coherence_shift` | `phase_sync` | `phase_sync_1to1` | `oriented_area` | `drr_plus_phase` |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Coupled 1:1 | 0.610 | 0.125 | 0.375 | 0.315 | 0.320 | 0.045 | 0.300 |
+| Coupled 1:2 (harmonic) | 0.050 | 0.045 | 0.070 | 0.355 | 0.020 | 0.050 | 0.180 |
+| Coupled 2:3 (harmonic) | 0.025 | 0.045 | 0.045 | 0.280 | 0.030 | 0.050 | 0.225 |
+| Coupled 1:1, 0.15 s delay | 0.115 | 0.020 | 0.110 | 0.050 | 0.050 | 0.045 | 0.030 |
+| Coupled 1:1, amplitude modulated | 0.280 | 0.105 | 0.205 | 0.215 | 0.245 | 0.020 | 0.195 |
+| Coupled 1:1, 15% missing | 0.605 | 0.070 | 0.400 | 0.340 | 0.345 | 0.035 | 0.345 |
+| Coupled 1:1, irregular timestamps | 0.590 | 0.055 | 0.410 | 0.365 | 0.365 | 0.025 | 0.350 |
+| Coupled 1:1, 50 Hz, 512 samples | 0.445 | 0.120 | 0.285 | 0.290 | 0.335 | 0.020 | 0.205 |
+
+**Reading.** Harmonic coupling is invisible to DRR rooting (2.5–5.0%, chance)
+and visible to the phase test (28.0–35.5%). With the ratio fixed at 1:1 the
+phase test loses it too (2.0–3.0%), so the ratio search carries the gain. For
+1:1 coupling the phase test is weaker: a mean of 0.263 over the six stationary
+1:1 rows against 0.441 for rooting. The preregistered hypothesis that it would
+come within 0.10 was **not supported**. The Bonferroni union of the two tests
+lost power on 1:1 coupling and kept only part of the harmonic gain.
+
+### Nonstationary pairs and the data-quality gate
+
+| Condition | Related | `drr_rooting` | `phase_sync` | `drr_plus_phase` | Gate abstains | `phase_sync_gated` | `drr_plus_phase_gated` |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Coupled 1:1, shared amplitude trend | yes | 0.580 | 0.295 | 0.375 | 0.070 | 0.285 | 0.360 |
+| Coupled 1:1, swept 6-8 Hz | yes | 0.995 | 0.845 | 0.905 | 0.715 | 0.260 | 0.245 |
+| Independent, shared amplitude trend | no | **0.150** | 0.037 | **0.072** | 0.072 | 0.037 | 0.068 |
+| Independent random walks | no | **0.188** | 0.000 | **0.155** | 1.000 | 0.000 | 0.000 |
+| Independent, shared 6-8 Hz sweep | no | **0.098** | **0.077** | **0.080** | 0.885 | 0.010 | 0.005 |
+
+**Reading.** The gate abstained on every random walk and on 88.5% of shared
+sweeps, and on 0.5–9% of stationary pairs. It does not detect a shared amplitude
+trend, which inflated DRR rooting (0.150) but not the amplitude-blind phase
+test (0.037).
+
+**Hypotheses.** Nine were fixed before the held-out run and committed with
+their fingerprint. Eight were supported, including the ones predicting that
+DRR rooting fails on coherent oscillators and that the phase test without its
+gate fails on a shared sweep. The one that was not supported is the phase
+test's power on 1:1 coupling. The statements, rules and outcomes are in the
+[report](docs/resonance-math-report.md) and the artifact.
 
 ## Withdrawn material
 
