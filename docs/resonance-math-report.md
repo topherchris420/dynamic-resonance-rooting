@@ -14,7 +14,7 @@ report; the same test file checks that.
 ## The answer in brief
 
 On simulated channel pairs with a known relationship, held out from
-development and evaluated once against nine hypotheses fixed beforehand:
+development and tested against nine hypotheses fixed before the held-out run:
 
 - **The new phase-synchrony test kept its false-relationship rate controlled
   on every stationary unrelated condition** (0.003–0.058 at a nominal 0.05,
@@ -90,10 +90,10 @@ synthetic. That the ratio is chosen from the Welch peak, which only
 approximates the condition under which the test is exact.
 
 **What does it cost?** No new dependency. Per pair, the phase test took a
-median 8 ms, against 176 ms for DRR rooting with 99 surrogates and 130 ms for
+median 8 ms, against 175 ms for DRR rooting with 99 surrogates and 132 ms for
 the transfer-entropy backend (medians over the held-out conditions, most of
 them 2048 samples, on the generating machine with four workers). The whole
-benchmark took 837 seconds there.
+benchmark took 831 seconds there.
 
 **How long will it take?** This slice is complete. Each next step in the
 recommendations below needs its own preregistered study, like this one.
@@ -244,8 +244,18 @@ by the quadratic-phase test.
 The held-out conditions, methods, thresholds and hypotheses were committed in
 `1f4f876` with their SHA-256 fingerprint before the held-out conditions were
 first run. The artifact records that its configuration still matches that
-fingerprint. The held-out split was run once. After it ran, only the report's
-rendering changed, to list methods in a fixed order; the rows did not.
+fingerprint. The held-out split was first run at `1f4f876`, and its outcomes
+were recorded in `600cbbe`. After that run, the phase test gained a check that
+refuses a constant channel, the report began listing methods in a fixed order,
+and the documented argument for how the ratio is chosen and two literature
+references were corrected. The artifact was then regenerated with the final
+code, under the same Python and NumPy versions, so that it stores only the
+per-trial codes: the stored rates, which the tests already recomputed from those
+codes, had pushed the file past the 500 KB limit of the repository's pre-commit
+large-file check. All 207,000 per-trial codes, every
+other field of every row, every hypothesis outcome and every integrity check
+matched the first run exactly. Only the wall-clock times differ; the figures
+above are from the regenerated run.
 
 ## Recommendations for R.A.I.N., Anna, and CIRCLE
 

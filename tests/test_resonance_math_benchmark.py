@@ -166,11 +166,13 @@ def test_committed_artifact_is_complete_frozen_and_matches_its_report():
 
 
 def test_committed_rates_and_outcomes_are_recomputed_from_the_trial_codes():
-    """No rate, interval, or hypothesis outcome can be edited without its codes disagreeing."""
+    """Rates are not stored, and outcomes and checks must equal their recomputation."""
     artifact = _artifact()
     alpha = artifact["config"]["alpha"]
     for row in artifact["development"] + artifact["holdout"]:
-        assert row["summary"] == summarize_row(row, alpha), row["condition"]
+        assert "summary" not in row, "rates are derived from the codes, never stored"
+        assert all(len(codes) == row["n_trials"] for codes in row["levels"].values())
+        assert summarize_row(row, alpha)["phase_sync"]["declared"]["trials"] == row["n_trials"]
     assert artifact["hypotheses"] == evaluate_hypotheses(artifact["holdout"], artifact["config"])
     assert artifact["checks"] == integrity_checks(
         artifact["development"], artifact["holdout"], artifact["config"]

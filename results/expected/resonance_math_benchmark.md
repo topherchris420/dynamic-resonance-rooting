@@ -182,15 +182,15 @@ Median wall-clock seconds per trial on the generating machine (x86_64, 4 workers
 | --- | ---: |
 | `coherence_analytic` | 0.0027 |
 | `coherence_shift` | 0.0027 |
-| `drr_rooting` | 0.1759 |
-| `drr_rooting_te` | 0.1296 |
-| `gate` | 0.0144 |
+| `drr_rooting` | 0.1746 |
+| `drr_rooting_te` | 0.1317 |
+| `gate` | 0.0145 |
 | `oriented_area` | 0.0004 |
 | `pearson_analytic` | 0.0002 |
-| `phase_sync` | 0.0080 |
-| `phase_sync_1to1` | 0.0081 |
+| `phase_sync` | 0.0081 |
+| `phase_sync_1to1` | 0.0082 |
 | `phase_sync_broadband` | 0.0039 |
-| `phase_sync_no_seam` | 0.0080 |
+| `phase_sync_no_seam` | 0.0082 |
 | `phase_sync_no_trim` | 0.0073 |
 | `plv_rayleigh` | 0.0042 |
 

@@ -1092,7 +1092,7 @@ def run_condition(
         "max_identity_error": identity,
     }
     runtime = {
-        name: {"median_seconds": float(np.median(values)), "mean_seconds": float(np.mean(values))}
+        name: {"median_seconds": float(np.median(values))}
         for name, values in sorted(timings.items())
     }
     return row, runtime
@@ -1338,15 +1338,12 @@ def run_benchmark(
     rows.
     """
     cfg = json.loads(json.dumps(DEFAULT_CONFIG if config is None else config))
-    alpha = float(cfg["alpha"])
     started = time.perf_counter()
     development, dev_runtime = (
         _run_split(cfg, "development", workers) if "development" in splits else ([], {})
     )
     holdout, hold_runtime = _run_split(cfg, "holdout", workers) if "holdout" in splits else ([], {})
     elapsed = time.perf_counter() - started
-    for row in development + holdout:
-        row["summary"] = summarize_row(row, alpha)
     fingerprint = preregistration_sha256(cfg)
     return {
         "schema_version": SCHEMA_VERSION,
@@ -1406,7 +1403,9 @@ def render_benchmark_report(artifact: Mapping[str, Any]) -> str:
     """Render the Markdown companion of a benchmark artifact."""
     cfg = artifact["config"]
     alpha = float(cfg["alpha"])
-    holdout = list(artifact["holdout"])
+    # Rates are never stored; they are recomputed here from the per-trial codes.
+    holdout = [dict(row, summary=summarize_row(row, alpha)) for row in artifact["holdout"]]
+    development = [dict(row, summary=summarize_row(row, alpha)) for row in artifact["development"]]
     stationary_nulls = [r for r in holdout if not r["related"] and r["stationary"]]
     related = [r for r in holdout if r["related"] and r["stationary"]]
     nonstationary = [r for r in holdout if not r["stationary"]]
@@ -1611,7 +1610,6 @@ def render_benchmark_report(artifact: Mapping[str, Any]) -> str:
     lines += ["", "## Integrity checks", "", "| Statement | Holds |", "| --- | --- |"]
     for name, holds in sorted(artifact["checks"].items()):
         lines.append(f"| {name.replace('_', ' ')} | {'yes' if holds else 'no'} |")
-    development = list(artifact["development"])
     if development:
         dev_methods = [
             "drr_rooting",
