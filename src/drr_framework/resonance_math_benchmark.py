@@ -40,6 +40,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import multiprocessing
 import platform
 import time
 from concurrent.futures import ProcessPoolExecutor
@@ -1316,7 +1317,10 @@ def _run_split(
         (spec, int(trials["related" if spec["related"] else "unrelated"])) for spec in conditions
     ]
     if workers > 1:
-        with ProcessPoolExecutor(max_workers=workers) as pool:
+        # Spawned workers share no state with the parent and avoid forking a
+        # multi-threaded process, which Python 3.12 deprecates.
+        context = multiprocessing.get_context("spawn")
+        with ProcessPoolExecutor(max_workers=workers, mp_context=context) as pool:
             futures = [pool.submit(run_condition, spec, cfg, n) for spec, n in jobs]
             results = [future.result() for future in futures]
     else:
