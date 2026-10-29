@@ -138,6 +138,7 @@ The default uses **99 circular-shift surrogates with max-statistic correction**.
 | **Synthetic oscillator** | Recovery of a known injected frequency and lag; a specification check | [Reproduction guide](docs/reproducibility.md) |
 | **Monte Carlo calibration** | False-alarm rates and detection power on specified simulated systems; resonance depth remains descriptive | [Benchmarks](DRR_BENCHMARKS.md) · [Artifact](results/expected/rooting_calibration_study.json) |
 | **Dependent-noise study** | Near-nominal false-alarm rates for the default circular-shift null on tested stationary long-memory processes; every tested null fails on random walks | [Protocol and outcomes](docs/MATH_RESEARCH.md) · [Artifact](results/expected/dependent_noise_null_study.json) |
+| **Paired robustness comparison** | Existing rooting procedures versus separately calibrated raw and AR(1)-residual correlation baselines, with weak coupling and before/after regime changes | [Design and limits](docs/ROBUSTNESS_BENCHMARK.md) · [Report and figure](results/expected/robustness-benchmark/report.md) |
 | **Phase and harmonic study** | Better detection of tested 1:2 and 2:3 couplings, weaker detection of ordinary 1:1 coupling, and failure modes for existing rooting | [Report](docs/resonance-math-report.md) · [Artifact](results/expected/resonance_math_benchmark.json) |
 | **External NOAA QBO comparison** | **Not supported:** the full DRR holdout false-alarm rate exceeded the preregistered tolerance | [External evidence](docs/external-evidence.md) · [Artifact](results/expected/qbo_structural_change_benchmark.json) |
 
@@ -155,6 +156,7 @@ From the repository root, regenerate each study into a local reproduction direct
 ```bash
 python scripts/run_calibration_study.py --output-dir results/reproduction
 python scripts/run_dependent_noise_study.py --output-dir results/reproduction
+python scripts/run_robustness_benchmark.py --output-dir results/robustness-full
 python scripts/run_resonance_math_benchmark.py --output-dir results/reproduction
 python scripts/run_structural_change_benchmark.py --output-dir results/reproduction
 ```

@@ -27,3 +27,11 @@ baselines, the experimental phase-synchrony test and its ablations on held-out
 simulated channel pairs, one character per trial, with nine hypotheses fixed
 before the held-out run. Regenerate it and its Markdown companion with
 `python scripts/run_resonance_math_benchmark.py --output-dir results/expected --workers 4`.
+
+`robustness-benchmark/` retains the fixed exploratory comparison of DRR rooting
+with raw and AR(1)-residual correlation baselines. It contains the pre-execution
+protocol, independent calibration maxima, all trial/window decisions, a rendered
+report, and PNG/SVG figures. It covers a memory/coupling grid and paired coupling
+onset, offset and reversal cases. Reproduce into a **fresh** directory with
+`python scripts/run_robustness_benchmark.py --output-dir results/robustness-full`.
+See [the design and interpretation limits](../../docs/ROBUSTNESS_BENCHMARK.md).
