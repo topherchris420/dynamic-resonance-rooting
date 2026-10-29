@@ -1,0 +1,187 @@
+{
+  "config": {
+    "alpha": 0.05,
+    "cases": [
+      {
+        "hurst": 0.5,
+        "id": "fgn_0.50_coupling_0.00",
+        "regimes": [
+          {
+            "coupling": 0.0,
+            "reverse": false
+          }
+        ]
+      },
+      {
+        "hurst": 0.5,
+        "id": "fgn_0.50_coupling_0.10",
+        "regimes": [
+          {
+            "coupling": 0.1,
+            "reverse": false
+          }
+        ]
+      },
+      {
+        "hurst": 0.5,
+        "id": "fgn_0.50_coupling_0.30",
+        "regimes": [
+          {
+            "coupling": 0.3,
+            "reverse": false
+          }
+        ]
+      },
+      {
+        "hurst": 0.5,
+        "id": "fgn_0.50_coupling_0.50",
+        "regimes": [
+          {
+            "coupling": 0.5,
+            "reverse": false
+          }
+        ]
+      },
+      {
+        "hurst": 0.85,
+        "id": "fgn_0.85_coupling_0.00",
+        "regimes": [
+          {
+            "coupling": 0.0,
+            "reverse": false
+          }
+        ]
+      },
+      {
+        "hurst": 0.85,
+        "id": "fgn_0.85_coupling_0.10",
+        "regimes": [
+          {
+            "coupling": 0.1,
+            "reverse": false
+          }
+        ]
+      },
+      {
+        "hurst": 0.85,
+        "id": "fgn_0.85_coupling_0.30",
+        "regimes": [
+          {
+            "coupling": 0.3,
+            "reverse": false
+          }
+        ]
+      },
+      {
+        "hurst": 0.85,
+        "id": "fgn_0.85_coupling_0.50",
+        "regimes": [
+          {
+            "coupling": 0.5,
+            "reverse": false
+          }
+        ]
+      },
+      {
+        "hurst": 0.95,
+        "id": "fgn_0.95_coupling_0.00",
+        "regimes": [
+          {
+            "coupling": 0.0,
+            "reverse": false
+          }
+        ]
+      },
+      {
+        "hurst": 0.95,
+        "id": "fgn_0.95_coupling_0.10",
+        "regimes": [
+          {
+            "coupling": 0.1,
+            "reverse": false
+          }
+        ]
+      },
+      {
+        "hurst": 0.95,
+        "id": "fgn_0.95_coupling_0.30",
+        "regimes": [
+          {
+            "coupling": 0.3,
+            "reverse": false
+          }
+        ]
+      },
+      {
+        "hurst": 0.95,
+        "id": "fgn_0.95_coupling_0.50",
+        "regimes": [
+          {
+            "coupling": 0.5,
+            "reverse": false
+          }
+        ]
+      },
+      {
+        "hurst": 0.85,
+        "id": "coupling_onset",
+        "regimes": [
+          {
+            "coupling": 0.0,
+            "reverse": false
+          },
+          {
+            "coupling": 0.3,
+            "reverse": false
+          }
+        ]
+      },
+      {
+        "hurst": 0.85,
+        "id": "coupling_offset",
+        "regimes": [
+          {
+            "coupling": 0.3,
+            "reverse": false
+          },
+          {
+            "coupling": 0.0,
+            "reverse": false
+          }
+        ]
+      },
+      {
+        "hurst": 0.85,
+        "id": "direction_reversal",
+        "regimes": [
+          {
+            "coupling": 0.3,
+            "reverse": false
+          },
+          {
+            "coupling": 0.3,
+            "reverse": true
+          }
+        ]
+      }
+    ],
+    "lag": 2,
+    "max_lag": 4,
+    "n_calibration": 399,
+    "n_samples": 512,
+    "n_surrogates": 99,
+    "n_trials": 200,
+    "seed": 20261029
+  },
+  "config_sha256": "691b9c6184139f2a7663ff671ffc635049d04f99e0a039aae2d23d0aa4d989f5",
+  "schema_version": "drr-robustness-benchmark-v1",
+  "source_commit": "59f9101536656e957d072bcdcf0cb1542afd676d",
+  "source_sha256": {
+    "scripts/run_robustness_benchmark.py": "c48eb9958e4affd162998fa6e5af529c3b7b5389aca1f574752386bec81fe51e",
+    "src/drr_framework/calibration.py": "999d23e2b3dd488114677f70a09b7f97138f2f0f00266de6af54eb7d1e0ee1c7",
+    "src/drr_framework/dependent_noise.py": "97257e018e05616f103f8ada941b6dc860905163ef5887b70014b1309ba79edf",
+    "src/drr_framework/modules.py": "b093f3fad6339339993a365c8665af53a884e5f70ae56b69971cf0e63fd3eec2",
+    "src/drr_framework/robustness_benchmark.py": "e0789045aad0c765df8de99bac2ce8d8d51f6d2c785222cd945c8376ac164173"
+  },
+  "study_status": "fixed exploratory comparison; not external preregistration"
+}
