@@ -141,6 +141,7 @@ The default uses **99 circular-shift surrogates with max-statistic correction**.
 | **Paired robustness comparison** | Existing rooting procedures versus separately calibrated raw and AR(1)-residual correlation baselines, with weak coupling and before/after regime changes | [Design and limits](docs/ROBUSTNESS_BENCHMARK.md) · [Report and figure](results/expected/robustness-benchmark/report.md) |
 | **Phase and harmonic study** | Better detection of tested 1:2 and 2:3 couplings, weaker detection of ordinary 1:1 coupling, and failure modes for existing rooting | [Report](docs/resonance-math-report.md) · [Artifact](results/expected/resonance_math_benchmark.json) |
 | **External NOAA QBO comparison** | **Not supported:** the full DRR holdout false-alarm rate exceeded the preregistered tolerance | [External evidence](docs/external-evidence.md) · [Artifact](results/expected/qbo_structural_change_benchmark.json) |
+| **Registered financial holdout** | **Not supported:** DRR's forecast improvements over the simplest baselines were too small and not significant after correction, despite positive cost-adjusted returns | [Design and replay](docs/financial-holdout.md) · [All outcomes](results/expected/financial_holdout/report.md) |
 
 The QBO conclusion applies to the equatorial stratospheric zonal-wind comparison. It does not establish results in other domains. The [review memo](DRR_VALIDATION_REPORT.md) and [limitations](DRR_LIMITATIONS.md) explain the current boundaries.
 
@@ -173,6 +174,7 @@ These studies take longer than the quick start. The external comparison reads ve
 | Sensing and micro-Doppler analog signals | `python examples/sensing_systems_resonance_depth.py` | [Examples](docs/examples.md) |
 | State estimation and filtering | `python examples/state_space_lab.py` | [API reference](docs/api.md) |
 | Macroeconomic and market research | `python examples/quant_macro_lab.py --offline` | [Quant research](docs/quant-research.md) |
+| Preregistered financial forecasting | `python scripts/run_financial_holdout.py select --output-dir /tmp/drr-selection` | [Locked holdout study](docs/financial-holdout.md) |
 | Public-data supervisory monitoring | `drr-monitor --demo` | [LFBO workbench](docs/lfbo-workbench.md) |
 | Multiple perspectives on one system | `DRR_ScopeResolver` | [Scope resolution](docs/scope-resolution.md) |
 
