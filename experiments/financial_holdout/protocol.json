@@ -5,7 +5,10 @@
   "question": "Do trailing DRR depth and directed lag-correlation features improve delayed daily return forecasts and net long/cash performance beyond established baselines?",
   "data": {
     "provider": "Binance Vision spot monthly 1d klines",
-    "symbols": ["BTCUSDT", "ETHUSDT"],
+    "symbols": [
+      "BTCUSDT",
+      "ETHUSDT"
+    ],
     "start": "2018-01-01",
     "end": "2026-01-01",
     "source_template": "https://data.binance.vision/data/spot/monthly/klines/{symbol}/1d/{symbol}-1d-{month}.zip",
@@ -30,11 +33,22 @@
     "fit_window_days": 1095,
     "calibration_rows": 180,
     "minimum_fit_rows": 365,
-    "update_rule": "At each quarter start only labels exiting strictly before the first feature date minus 7 days are eligible. Reserve the last 180 eligible rows for calibration; purge fit labels within 7 days of the first calibration feature date. Fit on the most recent 1095 eligible fit rows. Mature prior holdout labels may enter later refits, never hyperparameter selection."
+    "update_rule": "At each quarter start only labels exiting strictly before the first feature date minus 7 days are eligible. Reserve the last 180 eligible rows for calibration; purge fit labels within 7 days of the first calibration feature date. Fit on the most recent 1095 eligible fit rows. Mature prior holdout labels may enter later refits, never hyperparameter selection.",
+    "selection_boundary_purge": "Validation labels must exit strictly before the first test feature date minus the registered 7-day gap. The nominal validation period therefore ends early; actual dates/counts are reported."
   },
   "features": {
-    "return_lags": [0, 1, 2, 3, 4],
-    "windows": [5, 20, 60],
+    "return_lags": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "windows": [
+      5,
+      20,
+      60
+    ],
     "conventional": "Both assets: close-to-close returns and lags; trailing mean, sample standard deviation, cumulative momentum; log(high/low); log(close/open); log1p(volume) minus trailing 20-day mean. Trailing 20/60-day cross-asset correlation. No globally fitted transform.",
     "drr_window": 64,
     "drr_spectral": "Existing DepthCalculator on each asset's last 64 close returns, window_size=32, sampling_rate=1: depth, four components and target frequency. Descriptive scores; the module's heuristic confidence interval is not used as predictive uncertainty.",
@@ -42,17 +56,52 @@
     "noise_control": "Conventional features plus 16 independent standard normal columns, seed 20261114, generated sequentially by date so truncation leaves the prefix unchanged."
   },
   "models": {
-    "baselines": ["zero", "historical_mean", "momentum20", "ridge", "hgb"],
-    "candidates": ["ridge_drr", "hgb_drr"],
-    "ablations": ["hgb_spectral", "hgb_rooting", "hgb_noise"],
-    "ridge_alpha": [1.0, 100.0, 10000.0],
-    "hgb_grid": [
-      {"max_leaf_nodes": 7, "l2_regularization": 1.0},
-      {"max_leaf_nodes": 7, "l2_regularization": 10.0},
-      {"max_leaf_nodes": 15, "l2_regularization": 1.0},
-      {"max_leaf_nodes": 15, "l2_regularization": 10.0}
+    "baselines": [
+      "zero",
+      "historical_mean",
+      "momentum20",
+      "ridge",
+      "hgb"
     ],
-    "hgb_fixed": {"max_iter": 150, "learning_rate": 0.05, "min_samples_leaf": 40, "early_stopping": false, "random_state": 20261114},
+    "candidates": [
+      "ridge_drr",
+      "hgb_drr"
+    ],
+    "ablations": [
+      "hgb_spectral",
+      "hgb_rooting",
+      "hgb_noise"
+    ],
+    "ridge_alpha": [
+      1.0,
+      100.0,
+      10000.0
+    ],
+    "hgb_grid": [
+      {
+        "max_leaf_nodes": 7,
+        "l2_regularization": 1.0
+      },
+      {
+        "max_leaf_nodes": 7,
+        "l2_regularization": 10.0
+      },
+      {
+        "max_leaf_nodes": 15,
+        "l2_regularization": 1.0
+      },
+      {
+        "max_leaf_nodes": 15,
+        "l2_regularization": 10.0
+      }
+    ],
+    "hgb_fixed": {
+      "max_iter": 150,
+      "learning_rate": 0.05,
+      "min_samples_leaf": 40,
+      "early_stopping": false,
+      "random_state": 20261114
+    },
     "selection": "Lowest equal-asset validation MSE, ties by listed order. One shared setting per model across both assets. Publish every trial. Ridge scaling fitted only on the fit split. Separate model per asset. No clipping or post-holdout tuning.",
     "historical_mean": "Mean of eligible fit targets at each refit.",
     "momentum20": "Trailing 20-day arithmetic mean of close returns, no fitted parameters.",
@@ -70,9 +119,16 @@
     "base_one_way_bps": 15,
     "fee_bps": 10,
     "slippage_bps": 5,
-    "cost_sensitivity_bps": [0, 15, 30],
+    "cost_sensitivity_bps": [
+      0,
+      15,
+      30
+    ],
     "accounting": "Self-financing daily target-weight portfolio. Charge turnover from drifted pretrade weights, including first entry and final liquidation; solve fees against post-cost target wealth. Report gross/net growth, mean, volatility, Sharpe (sqrt(365)), drawdown, exposure, turnover and break-even proportional cost.",
-    "references": ["cash", "equal_weight_long"],
+    "references": [
+      "cash",
+      "equal_weight_long"
+    ],
     "limits": "Daily open prices with hypothetical proportional costs are execution proxies. No order-book, spread, market impact, capacity, exchange failure, stablecoin depeg or fill guarantee is estimated. Fee assumptions are scenarios, not a verified account fee tier."
   },
   "inference": {
@@ -80,7 +136,11 @@
     "family": "14 one-sided tests: each of 2 DRR candidates versus each of 5 baselines on MSE; each DRR candidate versus cash and the validation-selected baseline on base-cost daily net return.",
     "method": "Paired circular moving-block bootstrap of daily differences, centered under the null; plus-one p-values; pointwise percentile 95% intervals. Holm step-down across the complete 14-test family.",
     "bootstrap_replicates": 9999,
-    "block_days": [7, 30, 90],
+    "block_days": [
+      7,
+      30,
+      90
+    ],
     "seed": 20261114,
     "alpha": 0.05,
     "minimum_relative_mse_improvement": 0.01,
@@ -90,10 +150,22 @@
   "regimes": {
     "volatility": "Mean across assets of trailing 20-day return std; high iff above the 75th percentile of development-period feature dates, threshold frozen before validation/test.",
     "trend": "Mean across assets of trailing 60-day cumulative return >=0 is up, else down.",
-    "reporting": "Four ex-ante vol/trend strata plus each calendar year; include every stratum and its sample size. Descriptive, not extra significance claims."
+    "reporting": "Four ex-ante vol/trend strata plus each calendar year; include every stratum and its sample size. Descriptive, not extra significance claims.",
+    "threshold_cutoff": "Development threshold uses feature dates strictly before the first validation feature date minus the same 7-day gap."
   },
   "publication": {
-    "required": ["immutable protocol and registration commit", "data checksums and provenance", "all validation trials and selection lock", "all per-date predictions, interval bounds, targets and fit/calibration cutoffs", "all baseline/candidate/control metrics", "all 14 tests at every block length", "cost and regime tables", "machine-readable verdict with each gate", "environment and source hashes", "negative results and limitations"],
+    "required": [
+      "immutable protocol and registration commit",
+      "data checksums and provenance",
+      "all validation trials and selection lock",
+      "all per-date predictions, interval bounds, targets and fit/calibration cutoffs",
+      "all baseline/candidate/control metrics",
+      "all 14 tests at every block length",
+      "cost and regime tables",
+      "machine-readable verdict with each gate",
+      "environment and source hashes",
+      "negative results and limitations"
+    ],
     "no_suppression": "Write all outcomes regardless of sign or significance. Never use scientific success as CI pass criterion.",
     "prospective_limit": "This is a preregistered analysis of already historical data, not a blind live trial. No claim of independence from public knowledge of 2023-2025 events. Reusing the holdout for methodological tuning invalidates confirmatory language; corrections must be logged."
   }
