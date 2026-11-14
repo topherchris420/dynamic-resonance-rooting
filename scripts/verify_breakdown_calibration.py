@@ -21,8 +21,8 @@ def verify_calibration_replay(actual: Path, expected: Path) -> None:
     verify_replay(sorted(actual_artifacts), sorted(expected_artifacts), "calibration.artifacts")
     verify_replay(actual_lock, expected_lock, "calibration")
     for name in sorted(expected_artifacts):
-        replay = pd.read_csv(actual / name, keep_default_na=False)
-        published = pd.read_csv(expected / name, keep_default_na=False)
+        replay = pd.read_csv(actual / name)
+        published = pd.read_csv(expected / name)
         pd.testing.assert_frame_equal(
             replay, published, check_exact=False, rtol=1e-7, atol=1e-10, obj=name
         )
