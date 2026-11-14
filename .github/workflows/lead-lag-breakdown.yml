@@ -34,7 +34,10 @@ jobs:
         run: >-
           python scripts/run_breakdown_study.py calibrate
           --output-dir /tmp/breakdown-calibration
-          --verify-against experiments/lead_lag_breakdown/calibration
+      - name: Check calibration checksums, thresholds and every replayed row
+        run: >-
+          python scripts/verify_breakdown_calibration.py
+          /tmp/breakdown-calibration experiments/lead_lag_breakdown/calibration
       - name: Replay every held-out episode and market result
         run: >-
           python scripts/run_breakdown_study.py evaluate
