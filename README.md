@@ -173,6 +173,7 @@ These studies take longer than the quick start. The external comparison reads ve
 | Sensing and micro-Doppler analog signals | `python examples/sensing_systems_resonance_depth.py` | [Examples](docs/examples.md) |
 | State estimation and filtering | `python examples/state_space_lab.py` | [API reference](docs/api.md) |
 | Macroeconomic and market research | `python examples/quant_macro_lab.py --offline` | [Quant research](docs/quant-research.md) |
+| Preregistered financial forecasting | `python scripts/run_financial_holdout.py select --output-dir /tmp/drr-selection` | [Locked holdout study](docs/financial-holdout.md) |
 | Public-data supervisory monitoring | `drr-monitor --demo` | [LFBO workbench](docs/lfbo-workbench.md) |
 | Multiple perspectives on one system | `DRR_ScopeResolver` | [Scope resolution](docs/scope-resolution.md) |
 

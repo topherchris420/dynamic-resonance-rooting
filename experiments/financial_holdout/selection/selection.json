@@ -1,0 +1,66 @@
+{
+  "data_sha256": "a0a7fa0fa7f0a706e4b74ef2fb5b0280d2457235113c4ed46f669a559edf4abe",
+  "economic_comparator": "zero",
+  "expected_test_days": 1096,
+  "experiment_id": "drr-financial-holdout-v1",
+  "high_volatility_threshold": 0.04597587724047619,
+  "last_validation_entry": "2022-12-21",
+  "primary_candidate": "ridge_drr",
+  "protocol_sha256": "a106ed97380f4cec0b54ad2a8247008b8cceb5fc7001fa9f0af6ca76bdd3cd65",
+  "regime_threshold_feature_cutoff_exclusive": "2020-12-23",
+  "selected_parameters": {
+    "hgb": {
+      "l2_regularization": 10.0,
+      "max_leaf_nodes": 7
+    },
+    "hgb_drr": {
+      "l2_regularization": 10.0,
+      "max_leaf_nodes": 7
+    },
+    "hgb_noise": {
+      "l2_regularization": 10.0,
+      "max_leaf_nodes": 7
+    },
+    "hgb_rooting": {
+      "l2_regularization": 10.0,
+      "max_leaf_nodes": 7
+    },
+    "hgb_spectral": {
+      "l2_regularization": 10.0,
+      "max_leaf_nodes": 7
+    },
+    "historical_mean": {},
+    "momentum20": {},
+    "ridge": {
+      "alpha": 10000.0
+    },
+    "ridge_drr": {
+      "alpha": 10000.0
+    },
+    "zero": {}
+  },
+  "selection_label_cutoff_exclusive": "2022-12-23",
+  "source_manifest_sha256": "06d0b825b2e65ed2b9b3d379bb64f30bcd353dd1c947ea0e35c2070e886b62ee",
+  "source_sha256": {
+    "src/drr_framework/_spectral.py": "57cdfceee866227f7b2b4eada5a0d0600b1faf4b764fd1ff2e4e92d01d322ba0",
+    "src/drr_framework/finance/holdout/__init__.py": "a831b1d29726beb6b517790a25791324a328f26145b9800866227a96bafee293",
+    "src/drr_framework/finance/holdout/data.py": "f3db709b8069d653d5d9a544d417f5fe7887524dd95bfcee98d368b656128f14",
+    "src/drr_framework/finance/holdout/models.py": "62765a8ded766b4d8bf028b4de1d78efdb0194250437d5690324eba82f662d09",
+    "src/drr_framework/finance/holdout/statistics.py": "aebb56f0c52f94f595a57684e377627068b9267d341d73eb247853cdc8e42d06",
+    "src/drr_framework/finance/holdout/study.py": "0133ada07ab18b7f3f2607cf5cbb4ecf0b8834f3a6ed9ea2885bc022acea5832",
+    "src/drr_framework/modules.py": "b093f3fad6339339993a365c8665af53a884e5f70ae56b69971cf0e63fd3eec2"
+  },
+  "trials_sha256": "8e8b3ef4d63b01f8a2cb1e71c2ab9c41c78a203a3d3c5dc0f0af9b898909d3a8",
+  "validation_mse": {
+    "hgb": 0.002246246494827,
+    "hgb_drr": 0.0022673182923875343,
+    "hgb_noise": 0.0021758578914374063,
+    "hgb_rooting": 0.002265988174482177,
+    "hgb_spectral": 0.0022382382875587026,
+    "historical_mean": 0.0020926104558336212,
+    "momentum20": 0.0021703500400455118,
+    "ridge": 0.002087551835943291,
+    "ridge_drr": 0.0020901034891486958,
+    "zero": 0.0020821185187085344
+  }
+}
