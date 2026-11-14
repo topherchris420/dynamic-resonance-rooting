@@ -4,13 +4,15 @@ from __future__ import annotations
 
 import copy
 import json
+import runpy
+import shutil
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import pytest
 
-from drr_framework.finance.holdout.data import build_features, validate_bars
+from drr_framework.finance.holdout.data import build_features, digest, validate_bars
 from drr_framework.finance.holdout.models import (
     calibration_quantile,
     split_training,
@@ -202,6 +204,38 @@ def test_replay_detects_changed_metrics_and_verdict():
         verify_replay({**expected, "mse": 0.02}, expected)
     with pytest.raises(ValueError):
         verify_replay({**expected, "verdict": "SUPPORTED"}, expected)
+
+
+def test_selection_replay_checks_integrity_and_compares_every_trial(tmp_path):
+    verify_selection_replay = runpy.run_path(str(ROOT / "scripts/run_financial_holdout.py"))[
+        "verify_selection_replay"
+    ]
+    study = ROOT / "experiments/financial_holdout"
+    expected = study / "selection"
+    actual = tmp_path / "selection"
+    shutil.copytree(expected, actual)
+    trials_path = actual / "trials.json"
+    lock_path = actual / "selection.json"
+    trials = json.loads(trials_path.read_text())
+    lock = json.loads(lock_path.read_text())
+
+    trials[0]["mse"] += 1e-15
+    trials_path.write_text(json.dumps(trials))
+    with pytest.raises(ValueError, match="Selection lock mismatch: trials_sha256"):
+        verify_selection_replay(ROOT, study, actual, expected)
+
+    lock["trials_sha256"] = digest(trials_path)
+    lock_path.write_text(json.dumps(lock))
+    (actual / "selection.sha256").write_text(digest(lock_path) + "\n")
+    verify_selection_replay(ROOT, study, actual, expected)
+
+    trials[0]["mse"] += 0.01
+    trials_path.write_text(json.dumps(trials))
+    lock["trials_sha256"] = digest(trials_path)
+    lock_path.write_text(json.dumps(lock))
+    (actual / "selection.sha256").write_text(digest(lock_path) + "\n")
+    with pytest.raises(ValueError, match=r"trials\[0\]\.mse"):
+        verify_selection_replay(ROOT, study, actual, expected)
 
 
 def test_existing_run_is_never_overwritten(tmp_path):
