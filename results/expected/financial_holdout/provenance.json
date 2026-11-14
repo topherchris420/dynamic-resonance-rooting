@@ -1,0 +1,21 @@
+{
+  "artifacts": {
+    "daily_portfolios.csv.gz": "49bd2c66afdcdcef188053208c44b1c245037678d94528677da3209107aa0332",
+    "environment.json": "54924d02b9de7ae49d5608500407a5ba19c1130d1067cb1a744a7af12fac4324",
+    "predictions.csv.gz": "e016e6abb467d34ab0fe2a2f45ffb6b89ed4d2c050a8c1f716d249edb40f0296",
+    "report.md": "bc4a3e28b7b75aa3f1a50f2dce9d0bde215c36ffcc2173bdfc431dde3842f40f",
+    "summary.json": "70d9d82230e75a7d7f98a52997a36725a65a316d922ea285ad035b5f7a8b5fd2"
+  },
+  "data_sha256": "a0a7fa0fa7f0a706e4b74ef2fb5b0280d2457235113c4ed46f669a559edf4abe",
+  "protocol_sha256": "a106ed97380f4cec0b54ad2a8247008b8cceb5fc7001fa9f0af6ca76bdd3cd65",
+  "selection_sha256": "c0240eb21e0cc2b22265d76796b1f2c24fac1bbb447bcad91c424a7c2bbdde7b",
+  "source_sha256": {
+    "src/drr_framework/_spectral.py": "57cdfceee866227f7b2b4eada5a0d0600b1faf4b764fd1ff2e4e92d01d322ba0",
+    "src/drr_framework/finance/holdout/__init__.py": "a831b1d29726beb6b517790a25791324a328f26145b9800866227a96bafee293",
+    "src/drr_framework/finance/holdout/data.py": "f3db709b8069d653d5d9a544d417f5fe7887524dd95bfcee98d368b656128f14",
+    "src/drr_framework/finance/holdout/models.py": "62765a8ded766b4d8bf028b4de1d78efdb0194250437d5690324eba82f662d09",
+    "src/drr_framework/finance/holdout/statistics.py": "aebb56f0c52f94f595a57684e377627068b9267d341d73eb247853cdc8e42d06",
+    "src/drr_framework/finance/holdout/study.py": "0133ada07ab18b7f3f2607cf5cbb4ecf0b8834f3a6ed9ea2885bc022acea5832",
+    "src/drr_framework/modules.py": "b093f3fad6339339993a365c8665af53a884e5f70ae56b69971cf0e63fd3eec2"
+  }
+}

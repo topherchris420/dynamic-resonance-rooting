@@ -274,3 +274,55 @@ def test_published_artifacts_have_intact_hashes_and_failed_gates_are_published()
     assert len(predictions) == 1096 * 2 * 10
     assert set(predictions.model) == set(summary["forecast_metrics"])
     assert summary["verdict"] in (result / "report.md").read_text()
+
+
+def test_published_forecasts_independently_reconcile_to_raw_prices_and_timestamps(protocol):
+    result = ROOT / "results/expected/financial_holdout"
+    if not (result / "predictions.csv.gz").exists():
+        pytest.skip("Evidence has not been generated yet")
+    bars = pd.read_csv(ROOT / "experiments/financial_holdout/data/bars.csv", parse_dates=["date"])
+    prices = bars.set_index(["date", "symbol"]).open
+    rows = pd.read_csv(
+        result / "predictions.csv.gz",
+        parse_dates=[
+            "feature_date",
+            "entry_date",
+            "exit_date",
+            "fit_last_exit",
+            "calibration_first_feature",
+            "calibration_last_exit",
+        ],
+    )
+    summary = json.loads((result / "summary.json").read_text())
+    assert not rows.duplicated(["model", "entry_date", "symbol"]).any()
+    entry_prices = prices.reindex(
+        pd.MultiIndex.from_arrays([rows.entry_date, rows.symbol])
+    ).to_numpy()
+    exit_prices = prices.reindex(
+        pd.MultiIndex.from_arrays([rows.exit_date, rows.symbol])
+    ).to_numpy()
+    np.testing.assert_allclose(rows.target, exit_prices / entry_prices - 1, rtol=1e-10, atol=1e-14)
+    assert (rows.entry_date - rows.feature_date == pd.Timedelta(days=2)).all()
+    assert (rows.exit_date - rows.entry_date == pd.Timedelta(days=1)).all()
+    assert (rows.fit_last_exit < rows.calibration_first_feature - pd.Timedelta(days=7)).all()
+    assert (rows.calibration_last_exit < rows.feature_date - pd.Timedelta(days=7)).all()
+    assert (rows.loc[rows.model == "zero", "prediction"] == 0).all()
+    for model, group in rows.groupby("model"):
+        squared_errors = (group.prediction - group.target) ** 2
+        observed_coverage = ((group.lower <= group.target) & (group.target <= group.upper)).mean()
+        assert squared_errors.mean() == pytest.approx(
+            summary["forecast_metrics"][model]["mse"], abs=1e-14
+        )
+        assert observed_coverage == pytest.approx(summary["forecast_metrics"][model]["coverage"])
+    selection = json.loads(
+        (ROOT / "experiments/financial_holdout/selection/selection.json").read_text()
+    )
+    trials = json.loads((ROOT / "experiments/financial_holdout/selection/trials.json").read_text())
+    for model, params in selection["selected_parameters"].items():
+        best = min(
+            (trial for trial in trials if trial["model"] == model), key=lambda trial: trial["mse"]
+        )
+        assert params == best["params"]
+    assert pd.Timestamp(selection["last_validation_entry"]) + pd.Timedelta(days=1) < pd.Timestamp(
+        selection["selection_label_cutoff_exclusive"]
+    )

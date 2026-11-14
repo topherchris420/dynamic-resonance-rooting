@@ -2,9 +2,18 @@
 
 The machine-readable [protocol](protocol.json) fixes the target, timing, data,
 feature sets, model grids, selection procedure, costs, inference family and
-success criteria **before any holdout scoring**. This first commit contains no
-experiment results. Implementation, data provenance and results follow in
-separate commits so the chronology can be inspected.
+success criteria **before any holdout scoring**. Protocol registration,
+implementation/selection and results occupy separate commits so the chronology
+can be inspected. See the [amendment and execution history](amendments.md).
+
+**Outcome: NOT SUPPORTED.** The selected ridge + DRR model did not establish the
+registered minimum forecast advantage or corrected significance against every
+baseline. Positive simulated net returns do not override those failed criteria.
+
+- [Complete report, including unfavorable results](../../results/expected/financial_holdout/report.md)
+- [Method and reproduction commands](../../docs/financial-holdout.md)
+- [Every validation trial](selection/trials.json) and [frozen selection](selection/selection.json)
+- [Original source checksums](data/manifest.json) and [data license](DATA_LICENSE.md)
 
 The study asks whether DRR contributes useful incremental information to delayed
 daily return prediction. A negative result is a completed experiment, not a failed

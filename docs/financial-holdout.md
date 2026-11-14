@@ -10,6 +10,14 @@ Read the [fixed protocol](../experiments/financial_holdout/protocol.json),
 [selection lock](../experiments/financial_holdout/selection/selection.json) and
 [complete result](../results/expected/financial_holdout/report.md).
 
+**Observed outcome: NOT SUPPORTED.** Validation chose ridge + DRR. On the holdout,
+its MSE was 0.00084385 versus 0.00084675 for zero return and 0.00084450 for ridge.
+Those small improvements did not meet the registered 1% minimum against every
+baseline or survive the required significance tests. The primary portfolio's
+positive net result, cross-year consistency and roughly 90% interval coverage
+did not override the failed gates. The nonlinear DRR candidate was worse than
+the zero-return baseline on MSE. All of these outcomes remain in the report.
+
 ## What is tested
 
 | Choice | Fixed design |
