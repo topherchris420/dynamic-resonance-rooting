@@ -77,7 +77,10 @@ python scripts/run_financial_holdout.py evaluate \
 
 Choose unused output directories. The runner refuses to overwrite evidence and
 rejects changed protocol, market-data, source-code or selection checksums. It
-always writes the full scientific outcome. A `NOT SUPPORTED` result is a successful
+verifies the checksum of each trial ledger against its own selection lock,
+then compares every replayed trial with the published ledger using the same
+floating-point tolerance as the holdout summary.
+It always writes the full scientific outcome. A `NOT SUPPORTED` result is a successful
 execution; CI checks reproducibility and integrity, not whether DRR wins.
 
 To independently re-fetch the exact source vintage into a new directory:

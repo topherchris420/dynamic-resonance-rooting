@@ -1,0 +1,40 @@
+{
+  "calibration_artifacts": {
+    "market_scores.csv.gz": "bf908fa4affad46a20254f3c319bc4d2b7d819e1f6bd94aaa07bbb9593785324",
+    "simulation_maxima.csv.gz": "fe384adb55adc864e5ad71caa7dc0652f3ed7cdf428691de919ebb546d9964da",
+    "simulation_scores.csv.gz": "c84f721656b8d951c00e6a4aae6b80fa6331680a8744536793a515d5198f5bc8"
+  },
+  "id": "drr-lead-lag-breakdown-v1",
+  "inputs": {
+    "data": "b76346d9c3f6817237ccc8deb046e082c6f4a88373dd5163ba1a7b624b0304a8",
+    "manifest": "9a2b8173e36ec95572f00c192aff26390d380ebf6bfaa7ee23b45f0fb46092f0",
+    "protocol": "9fa1cdecb1a5897c5eb2e1398f520dd26592277fb4a8165f5bc591f7c64447d0",
+    "source": {
+      "scripts/fetch_breakdown_data.py": "0cfd740fa80e435c44f0769554014b3cf4872afa7c60f565a5f1bc044e25c9eb",
+      "scripts/run_breakdown_study.py": "12331170a3d57ad830ddba663761b70630f3c76f19501bdc8d450a34a1000070",
+      "src/drr_framework/_spectral.py": "57cdfceee866227f7b2b4eada5a0d0600b1faf4b764fd1ff2e4e92d01d322ba0",
+      "src/drr_framework/finance/breakdown/__init__.py": "40fb8f14502a2084181ce70fa1f9026a02d2e7c4df04e6cbe6329465051268cc",
+      "src/drr_framework/finance/breakdown/detectors.py": "044212ec9e27498d3eeeabc10b0d0e6ea280cc2edb1f91758a36096465182ff4",
+      "src/drr_framework/finance/breakdown/market.py": "4d4f2296cd95e59e9c9f621b29464a7a89195d48e09c1c0c4529834a4ce7d606",
+      "src/drr_framework/finance/breakdown/study.py": "053b948f680b1a67caed2086ff96e97c9f2b184454dcbd0b769bba6ae219bf09",
+      "src/drr_framework/finance/holdout/statistics.py": "aebb56f0c52f94f595a57684e377627068b9267d341d73eb247853cdc8e42d06",
+      "src/drr_framework/modules.py": "b093f3fad6339339993a365c8665af53a884e5f70ae56b69971cf0e63fd3eec2"
+    }
+  },
+  "market_thresholds": {
+    "drr": 2.594137607891287,
+    "rooting_only": 3.0078200588128854,
+    "signed_correlation": 2.558610744857607,
+    "spectral_only": 2.9478891922586157,
+    "var_bocpd": 0.3295571043862939,
+    "var_cusum": 352.52838533315196
+  },
+  "simulation_thresholds": {
+    "drr": 3.835038897606815,
+    "rooting_only": 7.070008339631399,
+    "signed_correlation": 4.601941776666626,
+    "spectral_only": 2.8605993185687906,
+    "var_bocpd": 0.9623287401193897,
+    "var_cusum": 3067.8192646554203
+  }
+}
