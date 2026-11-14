@@ -2,9 +2,12 @@
 
 The [protocol](protocol.json) was published as commit
 `705cdb6a96864140869e2f94d300b82790b22626` before scoring.
-The next commit seals the [calibration lock](calibration/lock.json), all source
-hashes, calibration evidence and the checksum-verified 2026 hourly market data
-before held-out evaluation. Held-out results follow in a separate commit.
+Commit `ed482a0d2ce80ee29692b8921c52039b170cba30` seals the
+[calibration lock](calibration/lock.json), source hashes, calibration evidence
+and the checksum-verified 2026 hourly market data before held-out evaluation.
+Held-out results follow in a separate commit. The registered verdict is
+**NOT SUPPORTED**; all three success gates failed. Read the
+[complete positive and negative outcomes](../../results/expected/lead_lag_breakdown/report.md).
 
 See the [method and replay guide](../../docs/lead-lag-breakdown.md).
 Simulation detection delay is the primary endpoint. Market warning association

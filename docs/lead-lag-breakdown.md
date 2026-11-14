@@ -9,6 +9,32 @@ Read the [registered protocol](../experiments/lead_lag_breakdown/protocol.json),
 [calibration lock](../experiments/lead_lag_breakdown/calibration/lock.json), and
 [complete results](../results/expected/lead_lag_breakdown/report.md).
 
+## Observed result
+
+**The registered claim was not supported.** All three gates failed. Across the
+four change types, DRR's mean penalized delay was 41.67 observations longer than
+signed correlation (pointwise paired-bootstrap interval: 31.86 to 51.86 longer).
+DRR improved on that baseline for abrupt disappearance and gradual weakening,
+but its penalty was 158.00 observations worse for sign reversals and 45.27 worse
+for lag shifts. These outcomes are consistent with the sign-insensitive rooting
+fingerprint's known limitation; they do not establish a universal ranking.
+
+The held-out false-alarm comparability gate also failed: BOCPD's volatility-only
+null upper bound was 14.19%, above the registered 12% tolerance. DRR's observed
+null alarm rates were 0% and 1.04%. The volatility-shock calibration made CUSUM
+so conservative that it never alarmed on any held-out path. DRR's significant
+gains over that configuration therefore do not establish superiority over a
+well-powered conventional detector. Neither baseline nor threshold was revised
+after seeing these results.
+
+Only **2 of 531** eligible market timestamps had DRR warnings. The registered
+minimum was 20, so its association interval is withheld. At 15 bps one-way cost,
+the DRR risk overlay returned 15.17% versus 24.27% for its constant matched-exposure
+control, with maximum drawdowns of 33.03% versus 32.72%. These are descriptive
+six-month path outcomes, not estimates of a repeatable trading edge. All 42
+simulation method/scenario outcomes, 15 corrected comparisons, six market
+associations, and 39 cost/strategy outcomes remain published.
+
 ## Fixed comparisons
 
 | Component | Design |
@@ -49,8 +75,9 @@ residuals before monitoring; no artificial certainty at startup is scored.
 ## Chronology and claim boundaries
 
 The protocol was published in commit `705cdb6a96864140869e2f94d300b82790b22626`
-before scoring. Calibration, source hashes and the new data vintage are committed
-separately before held-out evaluation. Merge commits preserve this chronology.
+before scoring. Commit `ed482a0d2ce80ee29692b8921c52039b170cba30` seals calibration,
+source hashes and the new data vintage before held-out evaluation. Results are
+published in a subsequent commit; merge commits preserve this chronology.
 Development tests use different seeds from both registered calibration and test
 ranges. Public seeds and public historical markets do not constitute independent
 blinding; detector inputs nevertheless contain no change-point labels.

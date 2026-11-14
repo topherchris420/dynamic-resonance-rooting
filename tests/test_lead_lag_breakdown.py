@@ -178,3 +178,64 @@ def test_sealed_evidence_and_market_labels_are_auditable(protocol):
         rows[name + "_warning"].equals(rows[name] > lock["market_thresholds"][name])
         for name in protocol["methods"]
     )
+
+
+def test_published_market_targets_reconcile_independently_to_raw_prices(protocol):
+    output = ROOT / "results/expected/lead_lag_breakdown"
+    if not (output / "market_scores.csv.gz").exists():
+        pytest.skip("Held-out evaluation not yet run")
+    bars = pd.read_csv(STUDY / "data/bars.csv.gz", parse_dates=["time"])
+    prices = bars.pivot(index="time", columns="symbol", values="close")[
+        protocol["market"]["symbols"]
+    ]
+    returns = np.log(prices / prices.shift()).iloc[1:]
+    ledger = pd.read_csv(output / "market_scores.csv.gz", parse_dates=["time"])
+    for month, rows in ledger.groupby("month"):
+        start = pd.Timestamp(month)
+        training = returns.loc[returns.index < start].tail(256).to_numpy()
+        means, scales = training.mean(axis=0), training.std(axis=0)
+        standardized = (training - means) / scales
+        design = np.array(
+            [
+                np.r_[1, standardized[t - 1], standardized[t - 2], standardized[t - 3]]
+                for t in range(3, 256)
+            ]
+        )
+        penalty = np.diag([0] + [0.001] * 6)
+        beta = np.linalg.solve(design.T @ design + penalty, design.T @ standardized[3:])
+        for row in rows.loc[rows.future_error_ratio.notna()].iloc[[0, -1]].itertuples():
+            future = pd.date_range(row.time + pd.Timedelta(hours=1), periods=24, freq="h")
+            numerator, denominator = 0.0, 0.0
+            for time in future:
+                z = (returns.loc[time].to_numpy() - means) / scales
+                regressors = np.concatenate(
+                    [np.ones(1)]
+                    + [
+                        (returns.loc[time - pd.Timedelta(hours=k)].to_numpy() - means) / scales
+                        for k in [1, 2, 3]
+                    ]
+                )
+                numerator += float(np.sum((z - regressors @ beta) ** 2))
+                denominator += float(np.sum((returns.loc[time].to_numpy() / scales) ** 2))
+            assert row.future_error_ratio == pytest.approx(numerator / denominator, rel=1e-10)
+
+
+def test_published_risk_exposure_controls_match_and_returns_reconcile():
+    output = ROOT / "results/expected/lead_lag_breakdown"
+    if not (output / "risk_ledger.csv.gz").exists():
+        pytest.skip("Held-out evaluation not yet run")
+    ledger = pd.read_csv(output / "risk_ledger.csv.gz")
+    summary = json.loads((output / "summary.json").read_text())
+    for record in summary["market"]["risk"]:
+        rows = ledger.loc[
+            (ledger.strategy == record["strategy"]) & (ledger.cost_bps == record["cost_bps"])
+        ]
+        assert len(rows) == 4391
+        assert np.prod(1 + rows.net_return) - 1 == pytest.approx(record["total_return"], abs=1e-12)
+        assert rows.exposure.mean() == pytest.approx(record["mean_exposure"])
+        if record["strategy"].endswith("_matched_exposure"):
+            original = record["strategy"][: -len("_matched_exposure")]
+            matched = ledger.loc[
+                (ledger.strategy == original) & (ledger.cost_bps == record["cost_bps"])
+            ]
+            assert rows.exposure.mean() == pytest.approx(matched.exposure.mean())
