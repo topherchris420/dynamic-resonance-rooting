@@ -1,7 +1,5 @@
 # Dynamic Resonance Rooting
 
-[![Dynamic Resonance Rooting: resonance detection, rooting analysis, and stability diagnostics](assets/drr-hero.svg)](#live-lab)
-
 **Measure the rhythm. Trace the lag. Keep the evidence.**
 
 Dynamic Resonance Rooting (DRR) is an open-source Python research framework for exploring **what repeats, what leads, and what changes** in multivariate time series. Find recurring frequencies, test relationships between signals, and export a record that others can inspect and reproduce.
@@ -11,6 +9,8 @@ Dynamic Resonance Rooting (DRR) is an open-source Python research framework for 
 [![MIT license](https://img.shields.io/badge/license-MIT-0B5D63)](LICENSE)
 
 **[Run your first analysis](#quick-start)** · **[Explore the browser lab](#live-lab)** · **[Inspect the evidence](#what-the-evidence-says)** · **[Contribute](#contribute)**
+
+[![Dynamic Resonance Rooting: resonance detection, rooting analysis, and stability diagnostics](assets/drr-hero.svg)](#live-lab)
 
 > **Research status:** DRR produces diagnostics. A directed edge is a statistical lead–lag relationship under a chosen estimator and null model; it does not establish causation. Evidence from one domain does not automatically transfer to another.
 
