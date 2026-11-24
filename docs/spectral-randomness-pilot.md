@@ -36,9 +36,14 @@ Freeze independent seeds, on/off-grid tones, SNR, record lengths, and a grid of 
 
 Arithmetic extension: the explicit formula for the Chebyshev function relates prime-power counting deviations to zeta zeros via terms x^rho/rho. On the critical line, log(x) is the oscillation coordinate. The Montgomery-Odlyzko connection to random-matrix local spacing statistics motivates a separate study against Poisson and GUE controls using independently specified unfolding and finite-size corrections. No claim of a proof of the Riemann hypothesis, no claim that primes are physically oscillating, and no transfer of this synthetic result to arithmetic.
 
+## Riemann hypothesis: status as of 2026-11-24
+
+On November 20, 2026, Levent Alpöge announced a Claude-assisted proof of the Riemann hypothesis in Lean. On November 21, the Lean FRO and Mathlib Initiative issued a joint statement certifying the theorem statement and proof: independent compilation, theorem comparison and multiple proof checkers supported the result. Broader mathematical exposition and interpretation remain underway; formal verification and Millennium Prize recognition are distinct. DRR does not reproduce the formal proof or claim new arithmetic results. The proposed arithmetic experiment uses the classical explicit formula and numerical zeros; its statistical conclusions must be independently validated and do not follow from RH alone.
+
 ## References
 
 - Theiler et al., Testing for nonlinearity in time series: the method of surrogate data (1992), https://doi.org/10.1016/0167-2789(92)90102-S
 - Schreiber and Schmitz, Surrogate time series (2000), https://doi.org/10.1016/S0167-2789(00)00043-9
 - Odlyzko, On the distribution of spacings between zeros of the zeta function (1987), https://www.jstor.org/stable/2007890
+- Lean FRO and Mathlib Initiative, Lean verification of the Riemann Hypothesis (2026-11-21), https://leanprover-community.github.io/blog/posts/riemann-hypothesis/
 - Clay Mathematics Institute, Riemann Hypothesis, https://www.claymath.org/millennium/Riemann-Hypothesis/
