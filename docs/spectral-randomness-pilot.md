@@ -30,6 +30,25 @@ NumPy only; seed 20261124; 300 trials per condition; each trial contains 32 inde
 
 Maximum absolute FFT magnitude discrepancy between original and randomized inverse/forward reconstructions: 3.552713678800501e-14. Null rejection rate is compatible with nominal 5% at this sample size; high-jitter power is weak. The pilot does not establish calibration on real time series, causality, chaos detection, prediction, or an advantage over established bicoherence. A coherent harmonic from a single nonsinusoidal source can give the same closure.
 
+## Reusable operators and arithmetic benchmark
+
+`drr_framework.spectral_structure.phase_closure` accepts independent real-valued blocks and a fixed collection of sum-frequency triads. Its shared-phase maximum-statistic surrogate test adjusts for the tested family; it rejects numerically undefined phases rather than silently treating them as zero. It does not validate the independence or stationarity assumptions automatically.
+
+```bash
+python -c "from drr_framework.arithmetic_spectrum import benchmark; import json; print(json.dumps(benchmark(), indent=2))"
+```
+
+The arithmetic benchmark computes the exact prime-power weighted Chebyshev staircase using a sieve, then reconstructs it on 991 fixed half-integer points from 10.5 to 1000.5 using the classical explicit formula. The truncated sum includes conjugate pairs of zeros, the constant and trivial-zero correction. The first ten known positive zero ordinates are embedded for offline replay (https://www.lmfdb.org/zeros/zeta/). No zero locations are fitted to the prime counts.
+
+| Positive zeros retained | RMSE of error divided by sqrt(x) |
+| ---: | ---: |
+| 0 | 0.200539 |
+| 1 | 0.178484 |
+| 4 | 0.149980 |
+| 10 | 0.125609 |
+
+This is an exploratory numerical reconstruction of a known mathematical identity, not a new theorem, an out-of-sample prime forecast, a universal monotonic convergence claim, or evidence for generalizing to physical signals. The selected interval and zero counts are illustrative, not preregistered. Regression tests check the known prime-power jumps, fixed numerical results, phase-shift invariance and input validation.
+
 ## Next confirmatory study (proposed, not executed)
 
 Freeze independent seeds, on/off-grid tones, SNR, record lengths, and a grid of triads before testing; use a max-statistic or multiplicity correction for searched triads. Include independent AR/long-memory processes, non-Gaussian innovations, nonsinusoidal single oscillators, deterministic chaotic systems, transient chirps and random walks. Match spectra using phase surrogates only where justified and compare amplitude-adjusted surrogates with explicit null assumptions. Benchmark DRR resonance depth, Welch entropy, weighted bicoherence, phase closure, and out-of-sample predictive skill; report uncertainty and abstain on nonstationary data or inadequately calibrated nulls. Distinguish ensemble/block structure from single-record identifiability. Publish negative outcomes.
