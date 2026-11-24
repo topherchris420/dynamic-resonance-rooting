@@ -28,8 +28,11 @@ def phase_closure(blocks: np.ndarray, triads: np.ndarray, surrogates=199, seed=0
         or not np.issubdtype(triads.dtype, np.integer)
         or np.any(triads <= 0)
         or np.any(triads > (blocks.shape[1] - 1) // 2)
-        or np.any(triads[:, 0] + triads[:, 1] != triads[:, 2])
     ):
+        raise ValueError("triads must be positive interior integer bins with a+b=c")
+    # Bounds above ensure the cast and sum fit in the native index dtype.
+    triads = triads.astype(np.intp, copy=False)
+    if np.any(triads[:, 0] + triads[:, 1] != triads[:, 2]):
         raise ValueError("triads must be positive interior integer bins with a+b=c")
     if not isinstance(surrogates, (int, np.integer)) or surrogates < 19:
         raise ValueError("at least 19 surrogates required")
