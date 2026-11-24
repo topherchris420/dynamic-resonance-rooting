@@ -54,3 +54,19 @@ def test_invalid_triads(triads):
 def test_undefined_phase_rejected():
     with pytest.raises(ValueError, match="phase undefined"):
         phase_closure(np.zeros((4, 16)), np.array([[1, 2, 3]]))
+
+
+@pytest.mark.parametrize(
+    "dtype,n,triad",
+    [(np.uint8, 512, [130, 130, 4]), (np.uint16, 131072, [32770, 32770, 4])],
+)
+def test_wrapped_triads_rejected(dtype, n, triad):
+    blocks = np.random.default_rng(13).normal(size=(4, n))
+    with pytest.raises(ValueError, match="a\\+b=c"):
+        phase_closure(blocks, np.array([triad], dtype=dtype))
+
+
+def test_valid_unsigned_triads():
+    blocks = np.random.default_rng(13).normal(size=(8, 512))
+    triads = np.array([[100, 130, 230]])
+    assert phase_closure(blocks, triads) == phase_closure(blocks, triads.astype(np.uint8))
