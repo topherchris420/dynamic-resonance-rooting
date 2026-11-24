@@ -28,7 +28,8 @@ def chebyshev_table(limit: int) -> np.ndarray:
     prime[:2] = False
     for p in range(2, int(limit**0.5) + 1):
         if prime[p]:
-            prime[p * p :: p] = False
+            start = p * p
+            prime[start::p] = False
     weights = np.zeros(limit + 1)
     for p in np.flatnonzero(prime):
         q = int(p)
@@ -47,7 +48,9 @@ def reconstruct(x: np.ndarray, count: int) -> np.ndarray:
         raise ValueError("invalid zero count")
     rho = 0.5 + 1j * ZERO_ORDINATES[:count]
     terms = np.exp(np.log(x)[..., None] * rho) / rho
-    return x - np.log(2 * np.pi) - 0.5 * np.log1p(-x**-2) - 2 * np.real(terms.sum(axis=-1))
+    inverse_square = np.power(x, -2)
+    correction = 0.5 * np.log1p(-inverse_square)
+    return x - np.log(2 * np.pi) - correction - 2 * np.real(terms.sum(axis=-1))
 
 
 def benchmark() -> dict:
