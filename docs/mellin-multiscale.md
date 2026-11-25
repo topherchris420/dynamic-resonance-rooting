@@ -53,4 +53,10 @@ frequency, amplitude = log_spectrum(x, y)
 print(fit_log_mode(x, y, [0.4, 0.5, 0.6], [13, 14, 15]))
 ```
 
-The noiseless, on-grid fixture recovers beta=0.5 and omega=14. This is a specification test, not evidence of robustness. Next research step: preregister noisy and off-grid trials, compare to ordinary log-coordinate regression/FFT and multi-mode baselines, quantify false discoveries and coverage, and report negative outcomes. No biological, financial, or consciousness implications follow from the arithmetic result.
+The noiseless, on-grid fixture recovers beta=0.5 and omega=14. This is a specification test, not evidence of robustness. No biological, financial, or consciousness implications follow from the arithmetic result.
+
+`log_mode_profile` returns the full candidate surface that `fit_log_mode` scans, in closed form and about 16 times faster; its minimum is the candidate `fit_log_mode` returns.
+
+## Noisy, off-grid recovery (preregistered)
+
+The [hidden-mode recovery benchmark](mellin-recovery-benchmark.md) compares the scan and `log_spectrum` with Lomb-Scargle in ln x, periodogram-initialized nonlinear least squares and ESPRIT. It uses 12,000 held-out off-grid records under white, scale-proportional and Student-t noise, with hypotheses frozen before the held-out run. Pooled, Lomb-Scargle (0.694) and NLS (0.688) recover the hidden log-frequency more often than the scan (0.666). The scan is the most reliable method tested for strongly growing or decaying modes (|beta| = 0.6) in additive noise sampled uniformly in ln x: +0.146 over Lomb-Scargle and +0.086 over NLS. It is worse at constant amplitude and under noise that scales with the envelope, as predicted. `log_spectrum` with its default beta = 0.5 weighting is not competitive (0.412). Multi-mode separation, coverage and real data remain untested.
