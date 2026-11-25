@@ -31,11 +31,12 @@ def chebyshev_table(limit: int) -> np.ndarray:
             start = p * p
             prime[start::p] = False
     weights = np.zeros(limit + 1)
-    for p in np.flatnonzero(prime):
-        q = int(p)
+    for prime_index in np.flatnonzero(prime):
+        p = int(prime_index)
+        q = p
         while q <= limit:
             weights[q] = np.log(p)
-            q *= int(p)
+            q *= p
     return np.cumsum(weights)
 
 
