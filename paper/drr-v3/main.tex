@@ -99,8 +99,10 @@ claim. On NOAA quasi-biennial-oscillation winds the holdout false-alarm rate was
 0.272 against a 0.05 tolerance. In a daily cryptocurrency-return holdout, DRR
 features improved squared error by 0.34\%, short of the registered 1\% and not
 significant after correction. In a lead--lag breakdown study, signed correlation
-detected reversals faster. The v3 simulation results come from scripts that are
-not yet public. DRR outputs are diagnostics, not causal,
+detected reversals faster. The original v3 study scripts were lost. An
+independent reconstruction, registered before any run, reproduces all 12 of its
+registered findings, and every one of the 123 Monte Carlo rates it compares is
+consistent with the published value. DRR outputs are diagnostics, not causal,
 policy, or supervisory conclusions.
 
 \smallskip
@@ -165,9 +167,13 @@ failure to the circular-shift seam (Section~\ref{sec:nulls}).
 stratospheric winds and on two market tasks, none of which supported its claim,
 reported in full with every comparison (Section~\ref{sec:external}).
 \item \emph{An evidence ledger.} A claim-status discipline (supported,
-not\_supported, withdrawn) separating results that readers can replay from the
-public repository from v3 results whose scripts are not yet public (Section~\ref{sec:ledger},
-Appendix).
+not\_supported, withdrawn) that records each claim's evidence class and
+whether readers can replay it from the public repository
+(Section~\ref{sec:ledger}, Appendix).
+\item \emph{An independent reconstruction of the v3 studies.} The original
+study scripts were lost. A protocol fixing every open implementation choice and
+every decision rule was committed before any run. The reconstruction is public
+and replayable (Section~\ref{sec:recon}).
 \end{enumerate}
 
 \section{Background and Related Work}
@@ -604,7 +610,8 @@ AR(2) oscillator, $r=0.95$ & .980 & .035 & .575 & .510\\
 \multicolumn{5}{p{0.95\columnwidth}}{\scriptsize Italic: not interpretable as
 power, because the same cutoff fires on .983 of AR(0.9) series without any line.
 The $-3.0$\,dB line in white noise (all methods 1.000) is omitted. The column
-for $\Lambda$ comes from a separate addendum run (Appendix).}
+for $\Lambda$ comes from a separate addendum run (Appendix).
+Section~\ref{sec:recon} reruns every cell.}
 \end{tabular}
 \end{table}
 
@@ -636,6 +643,74 @@ a plateau, so at $T=512$ the distinction is not identifiable from one
 realization. A band-averaged multiscale variant of $\Lambda$ was piloted and gave
 no gain, so it was not carried forward. At $r=0.95$, $\Lambda$ and isotonic $D^*$
 reach 0.51--0.58.
+
+\section{Independent Reconstruction of the v3 Studies}\label{sec:recon}
+
+The scripts and JSON artifacts behind Tables~\ref{tab:prop2}--\ref{tab:res} and
+the v3 parts of Section~\ref{sec:external} were lost. We therefore rebuilt the
+studies from the definitions, parameters and seeds stated in this paper and the
+repository snapshot. The rebuilt values are new runs of a new implementation.
+They are not the original outputs.
+
+\textit{Protocol.} Before any run we committed a protocol
+(\code{experiments/v3\_reconstruction/protocol.json}, id
+\code{drr-v3-reconstruction-v1}). It fixes 14 implementation choices the text
+leaves open, such as the AR order rule for prewhitening (AIC, $p\le10$) and the
+order in which each family consumes its random stream. It also fixes how every
+value is compared and states 12 findings (F1--F12) with a decision rule each. A
+no-tuning rule forbids changing an operator after seeing results. Four
+clarifications were logged before the full run, and none changed an operator.
+Each published rate is compared with its rebuilt rate by a two-sided Fisher exact
+test, with Holm correction across all 123 rates. Long-run correlations must agree
+within 0.01. The QBO values must agree under stated rounding and side-of-0.05
+rules.
+
+\textit{Results.} Every one of F1--F12 holds. All 123 compared rates are
+consistent with the published values (Holm-adjusted $p\ge0.05$ for each; the
+smallest raw $p$ is 0.022). Twenty of 20 QBO quantities agree. The v2 columns
+share their simulator and seeds with the committed calibration study, and the
+eight committed v2 rows the protocol names (four in full, four over their first
+200 trials) are reproduced trial for trial.
+Table~\ref{tab:recon} shows the cells the argument rests on.
+
+\begin{table}[t]
+\centering\scriptsize
+\caption{Published vs.\ reconstructed values for the cells the main claims rest on.}
+\label{tab:recon}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Quantity & Published & Rebuilt\\
+\midrule
+v2 exact lag, AR(0.9) & .403 & .400\\
+v2 reverse edge, AR(0.9) & .120 & .157\\
+v3 exact lag, every memory row & .997--1.000 & 1.000\\
+v3 reverse edge, every AR(1) row & .000--.003 & .000\\
+v3 / Granger power, $c=0.2$ & .890 / .883 & .883 / .877\\
+AR(1) $D^*$ size, AR(0.9) + white & .617 & .577\\
+$\Lambda$ size, five nulls & .037--.067 & .027--.047\\
+$\Lambda$, line in AR(0.9), $-9.0$\,dB & .800 & .810\\
+$\Lambda$ $p$, QBO 30 / 50\,hPa & .008 / .016 & .007 / .018\\
+Raw reverse corr., $\phi=0.9$ (Prop.~\ref{prop:rev}: .219) & .228 & .218\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textit{What did not reproduce exactly.} One registered comparison failed its
+rule. The long-run raw reverse correlation at $\phi=0.9$ is 0.2177 in the
+reconstruction, against 0.228 in Table~\ref{tab:prop2}. Proposition~\ref{prop:rev}
+predicts 0.219, so the published value, not the theory, is the one off, by about
+two sampling standard deviations. The other five long-run values agree. Two
+Monte Carlo cells came closest to failing (raw $p=0.022$, Holm $p=1.0$): isotonic
+$D^*$ on the $-5.5$\,dB line in AR(0.9) (.070 published, .145 rebuilt) and
+AR(1) $D^*$ on the $-3.0$\,dB line (.120 vs.\ .210). Neither changes a
+conclusion: in both cells $\Lambda$ rejects every series, published and rebuilt.
+
+\textit{An exploratory observation.} In the course of testing, $\Lambda$'s
+largest ratio sometimes fell on the last interior Fourier bin. In 1{,}000 white
+and 1{,}000 AR(0.9) series of length 512 (seed 20261125), the argmax landed there
+16 and 28 times, against about 4 expected if every bin were equally likely. This
+was not a registered finding and does not affect the size of $\Lambda$. It does
+bear on the QBO (Section~\ref{sec:external}).
 
 \section{Where the Implemented Test Stays Calibrated}\label{sec:nulls}
 
@@ -904,8 +979,11 @@ matched red null reproduces the depth. $\Lambda$ rejects $H_{\mathrm{mono}}$ at
 both levels ($p=0.016$ at 50\,hPa; $p=0.008$ at 30\,hPa, 999 surrogates). At
 50\,hPa the line sits at 27.2 months, the QBO. At 30\,hPa the QBO line (ratio
 10.0) is second to a line at 2.0 months, next to the Nyquist frequency (ratio
-16.7), whose origin we have not investigated. $\Lambda$ tests for a line;
-locating it requires review.
+16.7). That line is the last interior Fourier bin, where the reconstruction
+found $\Lambda$'s maximum more often than chance would put it
+(Section~\ref{sec:recon}). It may be an artifact of the estimator rather than a
+feature of the data; this is exploratory and untested. $\Lambda$ tests for a
+line; locating it requires review.
 
 \subsection{Daily cryptocurrency returns (claim not supported)}
 
@@ -995,8 +1073,9 @@ Thm.~\ref{thm:suff}, Props.~\ref{prop:exact}--\ref{prop:rev} & proof & proven\\
 v2 rooting FWER on stationary AR, fGn ($H\le0.85$), GARCH & sim. & supported\\
 v2 rooting FWER at fGn $H=0.95$ & sim. & borderline (two studies)\\
 v2 rooting on coherent oscillators, trends, random walks & sim. & not controlled\\
-v3 prewhitened rooting: size and exact-lag recovery & sim. & supported; outside package\\
-$\Lambda$: size and power on 16 families & sim. & supported; addendum, outside package\\
+v3 prewhitened rooting: size and exact-lag recovery & sim. & supported; reconstructed\\
+$\Lambda$: size and power on 16 families & sim. & supported; reconstructed\\
+v3 findings F1--F12 under an independent implementation & sim. & 12 of 12 hold\\
 Phase test: 1:2 and 2:3 coupling & sim. & supported (8 of 9 hyp.)\\
 Phase test: 1:1 non-inferiority to rooting & sim. & not supported\\
 DRR-Mellin recovery superiority & sim. & partially supported\\
@@ -1068,8 +1147,11 @@ that DRR adds information on real data anywhere. Every positive result in this p
 evidence.
 
 \textit{Limitations.} There is no confirmatory external evidence for any
-operator. The v3 operators (prewhitened rooting and $\Lambda$) are not yet in
-the package. Their scripts and artifacts are not publicly available. The
+operator. The v3 operators (prewhitened rooting and $\Lambda$) are in the
+package only as the reconstruction module \code{drr\_framework.v3\_reconstruction},
+not yet in the analysis API. The original study scripts and artifacts are lost.
+The public reconstruction agrees with them statistically, not number for number
+(Section~\ref{sec:recon}). The
 simulation studies choose families that stress known failure
 modes and cannot cover every realistic process. $\Lambda$ is a line detector and
 does not detect broad peaks at $T=512$. The QBO 30\,hPa line near the Nyquist
@@ -1080,9 +1162,10 @@ evidence, not a confirmatory claim. The dependent-noise and robustness studies
 tested v2 rooting only, so the size of v3 under long memory and coherent
 oscillation is unknown.
 
-\textit{Next steps.} (1) Move the v3 operators into the package behind version
-flags (\code{rooting\_v3}, \code{resonance\_test\_v1}), with their study scripts
-and calibration in CI. (2) Rerun the dependent-noise and coherent-oscillator
+\textit{Next steps.} (1) Promote the reconstructed v3 operators from the
+reconstruction module into the analysis API behind version flags
+(\code{rooting\_v3}, \code{resonance\_test\_v1}), with their calibration in CI.
+Study whether the last-bin excess of $\Lambda$ needs a boundary correction. (2) Rerun the dependent-noise and coherent-oscillator
 designs on v3, and add a seam correction to the rooting null (a phase ramp or
 tapered shifts), adopting it only if a size study supports it. (3) Retire the
 heuristic candidate gate, report every surrogate-tested edge, and add signed
@@ -1106,20 +1189,23 @@ from memory, and a theorem now explains why. Resonance is redefined so that the
 distinction becomes a test with measured size and power. The framework's three
 preregistered external claims all failed and are reported as such. A method that
 publishes where it breaks is a stronger foundation than one that does not.
-Releasing the v3 scripts will let readers check the rest.
+The original v3 scripts were lost, so the v3 studies were reconstructed from
+a protocol fixed before any run. Every registered finding held, and readers can
+now replay all of them.
 
 \medskip
 \noindent\textit{Data and code availability.} Code for the operators and all
 committed studies is at
-\url{https://github.com/topherchris420/dynamic-resonance-rooting} (MIT). The v3
-study scripts, configurations, and JSON artifacts are not publicly available
-(Appendix). The QBO data are U.S. government work from NOAA CPC, vendored with
+\url{https://github.com/topherchris420/dynamic-resonance-rooting} (MIT). The
+original v3 study scripts, configurations, and JSON artifacts were lost. The
+reconstruction that replaces them is public (Section~\ref{sec:recon},
+Appendix). The QBO data are U.S. government work from NOAA CPC, vendored with
 checksums. The market data are from Binance Vision and are used under its
 dataset terms (CC BY-NC-SA 4.0).
 
 \section*{Appendix: Reproduction}
 
-\textit{Reported v3 study environment (not independently replayable from the public repository).} Python 3.11.15, NumPy 2.4.4, SciPy 1.17.1,
+\textit{Original v3 study environment (lost; recorded for reference).} Python 3.11.15, NumPy 2.4.4, SciPy 1.17.1,
 scikit-learn 1.8.0, drr-framework 4.3.0 at commit \code{862c4f7}. Running
 \code{python run\_study.py} (configuration SHA-256 \code{57d5ea78f1c8\ldots5cb7},
 33 tasks, about 25 min on two cores) writes \code{results/study.json}. Running
@@ -1127,8 +1213,18 @@ scikit-learn 1.8.0, drr-framework 4.3.0 at commit \code{862c4f7}. Running
 \code{b92f522f3472\ldots2de5}) writes \code{results/spectral\_excess.json}, and
 \code{python make\_figures.py} renders Figs.~\ref{fig:rooting}, \ref{fig:resonance},
 and~\ref{fig:qbo} from those files. Seeds: 20260925 (study), 20260926 (addendum). Every value in
-Tables~\ref{tab:prop2}--\ref{tab:res} is read from these artifacts or from the
-committed repository artifacts.
+Tables~\ref{tab:prop2}--\ref{tab:res} was read from these artifacts or from the
+committed repository artifacts. These files are no longer available.
+
+\textit{Reconstruction.} Running
+\nolinkurl{scripts/run_v3_reconstruction.py} with \code{-{}-workers 4} writes
+\nolinkurl{results/expected/v3_reconstruction/v3_reconstruction.json}. It replays every v3
+study under protocol \code{drr-v3-reconstruction-v1} (SHA-256
+\code{88079def296b\ldots}) with the same seeds, about 12 min on four cores. It
+was run with Python 3.13.18, NumPy 2.5.3 and SciPy 1.18.1. The rendered report
+beside the JSON artifact lists every compared value. The protocol's assumptions
+and the clarifications logged before the run are in
+\code{experiments/v3\_reconstruction/}.
 
 \textit{Committed evidence.} Values in Sections~\ref{sec:nulls}
 and~\ref{sec:external} and Fig.~\ref{fig:depnoise} are read from artifacts under
