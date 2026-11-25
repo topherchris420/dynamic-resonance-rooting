@@ -62,9 +62,8 @@ def _time_pair(
     reference, actual = baseline(), candidate()
     finite = bool(np.isfinite(reference).all() and np.isfinite(actual).all())
     error = float(np.linalg.norm(actual - reference) / max(1.0, np.linalg.norm(reference)))
-    accurate = finite and error <= 1e-10 and bool(
-        np.allclose(actual, reference, rtol=1e-9, atol=1e-10)
-    )
+    elementwise_close = bool(np.allclose(actual, reference, rtol=1e-9, atol=1e-10))
+    accurate = finite and error <= 1e-10 and elementwise_close
     timings: dict = {"baseline": [], "candidate": []}
     for i in range(repeats):
         order = [("baseline", baseline), ("candidate", candidate)]
@@ -125,6 +124,8 @@ def benchmark(sizes=(64, 128, 256, 512), seeds=(19, 73, 127), repeats: int = 7) 
                     }
                 candidate_setup = perf_counter() - start
                 result = _time_pair(base, trial, repeats)
+                baseline_total = base_setup + result["baseline_seconds"]
+                candidate_total = candidate_setup + result["candidate_seconds"]
                 result.update(
                     {
                         "case": case,
@@ -134,8 +135,7 @@ def benchmark(sizes=(64, 128, 256, 512), seeds=(19, 73, 127), repeats: int = 7) 
                         "candidate_setup_seconds": candidate_setup,
                         "operator_storage_bytes": storage,
                         "passes_one_shot_gate": result["accurate"]
-                        and base_setup + result["baseline_seconds"]
-                        >= 1.2 * (candidate_setup + result["candidate_seconds"]),
+                        and baseline_total >= 1.2 * candidate_total,
                     }
                 )
                 rows.append(result)
