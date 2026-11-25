@@ -14,6 +14,16 @@ Dynamic Resonance Rooting (DRR) is an open-source Python research framework for 
 
 > **Research status:** DRR produces diagnostics. A directed edge is a statistical lead–lag relationship under a chosen estimator and null model; it does not establish causation. Evidence from one domain does not automatically transfer to another.
 
+<a id="film"></a>
+
+## Film: The Mathematics of Where
+
+<video src="assets/film/the-mathematics-of-where-60s.mp4" poster="assets/film/the-mathematics-of-where-poster.jpg" controls playsinline width="100%"></video>
+
+A 60-second animated film from Vers3Dynamics. Two cyclists ride through a garden of tall hedges while the film asks whether location could be encoded as frequency, sketches a field that shifts the odds of finding something at one of two places, A or B, and lists seven conditions physics would have to permit, each one testable. It ends on the question it opens: what if location could be tuned? The film poses questions and shows no result; DRR does not test these ideas. Turn the sound on for the score.
+
+If the player does not load, [open the MP4](assets/film/the-mathematics-of-where-60s.mp4) (1280×720, 12.6 MB).
+
 <a id="what-it-does"></a>
 
 ## What you can explore
