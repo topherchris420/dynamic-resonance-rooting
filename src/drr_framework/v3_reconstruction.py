@@ -1023,3 +1023,53 @@ def assemble(
     if committed_calibration is not None:
         artifact["exact_reproductions"] = exact_reproductions(results, committed_calibration)
     return artifact
+
+
+# ---------------------------------------------------------------------------
+# Replay check
+
+_REPLAY_IGNORED = ("environment", "runtime_seconds")
+
+
+def replay_differences(
+    replayed: Any, expected: Any, rel_tol: float = 1e-6, path: str = ""
+) -> List[str]:
+    """Differences between a replayed artifact and the committed one.
+
+    Every count, flag, label and trial index must match exactly. Floats must
+    agree to ``rel_tol`` so that last-digit differences between numerical
+    libraries do not fail the check while any change of result does. The
+    environment and runtime fields are ignored.
+    """
+    problems: List[str] = []
+    where = path or "artifact"
+    if isinstance(expected, dict):
+        if not isinstance(replayed, dict):
+            return [f"{where}: expected an object"]
+        keys = set(expected) | set(replayed)
+        for key in sorted(keys):
+            if not path and key in _REPLAY_IGNORED:
+                continue
+            child = f"{path}/{key}" if path else str(key)
+            if key not in replayed or key not in expected:
+                problems.append(f"{child}: present in only one artifact")
+                continue
+            problems.extend(replay_differences(replayed[key], expected[key], rel_tol, child))
+        return problems
+    if isinstance(expected, list):
+        if not isinstance(replayed, list) or len(replayed) != len(expected):
+            return [f"{where}: lists differ in length"]
+        for i, (a, b) in enumerate(zip(replayed, expected)):
+            problems.extend(replay_differences(a, b, rel_tol, f"{where}[{i}]"))
+        return problems
+    if isinstance(expected, float) or isinstance(replayed, float):
+        if isinstance(expected, bool) or isinstance(replayed, bool):
+            return [] if replayed == expected else [f"{where}: {replayed!r} != {expected!r}"]
+        if not isinstance(replayed, (int, float)) or not isinstance(expected, (int, float)):
+            return [f"{where}: {replayed!r} != {expected!r}"]
+        if math.isnan(expected) and math.isnan(replayed):
+            return []
+        if math.isclose(replayed, expected, rel_tol=rel_tol, abs_tol=1e-12):
+            return []
+        return [f"{where}: {replayed!r} != {expected!r}"]
+    return [] if replayed == expected else [f"{where}: {replayed!r} != {expected!r}"]
