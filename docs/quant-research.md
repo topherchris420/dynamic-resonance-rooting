@@ -356,3 +356,12 @@ This API does not call or change the event backtester, its lead-window metrics,
 or the Phase 1 challenge scorers. The optional extra requires Python 3.12;
 dependency and mathematical unavailability are explicit. See the
 [metrology contract, examples, numerical conventions, and review limitations](contingency-metrology.md).
+# Registered market-data experiment
+
+For a complete external financial forecasting study, start with the
+[financial holdout guide](financial-holdout.md). It fixes the target, model grids,
+chronological selection and test periods, execution delay, cost scenarios,
+uncertainty procedure and multiple-testing family before evaluation. Its
+published report retains unfavorable baselines, controls and negative results.
+The examples below remain exploratory adapters and do not establish trading alpha.
+

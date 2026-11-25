@@ -1,7 +1,5 @@
 # Dynamic Resonance Rooting
 
-[![Dynamic Resonance Rooting: resonance detection, rooting analysis, and stability diagnostics](assets/drr-hero.svg)](#live-lab)
-
 **Measure the rhythm. Trace the lag. Keep the evidence.**
 
 Dynamic Resonance Rooting (DRR) is an open-source Python research framework for exploring **what repeats, what leads, and what changes** in multivariate time series. Find recurring frequencies, test relationships between signals, and export a record that others can inspect and reproduce.
@@ -11,6 +9,8 @@ Dynamic Resonance Rooting (DRR) is an open-source Python research framework for 
 [![MIT license](https://img.shields.io/badge/license-MIT-0B5D63)](LICENSE)
 
 **[Run your first analysis](#quick-start)** · **[Explore the browser lab](#live-lab)** · **[Inspect the evidence](#what-the-evidence-says)** · **[Contribute](#contribute)**
+
+[![Dynamic Resonance Rooting: resonance detection, rooting analysis, and stability diagnostics](assets/drr-hero.svg)](#live-lab)
 
 > **Research status:** DRR produces diagnostics. A directed edge is a statistical lead–lag relationship under a chosen estimator and null model; it does not establish causation. Evidence from one domain does not automatically transfer to another.
 
@@ -27,6 +27,8 @@ Start with a simulated oscillator, a sensor recording, or your own regularly sam
 | **What changed?** | State-space, topology, and structural-surprise diagnostics | Estimated states, structural changes, and uncertainty to investigate |
 | **Do two rhythms keep time?** | Experimental `n:m` phase-synchrony test with a data-quality gate | Phase-locking value, shift-test p-value, inconclusive labels, and evidence records |
 | **What could a bounded input change?** | Navigation engine and matched control experiments | Proposed interventions and comparison metrics in a simulated system |
+
+The experimental [DRR-Mellin research extension](docs/mellin-multiscale.md) explores growth exponents, log-scale oscillations and smoothed prime-sum reconstruction through an opt-in Python API. Finite numerical diagnostics do not certify spectral poles or zero-free regions.
 
 The phase-synchrony features are **experimental and off by default**. See the [mathematical extensions](docs/mathematical-extensions.md) for assumptions and definitions.
 
@@ -141,6 +143,8 @@ The default uses **99 circular-shift surrogates with max-statistic correction**.
 | **Paired robustness comparison** | Existing rooting procedures versus separately calibrated raw and AR(1)-residual correlation baselines, with weak coupling and before/after regime changes | [Design and limits](docs/ROBUSTNESS_BENCHMARK.md) · [Report and figure](results/expected/robustness-benchmark/report.md) |
 | **Phase and harmonic study** | Better detection of tested 1:2 and 2:3 couplings, weaker detection of ordinary 1:1 coupling, and failure modes for existing rooting | [Report](docs/resonance-math-report.md) · [Artifact](results/expected/resonance_math_benchmark.json) |
 | **External NOAA QBO comparison** | **Not supported:** the full DRR holdout false-alarm rate exceeded the preregistered tolerance | [External evidence](docs/external-evidence.md) · [Artifact](results/expected/qbo_structural_change_benchmark.json) |
+| **Registered financial holdout** | **Not supported:** DRR's forecast improvements over the simplest baselines were too small and not significant after correction, despite positive cost-adjusted returns | [Design and replay](docs/financial-holdout.md) · [All outcomes](results/expected/financial_holdout/report.md) |
+| **Registered lead–lag breakdown study** | **Not supported:** signed correlation detected reversals and lag changes faster; the false-alarm comparability gate failed, and market DRR warnings were too sparse for inference | [Design and replay](docs/lead-lag-breakdown.md) · [All outcomes](results/expected/lead_lag_breakdown/report.md) |
 
 The QBO conclusion applies to the equatorial stratospheric zonal-wind comparison. It does not establish results in other domains. The [review memo](DRR_VALIDATION_REPORT.md) and [limitations](DRR_LIMITATIONS.md) explain the current boundaries.
 
@@ -173,6 +177,8 @@ These studies take longer than the quick start. The external comparison reads ve
 | Sensing and micro-Doppler analog signals | `python examples/sensing_systems_resonance_depth.py` | [Examples](docs/examples.md) |
 | State estimation and filtering | `python examples/state_space_lab.py` | [API reference](docs/api.md) |
 | Macroeconomic and market research | `python examples/quant_macro_lab.py --offline` | [Quant research](docs/quant-research.md) |
+| Preregistered financial forecasting | `python scripts/run_financial_holdout.py select --output-dir /tmp/drr-selection` | [Locked holdout study](docs/financial-holdout.md) |
+| Lead–lag breakdown detection | `python scripts/run_breakdown_study.py calibrate --output-dir /tmp/breakdown-calibration` | [Registered detection study](docs/lead-lag-breakdown.md) |
 | Public-data supervisory monitoring | `drr-monitor --demo` | [LFBO workbench](docs/lfbo-workbench.md) |
 | Multiple perspectives on one system | `DRR_ScopeResolver` | [Scope resolution](docs/scope-resolution.md) |
 

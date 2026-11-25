@@ -1,0 +1,56 @@
+name: Lead-lag breakdown replay
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reproduce-breakdown:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      OMP_NUM_THREADS: "1"
+      OPENBLAS_NUM_THREADS: "1"
+      MKL_NUM_THREADS: "1"
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install pinned numerical environment
+        run: python -m pip install -e ".[dev]" -c experiments/financial_holdout/requirements.txt
+      - name: Verify causal timing and evidence
+        run: python -m pytest tests/test_lead_lag_breakdown.py -q
+      - name: Replay calibration without holdout outcomes
+        run: >-
+          python scripts/run_breakdown_study.py calibrate
+          --output-dir /tmp/breakdown-calibration
+      - name: Check calibration checksums, thresholds and every replayed row
+        run: >-
+          python scripts/verify_breakdown_calibration.py
+          /tmp/breakdown-calibration experiments/lead_lag_breakdown/calibration
+      - name: Replay every held-out episode and market result
+        run: >-
+          python scripts/run_breakdown_study.py evaluate
+          --calibration-dir /tmp/breakdown-calibration
+          --output-dir /tmp/breakdown-results
+          --verify-against results/expected/lead_lag_breakdown
+      - name: Preserve all results including negative findings
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: lead-lag-breakdown-evidence
+          path: |
+            /tmp/breakdown-calibration
+            /tmp/breakdown-results
+          retention-days: 90
+          if-no-files-found: error
