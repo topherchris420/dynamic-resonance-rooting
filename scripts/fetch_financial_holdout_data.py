@@ -15,7 +15,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from urllib.request import urlopen
 
-
 ROOT = Path(__file__).resolve().parents[1]
 STUDY = ROOT / "experiments/financial_holdout"
 

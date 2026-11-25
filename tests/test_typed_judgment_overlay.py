@@ -50,7 +50,6 @@ from drr_framework.supervisory.workbench import (
 )
 from test_regulatory_foundation import definition
 
-
 SECRET = "unit-test-secret-value"
 WHEN = "2026-01-15T00:00:00+00:00"
 

@@ -21,7 +21,6 @@ import numpy as np
 from .challenge_models import BinaryEventLabel, _integer, _labels_as_of, _quarter, _text
 from .common import canonical_json, day, instant, stable_id
 
-
 PACKAGE_NAME = "contingency-tools"
 REVIEWED_VERSION = "0.2.3"
 DESCRIPTION = "NIST Contingency-based supplementary detection metrology"
