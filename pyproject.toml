@@ -52,7 +52,7 @@ contingency = [
 ]
 econometrics = [
   "statsmodels>=0.14,<0.14.2; python_version < '3.9'",
-  "statsmodels>=0.14.4,<0.15; python_version >= '3.9'",
+  "statsmodels>=0.14.4,<0.16; python_version >= '3.9'",
 ]
 dev = [
   "pytest>=8,<10",
