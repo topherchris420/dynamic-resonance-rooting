@@ -1,10 +1,10 @@
 % Dynamic Resonance Rooting: Calibrated Resonance and Lead--Lag Diagnostics
 % for Complex Adaptive Systems.
 %
-% Revision of 25 November 2026. It supersedes the version of 25 September 2026
-% (SSRN 5285993), kept beside this file as ssrn-5285993-sep2026.pdf. Its figures
-% are taken from that PDF unchanged. The dependent-noise figure is drawn here
-% with pgfplots from committed repository artifacts. Build with:  latexmk -pdf main.tex  (or pdflatex twice).
+% 25 November 2026.
+% Prefer the standalone vector PDFs in figures/ when available. The archived
+% September PDF is a fallback for Figures 1--3 and 5; Figure 4 has inline pgfplots
+% source. Build with: latexmk -pdf main.tex (or pdflatex twice).
 \documentclass[10pt,twocolumn,letterpaper]{article}
 
 \usepackage[T1]{fontenc}
@@ -58,7 +58,7 @@ Lead--Lag Diagnostics for Complex Adaptive Systems\par}
 {\large Christopher Woodyard\par}
 {\small Vers3Dynamics, Bethesda, MD, USA\par}
 \vspace{2pt}
-{\footnotesize Revised 25 November 2026. Supersedes the version of 25 September 2026 (SSRN 5285993).\par}
+{\footnotesize 25 November 2026\par}
 \vspace{10pt}
 \end{center}
 \begin{minipage}{\textwidth}
@@ -91,9 +91,9 @@ claim. On NOAA quasi-biennial-oscillation winds the holdout false-alarm rate was
 0.272 against a 0.05 tolerance. In a daily cryptocurrency-return holdout, DRR
 features improved squared error by 0.34\%, short of the registered 1\% and not
 significant after correction. In a lead--lag breakdown study, signed correlation
-detected reversals faster. Every number is read from scripts or artifacts pinned
-to configuration hashes. DRR outputs are diagnostics, not causal, policy, or
-supervisory conclusions.
+detected reversals faster. The v3 simulation results are manuscript-reported;
+supporting scripts are not yet public. DRR outputs are diagnostics, not causal,
+policy, or supervisory conclusions.
 
 \smallskip
 \noindent\textit{Index Terms}---complex adaptive systems, surrogate data,
@@ -156,8 +156,9 @@ failure to the circular-shift seam (Section~\ref{sec:nulls}).
 stratospheric winds and on two market tasks, none of which supported its claim,
 reported in full with every comparison (Section~\ref{sec:external}).
 \item \emph{An evidence ledger.} A claim-status discipline (supported,
-not\_supported, withdrawn) in which every number in this paper traces to a
-hash-pinned script or artifact (Section~\ref{sec:ledger}, Appendix).
+not\_supported, withdrawn) separating public evidence from manuscript-reported
+results awaiting release of supporting artifacts (Section~\ref{sec:ledger},
+Appendix).
 \end{enumerate}
 
 \section{Background and Related Work}
@@ -243,7 +244,11 @@ these operators.
 
 \begin{figure}[t]
 \centering
-\includegraphics[page=2,trim=312 563 52 52,clip,width=\columnwidth]{\src}
+\IfFileExists{figures/figure_1.pdf}{%
+  \includegraphics[width=\columnwidth]{figures/figure_1.pdf}%
+}{%
+  \includegraphics[page=2,trim=312 563 52 52,clip,width=\columnwidth]{\src}%
+}
 \caption{DRR v3. Blue boxes are the calibrated operators introduced here. Every
 output enters an evidence ledger with a machine-readable claim status before
 any interpretation, and nothing crosses the review boundary without
@@ -507,7 +512,11 @@ v3 matches the conventional benchmark.
 
 \begin{figure*}[t]
 \centering
-\includegraphics[page=5,trim=40 580 46 46,clip,width=\textwidth]{\src}
+\IfFileExists{figures/figure_2.pdf}{%
+  \includegraphics[width=\textwidth]{figures/figure_2.pdf}%
+}{%
+  \includegraphics[page=5,trim=40 580 46 46,clip,width=\textwidth]{\src}%
+}
 \caption{Rooting under memory. (a) The v2 test loses the true edge as memory
 grows; prewhitening and Granger do not. (b) The v2 reverse-edge artifact follows
 Eq.~\eqref{eq:rev}; prewhitening removes it. (c) At $\phi=0.9$, v3 and Granger
@@ -519,7 +528,11 @@ Wilson 95\% intervals; 300 systems per point.}
 
 \begin{figure*}[t]
 \centering
-\includegraphics[page=5,trim=40 343 46 246,clip,width=\textwidth]{\src}
+\IfFileExists{figures/figure_3.pdf}{%
+  \includegraphics[width=\textwidth]{figures/figure_3.pdf}%
+}{%
+  \includegraphics[page=5,trim=40 343 46 246,clip,width=\textwidth]{\src}%
+}
 \caption{Resonance testing. (a) A fixed depth cutoff is a red-noise detector: its
 false-alarm rate climbs to 0.997 as memory grows. The AR(1)-calibrated $D^*$
 holds size on AR(1) but fails (0.617) when white measurement noise is added,
@@ -637,6 +650,9 @@ textbook result \cite{grangernewbold}.
 
 \begin{figure}[t]
 \centering
+\IfFileExists{figures/figure_4.pdf}{%
+  \includegraphics[width=\columnwidth]{figures/figure_4.pdf}%
+}{%
 \begin{tikzpicture}
 \begin{axis}[
   width=\columnwidth, height=5.0cm,
@@ -664,7 +680,8 @@ textbook result \cite{grangernewbold}.
 \addlegendentry{permutation}
 \addplot[dashed,black,domain=0:1,forget plot] coordinates {(W,0.05) (RW,0.05)};
 \end{axis}
-\end{tikzpicture}
+\end{tikzpicture}%
+}
 \caption{Null validity under dependent noise. Family-wise error of v2 rooting
 on three independent channels, 400 trials per point, nominal 0.05 (dashed). The
 two nulls that keep each series' memory hold size on every stationary process
@@ -821,7 +838,11 @@ stratospheric wind and does not bear on DRR in any other domain.
 
 \begin{figure*}[t]
 \centering
-\includegraphics[page=6,trim=40 606 46 46,clip,width=\textwidth]{\src}
+\IfFileExists{figures/figure_5.pdf}{%
+  \includegraphics[width=\textwidth]{figures/figure_5.pdf}%
+}{%
+  \includegraphics[page=6,trim=40 606 46 46,clip,width=\textwidth]{\src}%
+}
 \caption{QBO exploratory checks. (a) The two levels with the preregistered
 disruption windows. (b) Raw levels are almost perfectly correlated across a wide
 band of lags, as Prop.~\ref{prop:rev} predicts for narrowband signals. Prewhitened
@@ -1023,8 +1044,8 @@ evidence.
 
 \textit{Limitations.} There is no confirmatory external evidence for any
 operator. The v3 operators (prewhitened rooting and $\Lambda$) are not yet in
-the package, and their study scripts accompany this manuscript rather than the
-repository. The simulation studies choose families that stress known failure
+the package. Their scripts and artifacts are not publicly available. The
+simulation studies choose families that stress known failure
 modes and cannot cover every realistic process. $\Lambda$ is a line detector and
 does not detect broad peaks at $T=512$. The QBO 30\,hPa line near the Nyquist
 frequency is unexplained. The $\Lambda$ statistic was added after the first study
@@ -1064,14 +1085,14 @@ foundation than one that does not.
 \noindent\textit{Data and code availability.} Code for the operators and all
 committed studies is at
 \url{https://github.com/topherchris420/dynamic-resonance-rooting} (MIT). The v3
-study scripts, configurations, and JSON artifacts accompany this manuscript
+study scripts, configurations, and JSON artifacts are not publicly available
 (Appendix). The QBO data are U.S. government work from NOAA CPC, vendored with
 checksums. The market data are from Binance Vision and are used under its
 dataset terms (CC BY-NC-SA 4.0).
 
 \section*{Appendix: Reproduction}
 
-\textit{v3 study environment.} Python 3.11.15, NumPy 2.4.4, SciPy 1.17.1,
+\textit{Reported v3 study environment (not independently replayable from the public repository).} Python 3.11.15, NumPy 2.4.4, SciPy 1.17.1,
 scikit-learn 1.8.0, drr-framework 4.3.0 at commit \code{862c4f7}. Running
 \code{python run\_study.py} (configuration SHA-256 \code{57d5ea78f1c8\ldots5cb7},
 33 tasks, about 25 min on two cores) writes \code{results/study.json}. Running
