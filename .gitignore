@@ -199,3 +199,10 @@ results/*
 !results/reproduction/**
 !results/expected/
 !results/expected/**
+
+# LaTeX build by-products (paper/)
+paper/**/*.aux
+paper/**/*.log
+paper/**/*.out
+paper/**/*.fls
+paper/**/*.fdb_latexmk

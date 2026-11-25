@@ -5,6 +5,10 @@ and historical research context.
 
 Current contents:
 
+- `drr-v3/`: the DRR paper, *Calibrated Resonance and Lead–Lag Diagnostics for
+  Complex Adaptive Systems*. `main.tex` and `main.pdf` hold the November 2026
+  revision; `ssrn-5285993-sep2026.pdf` is the September 2026 version (SSRN
+  5285993). `REVISION.md` lists what changed and what remains open.
 - `legacy-prototype-fragment.md`: preserved root-level prototype fragment. It is
   historical context, not executable package code.
 
