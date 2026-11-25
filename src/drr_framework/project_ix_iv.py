@@ -6,11 +6,13 @@ import argparse
 import json
 import os
 import platform
+from functools import partial
 from math import isqrt
+from operator import matmul
 from pathlib import Path
 from statistics import median
 from time import perf_counter
-from typing import Callable
+from typing import Callable, Optional
 
 import numpy as np
 import scipy
@@ -19,7 +21,7 @@ from scipy import sparse
 
 def rectangular_rank_bound(a: int, b: int, c: int) -> int:
     """Claimed exact tensor-rank bound, conditional on the Nov. 24 preprint."""
-    if any(type(x) is not int or x < 1 for x in (a, b, c)):
+    if any(not isinstance(x, int) or isinstance(x, bool) or x < 1 for x in (a, b, c)):
         raise ValueError("dimensions must be positive integers")
     power = (a * b * c) ** 3
     root = isqrt(isqrt(power))
@@ -100,23 +102,23 @@ def benchmark(sizes=(64, 128, 256, 512), seeds=(19, 73, 127), repeats: int = 7) 
             for case in ("dense", "gram_action", "sparse_transition"):
                 start = perf_counter()
                 if case == "dense":
-                    base = lambda: a @ b
+                    base = partial(matmul, a, b)
                 elif case == "gram_action":
                     gram = f @ f.T
-                    base = lambda: gram @ x
+                    base = partial(matmul, gram, x)
                 else:
-                    base = lambda: w @ x
+                    base = partial(matmul, w, x)
                 base_setup = perf_counter() - start
                 start = perf_counter()
                 if case == "dense":
-                    trial = lambda: strassen_step(a, b)
-                    storage = None
+                    trial = partial(strassen_step, a, b)
+                    storage: Optional[dict] = None
                 elif case == "gram_action":
-                    trial = lambda: gram_action(f, x)
+                    trial = partial(gram_action, f, x)
                     storage = {"baseline": int(gram.nbytes), "candidate": int(f.nbytes)}
                 else:
                     csr = sparse.csr_matrix(w)
-                    trial = lambda: csr @ x
+                    trial = partial(matmul, csr, x)
                     storage = {
                         "baseline": int(w.nbytes),
                         "candidate": int(csr.data.nbytes + csr.indices.nbytes + csr.indptr.nbytes),
