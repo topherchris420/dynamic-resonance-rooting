@@ -17,3 +17,4 @@ repos:
       - id: trailing-whitespace
         exclude: ^src/drr_framework/external_benchmark/data/qbo\.u(30|50)\.index$
       - id: check-added-large-files
+        exclude: ^assets/film/

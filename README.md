@@ -14,6 +14,16 @@ Dynamic Resonance Rooting (DRR) is an open-source Python research framework for 
 
 > **Research status:** DRR produces diagnostics. A directed edge is a statistical lead–lag relationship under a chosen estimator and null model; it does not establish causation. Evidence from one domain does not automatically transfer to another.
 
+<a id="film"></a>
+
+## Film: The Mathematics of Where
+
+[![The Mathematics of Where, title card: "What if location could be tuned?" Select to play the 60-second film.](assets/film/the-mathematics-of-where-poster.jpg)](https://dynamic-resonance-rooting.vercel.app/assets/film/the-mathematics-of-where-60s.mp4)
+
+A 60-second animated film from Vers3Dynamics. Two cyclists ride through a garden of tall hedges while the film asks whether location could be encoded as frequency, sketches a field that shifts the odds of finding something at one of two places, A or B, and lists seven conditions physics would have to permit, each one testable. It ends on the question it opens: what if location could be tuned? The film poses questions and shows no result; DRR does not test these ideas.
+
+Select the image to play the film in your browser, with sound. The MP4 (1280×720, 12.6 MB) is also in the repository at [`assets/film/the-mathematics-of-where-60s.mp4`](assets/film/the-mathematics-of-where-60s.mp4).
+
 <a id="what-it-does"></a>
 
 ## What you can explore
@@ -142,6 +152,7 @@ The default uses **99 circular-shift surrogates with max-statistic correction**.
 | **Dependent-noise study** | Near-nominal false-alarm rates for the default circular-shift null on tested stationary long-memory processes; every tested null fails on random walks | [Protocol and outcomes](docs/MATH_RESEARCH.md) · [Artifact](results/expected/dependent_noise_null_study.json) |
 | **Paired robustness comparison** | Existing rooting procedures versus separately calibrated raw and AR(1)-residual correlation baselines, with weak coupling and before/after regime changes | [Design and limits](docs/ROBUSTNESS_BENCHMARK.md) · [Report and figure](results/expected/robustness-benchmark/report.md) |
 | **Phase and harmonic study** | Better detection of tested 1:2 and 2:3 couplings, weaker detection of ordinary 1:1 coupling, and failure modes for existing rooting | [Report](docs/resonance-math-report.md) · [Artifact](results/expected/resonance_math_benchmark.json) |
+| **DRR-Mellin hidden-mode recovery** | **Conditional:** for log-periodic modes with strong power-law envelopes in additive noise, the DRR-Mellin scan recovered the hidden log-frequency more often than Lomb–Scargle, NLS and ESPRIT; pooled over all held-out conditions, Lomb–Scargle and NLS were more reliable, and scale-proportional noise reversed the advantage as predicted | [Protocol and outcomes](docs/mellin-recovery-benchmark.md) · [Report and figure](results/expected/mellin_recovery/report.md) |
 | **External NOAA QBO comparison** | **Not supported:** the full DRR holdout false-alarm rate exceeded the preregistered tolerance | [External evidence](docs/external-evidence.md) · [Artifact](results/expected/qbo_structural_change_benchmark.json) |
 | **Registered financial holdout** | **Not supported:** DRR's forecast improvements over the simplest baselines were too small and not significant after correction, despite positive cost-adjusted returns | [Design and replay](docs/financial-holdout.md) · [All outcomes](results/expected/financial_holdout/report.md) |
 | **Registered lead–lag breakdown study** | **Not supported:** signed correlation detected reversals and lag changes faster; the false-alarm comparability gate failed, and market DRR warnings were too sparse for inference | [Design and replay](docs/lead-lag-breakdown.md) · [All outcomes](results/expected/lead_lag_breakdown/report.md) |
