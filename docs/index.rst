@@ -15,6 +15,8 @@ navigation surface. Key entry points:
 - docs/audience-guide.md
 - docs/method-crosswalk.md
 - docs/validation-readiness-guide.md
+- docs/mathematical-extensions.md
+- docs/resonance-math-report.md
 
 The Sphinx stub is intentionally small so a future documentation build can be
 added without changing the current GitHub-native documentation workflow.

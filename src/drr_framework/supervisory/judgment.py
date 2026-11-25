@@ -17,7 +17,7 @@ import re
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Callable, Mapping, Optional, Sequence, Tuple
+from typing import Callable, List, Mapping, Optional, Sequence, Tuple
 
 from .common import canonical, canonical_json, sha256_hex, stable_id
 from .model_risk import ModelRiskProfile
@@ -720,11 +720,13 @@ class DeterministicMockJudgmentProvider(JudgmentProvider):
     name = "mock"
 
     def __init__(
-        self, clock: Callable[[], str] = None, script: Optional[Sequence[TypedAnswer]] = None
+        self,
+        clock: Optional[Callable[[], str]] = None,
+        script: Optional[Sequence[TypedAnswer]] = None,
     ):
-        self.clock = clock or (lambda: "2026-01-15T00:00:00+00:00")
+        self.clock = clock if clock is not None else (lambda: "2026-01-15T00:00:00+00:00")
         self.script = None if script is None else tuple(script)
-        self.calls = []
+        self.calls: List[str] = []
 
     def evaluate(self, state, questions):
         self.calls.append(state.evidence_id)

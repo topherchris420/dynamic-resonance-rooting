@@ -11,7 +11,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 import re
 from enum import Enum
-from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Union, cast
 
 
 class ObservationalScale(str, Enum):
@@ -45,6 +45,11 @@ NEGATIVE_POLARITY_TERMS: Set[str] = {
     "weak",
     "vulnerable",
 }
+
+
+def _scale_value(scale: Union["ObservationalScale", str]) -> str:
+    """Value of a perspective scale; ``__post_init__`` has already normalized it."""
+    return cast(ObservationalScale, scale).value
 
 
 @dataclass(frozen=True)
@@ -198,7 +203,7 @@ class DRR_ScopeResolver:
             {
                 "perspective_index": index,
                 "source_id": p.source_id,
-                "scale": p.scale.value,
+                "scale": _scale_value(p.scale),
                 "indicator": key,
                 "value": deepcopy(value),
                 "polarity": self._get_text_polarity(value) if isinstance(value, str) else None,
@@ -301,7 +306,7 @@ class DRR_ScopeResolver:
         ledger = [
             {
                 "source_id": p.source_id,
-                "scale": p.scale.value,
+                "scale": _scale_value(p.scale),
                 "confidence_score": p.confidence_score,
                 "indicators": deepcopy(p.indicators),
                 "evidence_provenance": p.evidence_provenance,

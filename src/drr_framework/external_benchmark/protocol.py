@@ -6,7 +6,7 @@ thresholds, counts hits, draws the block bootstrap, and assigns a claim status.
 
 from __future__ import annotations
 
-from typing import Dict, Iterable, Mapping, Optional, Sequence, Tuple
+from typing import Dict, Iterable, Mapping, Optional, Sequence, Tuple, Union, cast
 
 import numpy as np
 
@@ -162,7 +162,9 @@ def _resample_positions(n_rows: int, block_length: int, rng: np.random.Generator
     return positions[:n_rows]
 
 
-def _quantile_interval(values: Sequence[float], lower: float, upper: float) -> Tuple[float, float]:
+def _quantile_interval(
+    values: Union[Sequence[float], np.ndarray], lower: float, upper: float
+) -> Tuple[float, float]:
     finite = np.asarray(list(values), dtype=float)
     finite = finite[np.isfinite(finite)]
     if finite.size == 0:
@@ -250,7 +252,7 @@ def evaluate_panel(panel: Mapping, spec: Mapping) -> Dict:
         }
         summaries.append(summary)
         if status == "calibrated":
-            calibrated_scores[name] = (scores, threshold)
+            calibrated_scores[name] = (scores, float(cast(float, threshold)))
 
     by_name = {item["name"]: item for item in summaries}
     drr_name = next(name for name, role in roles.items() if role == "drr")

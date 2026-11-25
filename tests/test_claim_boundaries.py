@@ -7,6 +7,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 ARTIFACT = ROOT / "results" / "expected" / "qbo_structural_change_benchmark.json"
+NULL_STUDY = ROOT / "results" / "expected" / "dependent_noise_null_study.json"
 
 
 def _read(name: str) -> str:
@@ -16,28 +17,100 @@ def _read(name: str) -> str:
 def test_architecture_names_core_substrate_and_adapters():
     readme = _read("README.md")
     architecture = _read("docs/architecture.md")
-    assert "DRR core → validation substrate → domain adapters" in readme
-    for layer in ("DRR core", "validation substrate", "domain adapters"):
-        assert layer in readme
-        assert layer in architecture
-    assert "Universal" in readme
+    assert "DRR core → validation substrate → domain adapters" in architecture
+    for layer in ("validation substrate", "Domain adapters"):
+        assert layer.lower() in readme.lower()
+        assert layer.lower() in architecture.lower()
     assert "A domain claim stays in its adapter." in architecture
 
 
-def test_narrative_benchmarks_point_at_the_external_artifact():
+def test_benchmark_documents_point_at_every_artifact():
+    for name in ("DRR_BENCHMARKS.md", "DRR_VALIDATION_REPORT.md"):
+        text = _read(name)
+        assert "qbo_structural_change_benchmark.json" in text, name
+        assert "rooting_calibration_study.json" in text, name
+        assert "dependent_noise_null_study.json" in text, name
+
+
+def test_withdrawn_figures_do_not_return():
+    """These figures had no generating code or data in the repository."""
+    withdrawn = (
+        "**0.842**",
+        "**0.891**",
+        "**18.5**",
+        "+185 bps",
+        "+6 to +10 days",
+        "12 to 18 days",
+        "D_R < 0.25$) with 0",
+    )
+    for name in ("DRR_BENCHMARKS.md", "README.md", "docs/faq.md"):
+        text = _read(name)
+        for figure in withdrawn:
+            assert figure not in text, (name, figure)
+    assert "Empirical Answer" not in _read("DRR_BENCHMARKS.md")
+
+
+def test_benchmark_calibration_rows_are_the_artifact_rows():
+    from drr_framework.calibration import render_calibration_report
+
+    calibration = json.loads(
+        (ROOT / "results" / "expected" / "rooting_calibration_study.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    rendered = set(render_calibration_report(calibration).splitlines())
     benchmarks = _read("DRR_BENCHMARKS.md")
-    report = _read("DRR_VALIDATION_REPORT.md")
-    assert "narrative summaries" in benchmarks
-    assert "qbo_structural_change_benchmark.json" in benchmarks
-    assert "narrative validation memo" in report
-    assert "qbo_structural_change_benchmark.json" in report
+    rows = [
+        line
+        for line in benchmarks.splitlines()
+        if line.startswith("| 0.")
+        or line.startswith("| 1.")
+        or line.startswith("| ar1_")
+        or line.startswith("| tone_")
+    ]
+    calibration_rows = [row for row in rows if "conventional" not in row and "ablation" not in row]
+    assert len(calibration_rows) >= 20
+    for row in calibration_rows:
+        assert row in rendered, row
+
+
+def test_benchmark_null_study_rows_are_the_artifact_rows():
+    from drr_framework.dependent_noise import render_dependent_noise_report
+
+    artifact = json.loads(NULL_STUDY.read_text(encoding="utf-8"))
+    rendered = set(render_dependent_noise_report(artifact).splitlines())
+    methods = {"circular_shift", "phase_randomization", "permutation"}
+    for name in ("DRR_BENCHMARKS.md", "docs/MATH_RESEARCH.md"):
+        rows = [
+            line
+            for line in _read(name).splitlines()
+            if line.startswith(("| fGn", "| GARCH", "| Random walk"))
+            and line.split("|")[2].strip() in methods
+        ]
+        assert len(rows) >= 26, name
+        for row in rows:
+            assert row in rendered, (name, row)
+
+
+def test_hypothesis_outcomes_in_the_docs_are_the_artifact_outcomes():
+    """Each preregistered hypothesis is named with its recorded outcome, not a softer word."""
+    artifact = json.loads(NULL_STUDY.read_text(encoding="utf-8"))
+    research = _read("docs/MATH_RESEARCH.md")
+    for hypothesis in artifact["hypotheses"]:
+        line = next(
+            (line for line in research.splitlines() if line.startswith(f"| {hypothesis['id']} |")),
+            None,
+        )
+        assert line is not None, hypothesis["id"]
+        assert hypothesis["outcome"] in line, (hypothesis["id"], line)
+    assert "NOT TESTED" not in research
 
 
 def test_reviewed_claim_status_is_the_status_named_in_the_docs():
     status = json.loads(ARTIFACT.read_text(encoding="utf-8"))["claim"]["status"]
     assert status == "not_supported"
+    assert "not supported" in _read("README.md").lower()
     for name in (
-        "README.md",
         "docs/external-evidence.md",
         "docs/faq.md",
         "docs/architecture.md",

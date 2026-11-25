@@ -10,6 +10,80 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Experimental mathematical features, off by default
+  (`analyze_system(mathematical_features=...)`, `drr-analyze --mathematical-features`):
+  `drr_framework.phase_sync` tests channel pairs for `n:m` phase synchronization
+  on the Morlet phase at each dominant frequency, with a Farey ratio search and
+  an exact randomization test over every circular shift. A linear phase ramp
+  makes the shifted phasor periodic, which removes the seam that inflated shift
+  nulls on coherent oscillators. Non-significant pairs with too little phase
+  variability are reported inconclusive. `drr_framework.data_quality` adds DFA,
+  a quadratic-phase frequency-drift test, linear regularization of gaps and
+  irregular timestamps, and abstention. `drr_framework.recurrence` adds
+  recurrence quantification and second-order linear recurrences;
+  `drr_framework.trajectory_geometry` adds oriented areas with the proof that
+  they equal the antisymmetrized lag-one cross-covariance.
+  `drr_framework.math_evidence` and `drr_framework.math_features` produce
+  deterministic evidence records that separate proven, empirical and hypothetical
+  statements and include in-data phase-randomized negative controls.
+- Preregistered phase and harmonic benchmark (`drr_framework.resonance_math_benchmark`,
+  `scripts/run_resonance_math_benchmark.py`, `results/expected/resonance_math_benchmark.json`).
+  On held-out simulations the phase test held 0.003–0.058 on every stationary
+  unrelated condition and detected 1:2 and 2:3 coupling in 28.0–35.5% of pairs,
+  where DRR rooting detected 2.5–5.0%. It was weaker than rooting for 1:1
+  coupling (mean 0.263 against 0.441), so that hypothesis was not supported;
+  eight of nine were supported. The study also measured DRR rooting inflated on
+  coherent oscillators (0.145), a common jittered clock (0.072) and a shared
+  amplitude trend (0.150).
+- `docs/mathematical-extensions.md` (definitions and proofs) and
+  `docs/resonance-math-report.md` (performance, limitations, Heilmeier review,
+  integration recommendations). The framing credits Discovering the Art of
+  Mathematics (https://www.artofmathematics.org/books); no content is reproduced.
+
+- Added `drr-analyze`, a local CSV-to-evidence workflow with explicit signal selection,
+  sampling checks, finite-value and constant-channel validation, and opt-in differencing.
+- Added deterministic JSON and Markdown bundles with named edges, lag units, source
+  checksums, run parameters, environment versions, and explicit inference limitations.
+- Preserve existing output directories and reject invalid input before exporting results.
+- Documented real-data onboarding and added end-to-end and malformed-input regression tests.
+- Fixed NumPy trapezoidal-integration compatibility typing under current NumPy stubs.
+- Dependent-noise null study (`drr_framework.dependent_noise`,
+  `scripts/run_dependent_noise_study.py`): the experiment proposed in
+  `docs/MATH_RESEARCH.md`, executed. Exact fractional Gaussian noise
+  (Davies–Harte circulant embedding), GARCH(1,1), and random-walk simulators;
+  the family-wise error of the circular-shift, phase-randomization, and
+  permutation nulls on independent channels of each; power to recover a lag-2
+  edge when every channel has long memory; six hypotheses and a decision rule
+  fixed before the run, with each outcome recorded beside its rule. The
+  committed artifact is `results/expected/dependent_noise_null_study.json`.
+  All six hypotheses were supported: the circular-shift and
+  phase-randomization nulls hold their 5% family-wise error through Hurst 0.95
+  and GARCH(1,1) noise, the permutation null reaches 0.80, and every null is
+  inflated on a random walk (0.27–0.89).
+  `tests/test_dependent_noise_study.py` reruns a prefix of committed rows
+  exactly and recomputes every hypothesis outcome from the rows.
+- `surrogate_method="phase_randomization"` for `RootingAnalyzer` and
+  `analyze_system`: each series keeps its periodogram exactly, hence its sample
+  autocorrelation at every lag, and receives new random phases. It is the null
+  of no lead–lag relationship under a stationary linear Gaussian model. The
+  placebo module's `fourier_surrogate` now shares the implementation.
+- Landing-page evidence card charting the null study, read from the committed
+  artifact through `scripts/sync_site_evidence.py` like the other cards.
+- Monte Carlo calibration study (`drr_framework.calibration`,
+  `scripts/run_calibration_study.py`): family-wise false-alarm rate of the
+  rooting test on independent AR(1) series, power to recover a known edge,
+  the cost of memory in every channel, and reference distributions of
+  resonance depth, all with Wilson intervals. The committed artifact is
+  `results/expected/rooting_calibration_study.json`, and tests rerun parts of
+  it exactly.
+- Live browser lab on the landing page, backed by `assets/web-demo/drr-engine.js`,
+  a JavaScript port of `DepthCalculator` and `RootingAnalyzer`.
+  `tests/test_web_engine_parity.py` checks it against the Python package under
+  Node. The evidence section reads the committed artifacts through
+  `scripts/sync_site_evidence.py`.
+- Property tests for resonance depth: invariance to the time unit, the FFT grid
+  position, gain, and offset.
+- `mypy` runs in CI and is clean.
 - Preregistered external comparison on the NOAA CPC QBO zonal-wind index:
   fixed public snapshots, published disruption windows, conventional detectors,
   full DRR, spectral and rooting ablations, a temporal holdout, a block-bootstrap
@@ -83,6 +157,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (the figure is closed after optional saving instead of displayed)
 
 ### Changed
+- `DynamicResonanceRooting.time_delay_embedding` calls the shared
+  `recurrence.delay_embedding`; results and error messages are unchanged.
+- `tests/test_depth_invariants.py` compares committed edges one at a time,
+  because pytest 9.2 rejects `pytest.approx` on a list of dicts.
+- Resonance depth is now `drr_composite_v2`. The target frequency is refined to
+  sub-bin precision, and the temporal-persistence tolerance is one bin of the
+  segment spectrum instead of `max(bin, 0.5)` in the caller's units. Scores for
+  a fixed input differ from v1; the preregistered QBO artifact is unchanged.
+- Surrogate scoring for lagged-correlation rooting is batched. P-values are
+  identical to the one-at-a-time path for the same seed.
+- `DRR_BENCHMARKS.md` and `DRR_VALIDATION_REPORT.md` report only measured
+  results. The financial stress-episode tables and the "+6 to +10 days"
+  lead-time statement had no generating code or data and are withdrawn.
+- The validation runner's evidence card takes its p-value from the measured
+  rooting result instead of a hard-coded 0.01, and describes one experiment.
+- The reproduction summary adds `expected_edge_adjusted_p_value` and
+  `minimum_attainable_p_value`.
 - Typed-judgment policy `v2` emits `EVIDENCE_REVIEWABLE` where policy `v1`
   emitted `READY`. The decision rule is unchanged. `EVIDENCE_REVIEWABLE` means
   the packet is coherent enough for ordinary human review. Stored `v1` records
@@ -110,6 +201,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   previous versions)
 
 ### Fixed
+- Circular-shift surrogates were drawn from a multinomial split that placed
+  every surrogate near evenly spaced offsets. The null was far too narrow, and
+  the max-statistic test rejected 14% of true nulls on white noise and 19–30%
+  on red noise at a nominal 5%. Offsets are now uniform over every valid
+  configuration, and the measured family-wise error is 0.040–0.062.
+- Temporal persistence treated any series sampled at low rates (monthly, 1 Hz)
+  as persistent, so depth depended on the time unit.
+- A clean tone's phase coherence ranged from 0.76 to 0.996 depending on where
+  it fell on the FFT grid.
+- The placebo suite's phase shuffle was not a valid real-valued surrogate, and
+  `depth_reduction_from_shuffle` reported the surrogate's depth, not a
+  reduction.
+- Committed reproduction and quickstart summaries were stale; they are
+  regenerated and guarded by fresh-run tests.
+- The landing page displayed readings computed from the mouse position.
 - GitHub Actions `checkout`, `setup-python`, `upload-artifact`, and the PyPI
   publish action are pinned to releases that declare the Node 24 runtime.
   `ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION` is removed.

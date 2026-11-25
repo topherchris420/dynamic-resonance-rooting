@@ -146,6 +146,22 @@ def __getattr__(name):
         from . import generative_design_suite
 
         return getattr(generative_design_suite, name)
+    if name in ("PhaseSynchronyAnalyzer",):
+        from . import phase_sync
+
+        return getattr(phase_sync, name)
+    if name in ("assess_series_quality", "regularize_series"):
+        from . import data_quality
+
+        return getattr(data_quality, name)
+    if name in ("analyze_mathematical_features",):
+        from . import math_features
+
+        return getattr(math_features, name)
+    if name in ("MathematicalEvidenceRecord", "MathematicalStatement"):
+        from . import math_evidence
+
+        return getattr(math_evidence, name)
     if name in ("generate_coupled_oscillator", "run_reproduction_experiment"):
         from . import validation
 
@@ -253,6 +269,12 @@ __all__ = [
     "write_tableau_artifacts",
     "DynamicResonanceRooting",
     "GenerativeDesignSuite",
+    "PhaseSynchronyAnalyzer",
+    "assess_series_quality",
+    "regularize_series",
+    "analyze_mathematical_features",
+    "MathematicalEvidenceRecord",
+    "MathematicalStatement",
     "generate_coupled_oscillator",
     "run_reproduction_experiment",
     "VALIDATION_READINESS_CHECKLIST",

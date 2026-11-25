@@ -66,25 +66,41 @@ def run_full_validation_suite(
     )
 
     logger.info("5. Generating Supervisory Evidence Card...")
+    # The card describes the coupled-oscillator reproduction benchmark: every
+    # statistic on it is measured by step 1, and the Lorenz sweeps are cited
+    # only as the robustness and baseline context they are.
+    edge_p = float(reproduction_res["expected_edge_adjusted_p_value"])
     card = create_drr_evidence_card(
-        signal_id=f"val_sig_{random_state}",
-        variables=["lorenz_x", "lorenz_y", "lorenz_z"],
-        methodology="welch_transfer_entropy",
-        parameter_configuration={"window_size": 100, "tau": 1},
-        p_value=0.01,
+        signal_id=f"coupled_oscillator_{random_state}",
+        variables=["dim_0", "dim_1", "dim_2"],
+        methodology="welch_depth_lagged_correlation_circular_shift",
+        parameter_configuration={
+            "window_size": 256,
+            "max_lag": 4,
+            "n_surrogates": 25,
+            "correction": "max_statistic",
+        },
+        p_value=edge_p,
         effect_size_dict={"resonance_depth": reproduction_res["resonance_depth"]},
         robustness_score=1.0 - sensitivity_res["fragility_score"],
         benchmark_comparison={
-            "auroc_vs_volatility": oos_res["DRR_Resonance_Depth"]["auroc"]
+            "lorenz_auroc_vs_volatility": oos_res["DRR_Resonance_Depth"]["auroc"]
             - oos_res["Rolling_Volatility"]["auroc"]
         },
         confidence_interval=(
             reproduction_res["resonance_depth_confidence_interval"][0],
             reproduction_res["resonance_depth_confidence_interval"][1],
         ),
-        data_provenance={"dataset": "Lorenz_Attractor_Benchmark"},
-        detection_statement="Dominant peak detected in chaotic attractor phase space.",
-        interpretation_statement="High modal coherence associated with butterfly wing regime transition.",
+        data_provenance={"dataset": "synthetic coupled oscillator (known 12.5 Hz, lag 2)"},
+        detection_statement=(
+            f"Peak at {reproduction_res['detected_frequency_hz']:.2f} Hz; "
+            f"dim_0 -> dim_1 adjusted p = {edge_p:.3f} "
+            f"(minimum attainable {reproduction_res['minimum_attainable_p_value']:.3f})."
+        ),
+        interpretation_statement=(
+            "Specification check: the injected frequency and lead-lag edge are recovered. "
+            "Synthetic ground truth only; no claim about real systems."
+        ),
     )
 
     full_payload = {

@@ -11,7 +11,7 @@ support different interpretations, but interpretation belongs to the domain.
 | Phase coherence | Phase alignment across a signal window | Timing consistency in transformed observables |
 | Rooting edge | Lagged coupling from one variable to another | Lead-lag diagnostic among observables |
 | Effective lag | Delay between source and response | Number of periods by which one series leads another |
-| Surrogate p-value | Evidence against random coupling under permutation | Diagnostic significance under a simple null model |
+| Surrogate p-value | Evidence against coupling under circular shifts that keep each series' own memory | Diagnostic significance under a null of independent, autocorrelated series |
 | Transition matrix `TTT` | Linearized state evolution | VAR-style fitted transition among observables |
 | Measurement matrix `ZZ` | Sensor or observable loading | Mapping from latent state vector to observed series |
 | Shock covariance `QQ` | Process-noise energy | Innovation covariance in the fitted transition system |
