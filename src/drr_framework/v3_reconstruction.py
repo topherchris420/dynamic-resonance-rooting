@@ -295,7 +295,9 @@ def lambda_statistic(x: np.ndarray) -> Tuple[float, int, np.ndarray, np.ndarray]
     return float(ratio[k]), k + 1, ordinates, s_hat
 
 
-def gaussian_surrogate(spectrum: np.ndarray, n_samples: int, rng: np.random.Generator) -> np.ndarray:
+def gaussian_surrogate(
+    spectrum: np.ndarray, n_samples: int, rng: np.random.Generator
+) -> np.ndarray:
     """Gaussian series whose interior periodogram has mean ``spectrum`` (A9)."""
     coefficients = np.zeros(n_samples // 2 + 1, dtype=complex)
     scale = np.sqrt(n_samples * spectrum / 2.0)
@@ -374,14 +376,14 @@ def rooting_size_row(
     for trial in range(n_trials):
         data = simulate_process(process, shared["n_samples"], shared["n_channels"], rng)
         state = seed + 1 + trial
-        common = dict(
+        common: Dict[str, Any] = dict(
             max_lag=shared["max_lag"],
             n_surrogates=shared["n_surrogates"],
             random_state=state,
             alpha=shared["alpha"],
         )
         v2 = analyzer.analyze(data, surrogate_method="circular_shift", **common)
-        v3 = v3_rooting(data, **common)  # type: ignore[arg-type]
+        v3 = v3_rooting(data, **common)
         granger = granger_edges(data, alpha=shared["alpha"])
         for name, edges in (
             ("v2", v2["significant_edges"]),
@@ -417,14 +419,14 @@ def rooting_power_row(
     v2_prefix: Dict[str, int] = {"exact": 0, "any": 0, "reverse": 0, "other": 0}
     for trial in range(n_trials):
         data = simulate_coupled(process, shared["n_samples"], coupling, lag, rng)
-        common = dict(
+        common: Dict[str, Any] = dict(
             max_lag=shared["max_lag"],
             n_surrogates=shared["n_surrogates"],
             random_state=seed + 1 + trial,
             alpha=shared["alpha"],
         )
         v2 = analyzer.analyze(data, **common)
-        v3 = v3_rooting(data, **common)  # type: ignore[arg-type]
+        v3 = v3_rooting(data, **common)
         granger = granger_edges(data, alpha=shared["alpha"])
         for name, edges in (
             ("v2", v2["significant_edges"]),
@@ -516,14 +518,14 @@ def qbo_checks(cfg: Mapping[str, Any], depth_window: int = 256) -> Dict[str, Any
     values = np.asarray(series["values"], dtype=float)
     levels = list(series["levels"])
     rooting_cfg, spectral_cfg = cfg["rooting"], cfg["spectral"]
-    common = dict(
+    common: Dict[str, Any] = dict(
         max_lag=int(rooting_cfg["max_lag"]),
         n_surrogates=int(rooting_cfg["n_surrogates"]),
         random_state=int(rooting_cfg["seed"]),
         alpha=0.05,
     )
     v2 = RootingAnalyzer().analyze(values, **common)
-    v3 = v3_rooting(values, max_ar_order=int(rooting_cfg["max_ar_order"]), **common)  # type: ignore[arg-type]
+    v3 = v3_rooting(values, max_ar_order=int(rooting_cfg["max_ar_order"]), **common)
 
     def edge_summary(result: Mapping[str, Any], i: int, j: int) -> Dict[str, Any]:
         return {
@@ -532,9 +534,7 @@ def qbo_checks(cfg: Mapping[str, Any], depth_window: int = 256) -> Dict[str, Any
             "p_raw": float(result["p_values"][i, j]),
             "p_adj": float(result["adjusted_p_values"][i, j]),
             "passes_candidate_gate": bool(result["score_matrix"][i, j] > result["edge_threshold"]),
-            "significant": bool(
-                _edge(result["significant_edges"], f"dim_{i}", f"dim_{j}")
-            ),
+            "significant": bool(_edge(result["significant_edges"], f"dim_{i}", f"dim_{j}")),
         }
 
     rooting = {
@@ -572,8 +572,13 @@ def qbo_checks(cfg: Mapping[str, Any], depth_window: int = 256) -> Dict[str, Any
             "qbo_band_max_bin": band_k,
             "qbo_band_max_period_months": n / band_k,
         }
-    return {"n_months": n, "first_month": series["months"][0], "last_month": series["months"][-1],
-            "rooting": rooting, "spectral": spectral}
+    return {
+        "n_months": n,
+        "first_month": series["months"][0],
+        "last_month": series["months"][-1],
+        "rooting": rooting,
+        "spectral": spectral,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -611,36 +616,68 @@ def build_tasks(protocol: Mapping[str, Any]) -> List[Tuple[str, str, Dict[str, A
         else:
             row_seed = seed + 50_000
         tasks.append(
-            ("size", _key(process), dict(process=process, seed=row_seed,
-                                          n_trials=int(rs["size"]["n_trials"]), shared=shared))
+            (
+                "size",
+                _key(process),
+                dict(
+                    process=process,
+                    seed=row_seed,
+                    n_trials=int(rs["size"]["n_trials"]),
+                    shared=shared,
+                ),
+            )
         )
     mem = rs["memory"]
     for k, process in enumerate(mem["processes"]):
         tasks.append(
-            ("memory", _key(process), dict(
-                process=process, seed=seed + 300_000 + 1_000 * k, n_trials=int(mem["n_trials"]),
-                coupling=float(mem["coupling"]), lag=int(mem["lag"]), shared=shared))
+            (
+                "memory",
+                _key(process),
+                dict(
+                    process=process,
+                    seed=seed + 300_000 + 1_000 * k,
+                    n_trials=int(mem["n_trials"]),
+                    coupling=float(mem["coupling"]),
+                    lag=int(mem["lag"]),
+                    shared=shared,
+                ),
+            )
         )
     pc = rs["power_curve"]
     for k, coupling in enumerate(pc["couplings"]):
         tasks.append(
-            ("power_curve", f"c{coupling}", dict(
-                process={"kind": "ar1", "phi": float(pc["phi"])}, seed=seed + 400_000 + 1_000 * k,
-                n_trials=int(pc["n_trials"]), coupling=float(coupling), lag=int(pc["lag"]),
-                shared=shared))
+            (
+                "power_curve",
+                f"c{coupling}",
+                dict(
+                    process={"kind": "ar1", "phi": float(pc["phi"])},
+                    seed=seed + 400_000 + 1_000 * k,
+                    n_trials=int(pc["n_trials"]),
+                    coupling=float(coupling),
+                    lag=int(pc["lag"]),
+                    shared=shared,
+                ),
+            )
         )
     lr = rs["long_run_check"]
     for k, phi in enumerate(lr["phis"]):
-        tasks.append(("long_run", str(phi), dict(phi=float(phi), seed=seed + 600_000 + 1_000 * k,
-                                                 cfg=lr)))
+        tasks.append(
+            ("long_run", str(phi), dict(phi=float(phi), seed=seed + 600_000 + 1_000 * k, cfg=lr))
+        )
     res = protocol["resonance_study"]
     families = [(f, int(res["nulls"]["n_trials"])) for f in res["nulls"]["families"]]
     families += [(f, int(res["alternatives"]["n_trials"])) for f in res["alternatives"]["families"]]
     for j, (family, n_trials) in enumerate(families):
-        tasks.append(("resonance", _key(family), dict(
-            family=family, seed=int(res["seed"]) + 1_000 * j, n_trials=n_trials, cfg=res)))
-    tasks.append(("qbo", "qbo", dict(cfg=protocol["qbo_checks"],
-                                     depth_window=int(res["depth_window"]))))
+        tasks.append(
+            (
+                "resonance",
+                _key(family),
+                dict(family=family, seed=int(res["seed"]) + 1_000 * j, n_trials=n_trials, cfg=res),
+            )
+        )
+    tasks.append(
+        ("qbo", "qbo", dict(cfg=protocol["qbo_checks"], depth_window=int(res["depth_window"])))
+    )
     return tasks
 
 
@@ -697,28 +734,48 @@ def compare(results: Mapping[str, Any], protocol: Mapping[str, Any]) -> Dict[str
         for proc, value in values.items():
             cells.append(_cell(f"table2/{row}/{proc}", value, t2["n"], results["size"][row][proc]))
     t3 = pv["table3_memory"]
-    names = {"v2_exact": "v2_exact", "v2_rev": "v2_reverse", "v3_exact": "v3_exact",
-             "v3_rev": "v3_reverse", "granger_any": "granger_any", "granger_rev": "granger_reverse"}
+    names = {
+        "v2_exact": "v2_exact",
+        "v2_rev": "v2_reverse",
+        "v3_exact": "v3_exact",
+        "v3_rev": "v3_reverse",
+        "granger_any": "granger_any",
+        "granger_rev": "granger_reverse",
+    }
     for row, values in t3["rows"].items():
         for col, value in values.items():
-            cells.append(_cell(f"table3/{row}/{col}", value, t3["n"],
-                               results["memory"][row][names[col]]))
-    cells.append(_cell("table3_text/ar2_0.95/v2_any", t3["text"]["ar2_0.95_v2_any_lag"],
-                       t3["n"], results["memory"]["ar2_0.95"]["v2_any"]))
+            cells.append(
+                _cell(f"table3/{row}/{col}", value, t3["n"], results["memory"][row][names[col]])
+            )
+    cells.append(
+        _cell(
+            "table3_text/ar2_0.95/v2_any",
+            t3["text"]["ar2_0.95_v2_any_lag"],
+            t3["n"],
+            results["memory"]["ar2_0.95"]["v2_any"],
+        )
+    )
     pc = pv["power_curve_text"]
-    pc_names = {"v3_any": "v3_any", "granger_any": "granger_any", "v2_any": "v2_any",
-                "v2_rev": "v2_reverse", "v3_rev": "v3_reverse"}
+    pc_names = {
+        "v3_any": "v3_any",
+        "granger_any": "granger_any",
+        "v2_any": "v2_any",
+        "v2_rev": "v2_reverse",
+        "v3_rev": "v3_reverse",
+    }
     for c, values in pc["values"].items():
         for col, value in values.items():
-            cells.append(_cell(f"power/{c}/{col}", value, pc["n"],
-                               results["power_curve"][c][pc_names[col]]))
+            cells.append(
+                _cell(f"power/{c}/{col}", value, pc["n"], results["power_curve"][c][pc_names[col]])
+            )
     t4 = pv["table4_resonance"]
     null_rows = {"ar1_0.0", "ar1_0.5", "ar1_0.9", "ar1_0.97", "ar1_0.9_plus_white"}
     for row, values in t4["rows"].items():
         n_paper = t4["n_null"] if row in null_rows else t4["n_alt"]
         for col, value in zip(t4["columns"], values):
-            cells.append(_cell(f"table4/{row}/{col}", value, n_paper,
-                               results["resonance"][row][col]))
+            cells.append(
+                _cell(f"table4/{row}/{col}", value, n_paper, results["resonance"][row][col])
+            )
     adjusted = holm([c["fisher_p"] for c in cells])
     for c, p_adj in zip(cells, adjusted):
         c["holm_p"] = p_adj
@@ -727,44 +784,77 @@ def compare(results: Mapping[str, Any], protocol: Mapping[str, Any]) -> Dict[str
     long_run = []
     for phi, paper in pv["table1"]["reverse_corr_simulated"].items():
         got = results["long_run"][phi]["reverse_corr_raw"]
-        long_run.append({"quantity": f"raw reverse corr phi={phi}", "paper": paper,
-                         "reconstructed": got,
-                         "verdict": "consistent" if abs(got - paper) <= 0.01 else "differs"})
+        long_run.append(
+            {
+                "quantity": f"raw reverse corr phi={phi}",
+                "paper": paper,
+                "reconstructed": got,
+                "verdict": "consistent" if abs(got - paper) <= 0.01 else "differs",
+            }
+        )
     for phi, paper in pv["table1"]["prewhitened_reverse_corr_simulated"].items():
         got = results["long_run"][phi]["reverse_corr_prewhitened"]
-        long_run.append({"quantity": f"prewhitened reverse corr phi={phi}", "paper": paper,
-                         "reconstructed": got,
-                         "verdict": "consistent" if abs(got - paper) <= 0.01 else "differs"})
+        long_run.append(
+            {
+                "quantity": f"prewhitened reverse corr phi={phi}",
+                "paper": paper,
+                "reconstructed": got,
+                "verdict": "consistent" if abs(got - paper) <= 0.01 else "differs",
+            }
+        )
 
     q, qp = results["qbo"], pv["qbo"]
     qbo = []
 
     def add(quantity: str, paper: Any, got: Any, ok: bool) -> None:
-        qbo.append({"quantity": quantity, "paper": paper, "reconstructed": got,
-                    "verdict": "consistent" if ok else "differs"})
+        qbo.append(
+            {
+                "quantity": quantity,
+                "paper": paper,
+                "reconstructed": got,
+                "verdict": "consistent" if ok else "differs",
+            }
+        )
 
     for level in ("u30", "u50"):
         s = q["spectral"][level]
-        add(f"{level} lag-1 autocorrelation", qp["lag1_autocorrelation"][level],
+        add(
+            f"{level} lag-1 autocorrelation",
+            qp["lag1_autocorrelation"][level],
             s["lag1_autocorrelation"],
-            round(s["lag1_autocorrelation"], 2) == qp["lag1_autocorrelation"][level])
-        add(f"{level} share of power in bins 18-24", qp["bins_18_24_variance_share"],
-            s["band_18_24_variance_share"], 0.4 <= s["band_18_24_variance_share"] <= 0.6)
+            round(s["lag1_autocorrelation"], 2) == qp["lag1_autocorrelation"][level],
+        )
+        add(
+            f"{level} share of power in bins 18-24",
+            qp["bins_18_24_variance_share"],
+            s["band_18_24_variance_share"],
+            0.4 <= s["band_18_24_variance_share"] <= 0.6,
+        )
         for null in ("ar1", "isotonic"):
             paper_p = qp["dstar_p"][null][level]
             got = s[f"dstar_{null}_p"]
             add(f"{level} D* p ({null})", paper_p, got, (got <= 0.05) == (paper_p <= 0.05))
-        add(f"{level} Lambda p", qp["lambda_p"][level], s["lambda_p"],
-            (s["lambda_p"] <= 0.05) == (qp["lambda_p"][level] <= 0.05))
-        add(f"{level} Lambda argmax period (months)", qp["lambda_argmax_period_months"][level],
+        add(
+            f"{level} Lambda p",
+            qp["lambda_p"][level],
+            s["lambda_p"],
+            (s["lambda_p"] <= 0.05) == (qp["lambda_p"][level] <= 0.05),
+        )
+        add(
+            f"{level} Lambda argmax period (months)",
+            qp["lambda_argmax_period_months"][level],
             s["lambda_argmax_period_months"],
-            abs(s["lambda_argmax_period_months"] - qp["lambda_argmax_period_months"][level])
-            <= 0.5)
+            abs(s["lambda_argmax_period_months"] - qp["lambda_argmax_period_months"][level]) <= 0.5,
+        )
     for edge, paper in qp["rooting"].items():
         got = q["rooting"][edge]
         add(f"{edge} lag", paper["lag"], got["lag"], got["lag"] == paper["lag"])
-        add(f"{edge} adjusted p", paper["p_adj"], got["p_adj"],
-            (got["p_adj"] <= 0.05) == (paper["p_adj"] <= 0.05))
+        add(
+            f"{edge} adjusted p",
+            paper["p_adj"],
+            got["p_adj"],
+            (got["p_adj"] <= 0.05) == (paper["p_adj"] <= 0.05),
+        )
 
     return {
         "monte_carlo_cells": cells,
@@ -782,8 +872,14 @@ def exact_reproductions(results: Mapping[str, Any], committed: Mapping[str, Any]
     for row in size_rows:
         key = f"ar1_{row['ar_coefficient']}"
         got = results["size"][key]["false_positive_trials"]["v2"]
-        checks.append({"row": f"size/{key}", "committed": row["false_positive_trials"],
-                       "reconstructed": got, "match": got == row["false_positive_trials"]})
+        checks.append(
+            {
+                "row": f"size/{key}",
+                "committed": row["false_positive_trials"],
+                "reconstructed": got,
+                "match": got == row["false_positive_trials"],
+            }
+        )
     for row in committed["memory"]:
         key = f"ar1_{row['ar_coefficient']}"
         got = results["memory"][key]["v2_first_200_counts"]
@@ -793,8 +889,9 @@ def exact_reproductions(results: Mapping[str, Any], committed: Mapping[str, Any]
             "reverse": row["reverse_edge"]["count"],
             "other": row["any_other_edge"]["count"],
         }
-        checks.append({"row": f"memory/{key}", "committed": want, "reconstructed": got,
-                       "match": got == want})
+        checks.append(
+            {"row": f"memory/{key}", "committed": want, "reconstructed": got, "match": got == want}
+        )
     return checks
 
 
@@ -812,46 +909,85 @@ def findings(results: Mapping[str, Any]) -> List[Dict[str, Any]]:
     def add(fid: str, ok: bool, evidence: Dict[str, Any]) -> None:
         out.append({"id": fid, "holds": bool(ok), "evidence": evidence})
 
-    add("F1", mem["ar1_0.97"]["v2_exact"]["rate"] < mem["ar1_0.5"]["v2_exact"]["rate"]
+    add(
+        "F1",
+        mem["ar1_0.97"]["v2_exact"]["rate"] < mem["ar1_0.5"]["v2_exact"]["rate"]
         and mem["ar1_0.9"]["v2_exact"]["rate"] < 0.6
         and all(mem[k]["v3_exact"]["rate"] >= 0.95 for k in mem),
-        {k: (mem[k]["v2_exact"]["rate"], mem[k]["v3_exact"]["rate"]) for k in mem})
-    add("F2", _lower(mem["ar1_0.9"]["v2_reverse"]) > 0.05
+        {k: (mem[k]["v2_exact"]["rate"], mem[k]["v3_exact"]["rate"]) for k in mem},
+    )
+    add(
+        "F2",
+        _lower(mem["ar1_0.9"]["v2_reverse"]) > 0.05
         and all(mem[k]["v3_reverse"]["rate"] <= 0.02 for k in memory_ar1),
-        {k: (mem[k]["v2_reverse"]["rate"], mem[k]["v3_reverse"]["rate"]) for k in mem})
-    add("F3", all(_lower(size[k][p]) <= 0.05 for k in size for p in ("v2", "v3", "granger")),
-        {k: {p: size[k][p]["rate"] for p in ("v2", "v3", "granger")} for k in size})
-    add("F4", all(abs(pcurve[c]["v3_any"]["rate"] - pcurve[c]["granger_any"]["rate"]) <= 0.05
-                  for c in ("c0.1", "c0.2")),
-        {c: (pcurve[c]["v3_any"]["rate"], pcurve[c]["granger_any"]["rate"]) for c in pcurve})
-    add("F5", mem["ar2_0.95"]["v2_exact"]["rate"] < 0.5
-        and mem["ar2_0.95"]["v3_exact"]["rate"] >= 0.95,
-        {"v2_exact": mem["ar2_0.95"]["v2_exact"]["rate"],
-         "v3_exact": mem["ar2_0.95"]["v3_exact"]["rate"]})
-    add("F6", res["ar1_0.9"]["depth_fixed_cut"]["rate"] >= 0.9
+        {k: (mem[k]["v2_reverse"]["rate"], mem[k]["v3_reverse"]["rate"]) for k in mem},
+    )
+    add(
+        "F3",
+        all(_lower(size[k][p]) <= 0.05 for k in size for p in ("v2", "v3", "granger")),
+        {k: {p: size[k][p]["rate"] for p in ("v2", "v3", "granger")} for k in size},
+    )
+    add(
+        "F4",
+        all(
+            abs(pcurve[c]["v3_any"]["rate"] - pcurve[c]["granger_any"]["rate"]) <= 0.05
+            for c in ("c0.1", "c0.2")
+        ),
+        {c: (pcurve[c]["v3_any"]["rate"], pcurve[c]["granger_any"]["rate"]) for c in pcurve},
+    )
+    add(
+        "F5",
+        mem["ar2_0.95"]["v2_exact"]["rate"] < 0.5 and mem["ar2_0.95"]["v3_exact"]["rate"] >= 0.95,
+        {
+            "v2_exact": mem["ar2_0.95"]["v2_exact"]["rate"],
+            "v3_exact": mem["ar2_0.95"]["v3_exact"]["rate"],
+        },
+    )
+    add(
+        "F6",
+        res["ar1_0.9"]["depth_fixed_cut"]["rate"] >= 0.9
         and res["ar1_0.97"]["depth_fixed_cut"]["rate"] >= 0.9,
-        {k: res[k]["depth_fixed_cut"]["rate"] for k in ("ar1_0.9", "ar1_0.97")})
+        {k: res[k]["depth_fixed_cut"]["rate"] for k in ("ar1_0.9", "ar1_0.97")},
+    )
     nulls = ["ar1_0.0", "ar1_0.5", "ar1_0.9", "ar1_0.97", "ar1_0.9_plus_white"]
-    add("F7", _lower(res["ar1_0.9_plus_white"]["dstar_ar1"]) > 0.05
+    add(
+        "F7",
+        _lower(res["ar1_0.9_plus_white"]["dstar_ar1"]) > 0.05
         and all(_lower(res[k]["dstar_isotonic"]) <= 0.05 for k in nulls)
         and all(_lower(res[k]["lambda"]) <= 0.05 for k in nulls),
-        {k: {p: res[k][p]["rate"] for p in ("dstar_ar1", "dstar_isotonic", "lambda")}
-         for k in nulls})
+        {
+            k: {p: res[k][p]["rate"] for p in ("dstar_ar1", "dstar_isotonic", "lambda")}
+            for k in nulls
+        },
+    )
     line = res["line_ar1_0.9_a0.5"]
-    add("F8", line["lambda"]["rate"] >= 0.5 and line["dstar_ar1"]["rate"] <= 0.1
+    add(
+        "F8",
+        line["lambda"]["rate"] >= 0.5
+        and line["dstar_ar1"]["rate"] <= 0.1
         and line["dstar_isotonic"]["rate"] <= 0.1,
-        {p: line[p]["rate"] for p in RESONANCE_PROCEDURES})
+        {p: line[p]["rate"] for p in RESONANCE_PROCEDURES},
+    )
     loc = line["lambda_within_one_bin_of_line"]
     add("F9", loc is not None and loc >= 0.9, {"within_one_bin": loc})
-    add("F10", res["ar2_0.8"]["lambda"]["rate"] < 0.15 and res["ar2_0.9"]["lambda"]["rate"] < 0.15,
-        {k: res[k]["lambda"]["rate"] for k in ("ar2_0.8", "ar2_0.9")})
+    add(
+        "F10",
+        res["ar2_0.8"]["lambda"]["rate"] < 0.15 and res["ar2_0.9"]["lambda"]["rate"] < 0.15,
+        {k: res[k]["lambda"]["rate"] for k in ("ar2_0.8", "ar2_0.9")},
+    )
     sp = q["spectral"]
-    add("F11", all(sp[lv]["lambda_p"] <= 0.05 for lv in sp)
+    add(
+        "F11",
+        all(sp[lv]["lambda_p"] <= 0.05 for lv in sp)
         and all(sp[lv][f"dstar_{n}_p"] > 0.05 for lv in sp for n in ("ar1", "isotonic")),
-        {lv: {k: sp[lv][k] for k in ("lambda_p", "dstar_ar1_p", "dstar_isotonic_p")} for lv in sp})
-    add("F12", q["rooting"]["v2_30_to_50"]["p_adj"] <= 0.05
+        {lv: {k: sp[lv][k] for k in ("lambda_p", "dstar_ar1_p", "dstar_isotonic_p")} for lv in sp},
+    )
+    add(
+        "F12",
+        q["rooting"]["v2_30_to_50"]["p_adj"] <= 0.05
         and q["rooting"]["v3_30_to_50"]["p_adj"] <= 0.05,
-        {k: q["rooting"][k]["p_adj"] for k in ("v2_30_to_50", "v3_30_to_50")})
+        {k: q["rooting"][k]["p_adj"] for k in ("v2_30_to_50", "v3_30_to_50")},
+    )
     return out
 
 
