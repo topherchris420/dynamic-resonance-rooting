@@ -123,12 +123,8 @@ def benchmark():
     return {"samples": len(x), "cases": rows}
 
 
-def fit_log_mode(x, y, betas, omegas):
-    """Least-squares scan for one real conjugate mode; descriptive, not inference.
-
-    Returns the best supplied candidate and relative residual energy. A
-    finite grid cannot exclude off-grid modes or certify a spectral pole.
-    """
+def _mode_inputs(x, y, betas, omegas):
+    """Validate a single-mode scan and return centred log scale and scaled target."""
     x = _grid(x)
     y = np.asarray(y, dtype=float)
     if y.shape != x.shape or x.size < 5 or not np.isfinite(y).all():
@@ -153,7 +149,53 @@ def fit_log_mode(x, y, betas, omegas):
     scale = np.max(np.abs(y))
     if scale == 0:
         raise ValueError("zero signal has no identifiable mode")
-    target = y / scale
+    return u, y / scale, b, w
+
+
+def log_mode_profile(x, y, betas, omegas):
+    """Relative residual energy of every candidate that ``fit_log_mode`` scans.
+
+    Same model, centring, scaling and candidate rules as ``fit_log_mode``,
+    evaluated in closed form from 2x2 normal equations instead of one
+    least-squares solve per candidate. Rows follow ``betas`` and columns
+    ``omegas``; a candidate ``fit_log_mode`` would skip is NaN. The row-major
+    ``nanargmin`` selects the candidate ``fit_log_mode`` returns, up to
+    floating-point ties; near zero residual the closed form is accurate only
+    to about 1e-15 relative energy. Descriptive, like ``fit_log_mode``.
+    """
+    u, target, b, w = _mode_inputs(x, y, betas, omegas)
+    energy = float(target @ target)
+    angle = np.outer(u, w)
+    usable = np.isfinite(angle).all(axis=0)
+    cos, sin = np.cos(angle), np.sin(angle)
+    cc, ss, cs = cos * cos, sin * sin, cos * sin
+    surface = np.full((b.size, w.size), np.nan)
+    for row, beta in enumerate(b):
+        exponent = beta * u
+        if not np.isfinite(exponent).all() or np.ptp(exponent) > 600:
+            continue
+        envelope = np.exp(exponent - exponent.max())
+        weight = envelope * envelope
+        a, d, off = weight @ cc, weight @ ss, weight @ cs
+        weighted = envelope * target
+        p, q = weighted @ cos, weighted @ sin
+        largest = 0.5 * (a + d + np.sqrt((a - d) ** 2 + 4 * off * off))
+        determinant = a * d - off * off
+        with np.errstate(divide="ignore", invalid="ignore"):
+            # fit_log_mode skips designs whose singular-value ratio is <= 1e-10.
+            keep = usable & (largest > 0) & (determinant / largest > 1e-20 * largest)
+            explained = (d * p * p - 2 * off * p * q + a * q * q) / determinant
+        surface[row, keep] = np.maximum(energy - explained[keep], 0.0) / energy
+    return surface
+
+
+def fit_log_mode(x, y, betas, omegas):
+    """Least-squares scan for one real conjugate mode; descriptive, not inference.
+
+    Returns the best supplied candidate and relative residual energy. A
+    finite grid cannot exclude off-grid modes or certify a spectral pole.
+    """
+    u, target, b, w = _mode_inputs(x, y, betas, omegas)
     energy = float(target @ target)
     best = None
     best_error = float("inf")

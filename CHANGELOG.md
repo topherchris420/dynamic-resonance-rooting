@@ -10,6 +10,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Preregistered DRR-Mellin hidden-mode recovery benchmark
+  (`drr_framework.mellin_recovery_benchmark`, `scripts/run_mellin_recovery_benchmark.py`,
+  `results/expected/mellin_recovery/`, `docs/mellin-recovery-benchmark.md`) and a CI
+  workflow that replays every trial. On 12,000 held-out off-grid records, Lomb-Scargle
+  (0.694) and NLS (0.688) recovered the hidden log-frequency more often than the
+  DRR-Mellin scan (0.666), so the general superiority hypothesis was only partially
+  supported (it beat ESPRIT). The scan was the most reliable method tested for
+  |beta| = 0.6 envelopes in additive noise on log-uniform grids (+0.146 over
+  Lomb-Scargle, +0.086 over NLS). The predicted loss under scale-proportional noise was
+  confirmed (366 paired Lomb-Scargle wins to 10). Its 2.5-point cost at beta = 0 missed
+  the 3-point non-inferiority margin.
+- `drr_framework.mellin.log_mode_profile`: the closed-form candidate surface of
+  `fit_log_mode`, tested to select the same candidate.
 - Experimental mathematical features, off by default
   (`analyze_system(mathematical_features=...)`, `drr-analyze --mathematical-features`):
   `drr_framework.phase_sync` tests channel pairs for `n:m` phase synchronization
