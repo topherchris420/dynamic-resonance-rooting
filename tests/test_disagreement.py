@@ -70,10 +70,12 @@ class TestDisagreementPrinciple(unittest.TestCase):
 
     def test_divergence_synthesis_engine_output_and_template(self) -> None:
         """Verify generate_drr_conclusion outputs required natural language template and humility metadata."""
-        resolver = DRR_ScopeResolver([
-            self.samira_macro_archetype,
-            self.christopher_local_archetype,
-        ])
+        resolver = DRR_ScopeResolver(
+            [
+                self.samira_macro_archetype,
+                self.christopher_local_archetype,
+            ]
+        )
 
         conclusion_payload = resolver.generate_drr_conclusion()
 
@@ -81,15 +83,12 @@ class TestDisagreementPrinciple(unittest.TestCase):
         self.assertEqual(conclusion_payload["status"], "divergent_scopes_preserved")
         self.assertEqual(conclusion_payload["perspectives_evaluated"], 2)
 
-        # Verify natural language template structure
+        # Conclusions identify only the actual scopes and make no domain assumptions.
         conclusion_text = conclusion_payload["conclusion"]
-        expected_template_suffix = (
-            "These findings operate at different observational scopes and should "
-            "be interpreted together rather than collapsed into a single state."
-        )
-        self.assertIn("Aggregate financial-system indicators support", conclusion_text)
-        self.assertIn(", while material indicators for the evaluated population support", conclusion_text)
-        self.assertIn(expected_template_suffix, conclusion_text)
+        self.assertIn("MACRO:", conclusion_text)
+        self.assertIn("LOCAL:", conclusion_text)
+        self.assertIn("confidence does not resolve the disagreement", conclusion_text)
+        self.assertIn("not established", conclusion_payload["comparison_basis"])
 
         # Check macro and local state extraction
         self.assertIn("stabilizing", conclusion_payload["macro_state"])
@@ -101,7 +100,9 @@ class TestDisagreementPrinciple(unittest.TestCase):
         self.assertIn("completeness_of_representation", humility)
         self.assertTrue(humility["non_erasure_invariant_maintained"])
         self.assertIn("MACRO avg confidence: 0.95", humility["accuracy_within_representation"])
-        self.assertIn("LOCAL/MICRO avg confidence: 0.82", humility["accuracy_within_representation"])
+        self.assertIn(
+            "LOCAL/MICRO avg confidence: 0.82", humility["accuracy_within_representation"]
+        )
 
     def test_concordant_perspectives_returns_consensus(self) -> None:
         """Verify concordant perspectives across scales synthesize without divergence flag."""

@@ -95,6 +95,8 @@ def run_reproduction_experiment(
         edge["source"] == "dim_0" and edge["target"] == "dim_1"
         for edge in rooting_result["significant_edges"]
     )
+    # Surrogate-adjusted p-value of the injected edge, whether or not it passed.
+    expected_edge_adjusted_p_value = float(rooting_result["adjusted_p_values"][0, 1])
 
     summary: Dict[str, object] = {
         "benchmark": "coupled_oscillator_known_frequency_and_direction",
@@ -114,6 +116,8 @@ def run_reproduction_experiment(
         "expected_edge": "dim_0 -> dim_1",
         "expected_lag_samples": lag,
         "expected_edge_detected": bool(expected_edge_detected),
+        "expected_edge_adjusted_p_value": expected_edge_adjusted_p_value,
+        "minimum_attainable_p_value": float(rooting_result["minimum_attainable_p_value"]),
         "significant_edges_count": len(rooting_result["significant_edges"]),
     }
 

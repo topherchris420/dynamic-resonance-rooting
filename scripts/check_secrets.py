@@ -12,7 +12,6 @@ import sys
 from pathlib import Path
 from typing import Iterable, Tuple
 
-
 PATTERNS: Tuple[Tuple[str, re.Pattern], ...] = (
     ("private key", re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----")),
     ("AWS access key", re.compile(r"\bAKIA[0-9A-Z]{16}\b")),

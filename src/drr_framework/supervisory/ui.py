@@ -7,12 +7,14 @@ import json
 import math
 
 from .common import canonical_json
+from .judgment import display_policy_outcome
 
 STYLE = """
 :root{color-scheme:light;--ink:#1d302c;--muted:#60716a;--paper:#f6f5ef;--line:#d8dfd7;--accent:#276658}
 *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.6 system-ui,sans-serif}a{color:#185e50}a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #c57932;outline-offset:4px}
 header{border-bottom:1px solid var(--line);padding:25px 4vw;display:flex;justify-content:space-between;align-items:center;background:#fff}header strong{letter-spacing:.1em;font-size:12px}header small{display:block;color:var(--muted)}.scope{padding:5px 13px;border:1px solid var(--line);border-radius:20px;font-size:12px}
 .layout{display:grid;grid-template-columns:205px minmax(0,1fr);min-height:85vh}nav{padding:30px 18px;border-right:1px solid var(--line)}nav a{display:block;text-decoration:none;padding:10px 13px;margin-bottom:3px;color:var(--muted);border-radius:5px}nav a[aria-current=page]{background:var(--ink);color:white}main{padding:36px 4vw;max-width:1500px;width:100%}.eyebrow{text-transform:uppercase;font-size:11px;font-weight:700;letter-spacing:.15em;color:var(--muted)}h1{font:normal 39px/1.15 Georgia,serif;margin:9px 0 12px}h2{font:normal 26px Georgia,serif;margin:30px 0 16px}h3{font-size:17px;margin:0 0 10px}.lede{color:var(--muted);max-width:800px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:28px 0}.stat,.card{background:white;border:1px solid var(--line);padding:21px;border-radius:8px}.stat strong{display:block;font:32px Georgia,serif}.stat small{color:var(--muted)}.card{margin:14px 0}.card-top{display:flex;justify-content:space-between;gap:20px}.tag{display:inline-block;background:#edf3ee;border:1px solid #d3e4d8;border-radius:4px;padding:2px 8px;font-size:11px;color:var(--accent)}.muted{color:var(--muted)}.meta{display:flex;flex-wrap:wrap;gap:16px;font-size:13px;margin:13px 0}.explain{border-top:1px solid var(--line);margin-top:16px;padding-top:12px}summary{cursor:pointer;color:var(--accent);font-weight:600}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;border-bottom:1px solid var(--line);padding:11px 10px;vertical-align:top}th{color:var(--muted);font-weight:600}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f3f5f1;padding:15px;border-radius:6px;font-size:12px}code{overflow-wrap:anywhere}.empty{border:1px dashed #bdcbbf;padding:28px;border-radius:8px;margin:20px 0}.boundary{font-size:12px;color:var(--muted);margin:35px 0 0;border-top:1px solid var(--line);padding-top:18px}.panel[hidden]{display:none}.review-form{display:grid;gap:10px;max-width:600px;margin-top:16px}label{font-size:13px}input,select,textarea{display:block;width:100%;padding:9px;border:1px solid #acbdb2;border-radius:4px;background:white;color:var(--ink);font:inherit}button,.button{background:var(--ink);color:white;border:0;border-radius:5px;padding:10px 15px;font:inherit;cursor:pointer;text-decoration:none;display:inline-block}button:disabled{opacity:.6;cursor:default}.spark{width:140px;height:34px;color:var(--accent)}.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.layers{display:grid;gap:10px;margin:12px 0}.layer{border-radius:6px;padding:12px 14px}.layer h4{margin:0 0 8px;font-size:11px;letter-spacing:.14em;text-transform:uppercase}.layer-analytical{background:#f3f7f6;border-left:4px solid #276658}.layer-judgment{background:#f8f4ee;border-left:4px solid #8a5a12}.layer-human{background:#f6f3f8;border-left:4px solid #5c4d7a}.layer p{margin:4px 0}
 @media(max-width:800px){.layout{display:block}nav{display:flex;overflow:auto;border-bottom:1px solid var(--line);padding:8px}nav a{white-space:nowrap;margin:0}main{padding:25px 18px}.stats{grid-template-columns:1fr 1fr}.two{grid-template-columns:1fr}header{padding:18px}.card-top{display:block}h1{font-size:32px}}
 """
 
@@ -57,6 +59,84 @@ def sparkline(values, label):
         paths.append(("M" if prior is None or i != prior + 1 else "L") + f"{x:.1f},{y:.1f}")
         prior = i
     return f'<svg class="spark" viewBox="0 0 140 34" role="img" aria-label="{esc(label)}"><path d="{" ".join(paths)}" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>'
+
+
+def _answer_map(overlay):
+    result = (overlay or {}).get("judgment_result") or {}
+    return {answer["question_id"]: answer for answer in result.get("answers", ())}
+
+
+def _choice_text(answer):
+    if not answer or answer.get("choice") is None:
+        return "Unavailable"
+    confidence = answer.get("confidence")
+    if confidence is None:
+        return esc(answer["choice"])
+    return esc(answer["choice"]) + f" (model confidence {confidence:.2f})"
+
+
+def _noul_text(answer):
+    if not answer or answer.get("noul") is None:
+        return "Unavailable"
+    return f"{answer['noul']:.2f}"
+
+
+def _policy_label(outcome):
+    label = display_policy_outcome(outcome)
+    if outcome == "READY":
+        return label + " (policy v1 record)"
+    return label
+
+
+def judgment_layers(signal, result):
+    """Keep analytical evidence, typed judgment, and human disposition visually separate."""
+    evidence_id = signal["evidence_id"]
+    bundle = result.get("judgment") or {}
+    overlay = (bundle.get("overlays") or {}).get(evidence_id)
+    answers = _answer_map(overlay)
+    robustness = (
+        "Unavailable" if signal.get("robustness") is None else f"{signal['robustness']:.2f}"
+    )
+    analytical = (
+        '<section class="layer layer-analytical"><h4>Analytical signal</h4>'
+        f'<p>Materiality: {signal["materiality"]:.0f}</p>'
+        f'<p>Data confidence: {signal["confidence"]:.2f}</p>'
+        f"<p>Robustness: {robustness}</p>"
+        f'<p>DRR incremental: {"yes" if signal.get("drr_incremental") else "no"}</p>'
+        "</section>"
+    )
+    if overlay:
+        judgment = (
+            '<section class="layer layer-judgment"><h4>Typed judgment</h4>'
+            f'<p>Evidence adequacy: {_choice_text(answers.get("evidence_adequacy"))}</p>'
+            f'<p>Review complexity: {_choice_text(answers.get("review_complexity"))}</p>'
+            f'<p>Scope overreach: {_noul_text(answers.get("scope_overreach"))}</p>'
+            f'<p>Material contradiction: {_noul_text(answers.get("contradiction_material"))}</p>'
+            f'<p>Limitations material: {_noul_text(answers.get("limitations_material"))}</p>'
+            f'<p>Additional review: {_noul_text(answers.get("additional_review_needed"))}</p>'
+            f'<p>Judgment policy: {esc(_policy_label(overlay.get("policy_outcome")))}</p>'
+            '<p class="muted">Model confidence is not statistical confidence. This policy does not change attention rank or create a disposition.</p>'
+            "</section>"
+        )
+    elif bundle:
+        judgment = (
+            '<section class="layer layer-judgment"><h4>Typed judgment</h4>'
+            "<p>Not evaluated. Judgment runs only for evidence already selected by the attention budget.</p>"
+            "</section>"
+        )
+    else:
+        judgment = (
+            '<section class="layer layer-judgment"><h4>Typed judgment</h4>'
+            "<p>Not requested. Local-only mode does not call a judgment provider.</p>"
+            "</section>"
+        )
+    human = (
+        '<section class="layer layer-human"><h4>Analyst disposition</h4>'
+        f'<p>{esc(str(signal.get("disposition") or "unresolved").replace("_", " ").title())}</p>'
+        '<p class="muted">Human record. A typed judgment cannot set this disposition.</p>'
+        "</section>"
+    )
+    return '<div class="layers">' + analytical + judgment + human + "</div>"
 
 
 def evidence_details(oid, payload, *, token="", editable=False):
@@ -144,10 +224,11 @@ def evidence_details(oid, payload, *, token="", editable=False):
     return content
 
 
-def render_workbench(result, *, token="", editable=False):
+def render_workbench(result, *, token="", editable=False, review_activity=None):
     nav = (
         ("today", "Today"),
         ("institutions", "Institutions"),
+        ("revisions", "Filing revisions"),
         ("peers", "Peers"),
         ("evidence", "Evidence"),
         ("policy", "Policy"),
@@ -157,7 +238,7 @@ def render_workbench(result, *, token="", editable=False):
         ("perspectives", "Perspectives"),
     )
     sections = {}
-    attention = result["attention"]
+    attention = review_activity["attention"] if review_activity is not None else result["attention"]
     delta = result["delta"]
     selected = attention["review_first"]
     today = '<p class="eyebrow">Continuous monitoring</p><h1>Since your last review</h1><p class="lede">What changed, what deserves attention, and the evidence behind it.</p><div class="stats">'
@@ -173,7 +254,8 @@ def render_workbench(result, *, token="", editable=False):
         s = item["signal"]
         p = result["evidence"][s["evidence_id"]]
         today += (
-            f'<article class="card"><div class="card-top"><div><span class="eyebrow">{esc(s["institution"])} · {esc(s["period"])}</span><h3>{esc(s["claim"])}</h3></div><span class="tag">{esc(item["novelty"])}</span></div><div class="meta"><span>Materiality {s["materiality"]:.0f}/100</span><span>Data confidence {s["confidence"]:.0%}</span><span>Robustness {number(s["robustness"]*100 if s["robustness"] is not None else None)}%</span></div>'
+            f'<article class="card"><div class="card-top"><div><span class="eyebrow">{esc(s["institution"])} · {esc(s["period"])}</span><h3>{esc(s["claim"])}</h3></div><span class="tag">{esc(item["novelty"])}</span></div>'
+            + judgment_layers(s, result)
             + evidence_details(s["evidence_id"], p, token=token, editable=editable)
             + "</article>"
         )
@@ -181,7 +263,15 @@ def render_workbench(result, *, token="", editable=False):
         message = (
             "No material signal cleared the queue. Review the data-quality blockers before treating this as a quiet period."
             if any(e["severity"] == "important" for e in result["quality"])
-            else "Nothing material changed among eligible observations and configured review thresholds."
+            else (
+                "Material items are deferred by the configured attention budget."
+                if attention["deferred"]
+                else (
+                    "No new material item remains in today's queue after analyst review."
+                    if review_activity and review_activity["reviews"]
+                    else "Nothing material changed among eligible observations and configured review thresholds."
+                )
+            )
         )
         today += f'<div class="empty">{esc(message)}</div>'
     if attention["deferred"]:
@@ -218,6 +308,59 @@ def render_workbench(result, *, token="", editable=False):
             + "</article>"
         )
     sections["institutions"] = institutions
+    revisions = (
+        '<p class="eyebrow">Source changes</p><h1>What the filing revised</h1>'
+        '<p class="lede">Compare the exact observations held by each review, for the same reporting period. '
+        "A revision is separate from a quarterly change. Signal transitions shown alongside it do not establish causation.</p>"
+    )
+    for revision in result.get("observation_revisions", []):
+        old, new = revision["previous"], revision["current"]
+        revisions += '<article class="card"><h3>' + esc(revision["observation_key"]) + "</h3>"
+        revisions += table(
+            ("Review", "Value", "Vintage", "Available", "Observation ID"),
+            (
+                (
+                    (
+                        label,
+                        number(fact["value"]) + " " + esc(fact["unit"]),
+                        esc(fact["source_vintage"]),
+                        esc(fact["available_as_of"]),
+                        "<code>" + esc(fact["observation_id"]) + "</code>",
+                    )
+                    if fact
+                    else (label, "Source unavailable", "—", "—", esc(oid))
+                )
+                for label, fact, oid in (
+                    ("Previous", old, revision["previous_observation_id"]),
+                    ("Current", new, revision["current_observation_id"]),
+                )
+            ),
+        )
+        revisions += (
+            "<p>Comparison: "
+            + esc(revision["comparison_status"])
+            + ". "
+            + esc(revision["limitation"])
+            + "</p>"
+        )
+        if revision["comparison_status"] == "comparable":
+            revisions += (
+                "<p>Revision: "
+                + number(revision["raw_change"])
+                + " "
+                + esc(new["unit"])
+                + "; percent revision: "
+                + number(revision["percent_change"])
+                + "%.</p>"
+            )
+        revisions += (
+            "<details><summary>Changed fields, source facts and concurrent signal changes</summary><pre>"
+            + esc(json.dumps(revision, indent=2))
+            + "</pre></details></article>"
+        )
+    if not result.get("observation_revisions"):
+        revisions += '<div class="empty">No same-period filing revisions among the compared observations.</div>'
+    sections["revisions"] = revisions
     peer_rows = [p for a in result["analyses"] for p in a["peers"].values()]
     sections["peers"] = (
         '<p class="eyebrow">Horizontal comparison</p><h1>Who moved together?</h1><p class="lede">Cohorts are explicit. The target is excluded from its comparison distribution. Shared movement does not identify a causal source.</p>'
@@ -237,9 +380,11 @@ def render_workbench(result, *, token="", editable=False):
         )
     )
     evidence = '<p class="eyebrow">Evidence ledger</p><h1>Every claim, traceable</h1>'
+    signal_by_id = {s["evidence_id"]: s for s in result["state"]["signals"]}
     for oid, p in result["evidence"].items():
         evidence += (
             f'<article class="card"><h3>{esc(p["claim"])}</h3>'
+            + judgment_layers(signal_by_id[oid], result)
             + evidence_details(oid, p, token=token, editable=editable)
             + "</article>"
         )
@@ -274,12 +419,21 @@ def render_workbench(result, *, token="", editable=False):
             ),
         )
     )
-    queue = [
-        s for s in result["state"]["signals"] if s["disposition"] in ("unresolved", "investigate")
-    ]
+    signals = (
+        review_activity["signals"] if review_activity is not None else result["state"]["signals"]
+    )
+    queue = [s for s in signals if s["disposition"] in ("unresolved", "investigate")]
     sections["queue"] = (
         '<p class="eyebrow">Analyst workflow</p><h1>Review queue</h1><p class="lede">Dispositions record human interpretation separately from the original evidence.</p>'
     )
+    if review_activity is not None:
+        sections["queue"] += (
+            '<p class="muted">Analytical cutoff: '
+            + esc(result["as_of"])
+            + ". Analyst activity through "
+            + esc(review_activity["review_as_of"])
+            + ". The analytical snapshot remains unchanged.</p>"
+        )
     if not editable:
         sections[
             "queue"
@@ -287,6 +441,7 @@ def render_workbench(result, *, token="", editable=False):
     for s in queue:
         sections["queue"] += (
             f'<article class="card"><h3>{esc(s["claim"])}</h3>'
+            + judgment_layers(s, result)
             + evidence_details(
                 s["evidence_id"],
                 result["evidence"][s["evidence_id"]],
@@ -294,6 +449,20 @@ def render_workbench(result, *, token="", editable=False):
                 editable=editable,
             )
             + "</article>"
+        )
+    if review_activity and review_activity["reviews"]:
+        sections["queue"] += "<h2>Latest dispositions</h2>" + table(
+            ("Evidence", "Disposition", "Reviewer", "Reviewed", "Rationale"),
+            (
+                (
+                    esc(r["evidence_id"][:16]),
+                    esc(r["disposition"]),
+                    esc(r["reviewer"]),
+                    esc(r["reviewed_at"]),
+                    esc(r["rationale"]),
+                )
+                for r in review_activity["reviews"]
+            ),
         )
     model_risk = {
         "profile": result.get("model_risk_profile", {}),

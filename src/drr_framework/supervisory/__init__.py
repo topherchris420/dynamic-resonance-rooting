@@ -12,6 +12,24 @@ from .baselines import (
 from .briefs import generate_lfbo_monitoring_brief, generate_morning_brief
 from .change_detection import MaterialChange, attach_peer_context, detect_material_changes
 from .common import DECISION_BOUNDARY
+from .challenge_models import (
+    BinaryEventLabel,
+    ChallengeReview,
+    ConventionalChallengeResult,
+    LaggedFeature,
+    PanelLogitConfig,
+    VARChallengeConfig,
+    walk_forward_panel_logit,
+    walk_forward_var,
+)
+from .challenge_evaluation import ChallengeEvaluationDesign, evaluate_challenge_results
+from .contingency import (
+    ContingencyDesign,
+    ContingencyResult,
+    ContingencyScore,
+    ContingencyThresholdResult,
+    evaluate_contingency,
+)
 from .entity_graph import EntityGraph, EntityRelationship, PublicEntity
 from .evidence_ledger import (
     AuditEvent,
@@ -31,6 +49,19 @@ from .falsification import (
 from .feedback import AnalystFeedbackMetrics, evaluate_signal_usefulness
 from .ingestion import FilingContext, ingest_wide_csv, ingest_wide_filing
 from .issues import IssueTracker, MonitoringIssue
+from .judgment import (
+    POST_HOC_JUDGMENT_EVALUATION,
+    QUESTION_SET_VERSION,
+    DeterministicMockJudgmentProvider,
+    DisabledJudgmentProvider,
+    JudgmentOverlay,
+    JudgmentProvider,
+    JudgmentResult,
+    JudgmentState,
+    TypeSafeJudgmentProvider,
+    build_judgment_state,
+    replay_recorded_judgments,
+)
 from .model_risk import (
     MODEL_RISK_REFERENCE_BASIS,
     MODEL_RISK_SECTIONS,
@@ -48,8 +79,15 @@ from .monitoring import (
     MonitoringSignal,
     ReviewState,
     compare_review_states,
+    build_review_activity,
 )
-from .passport import AnalysisPassport, dependency_inventory, software_identity
+from .passport import (
+    AnalysisPassport,
+    dependency_inventory,
+    software_identity,
+    verify_monitoring_snapshot,
+)
+from .revisions import build_revision_audit
 from .peer_analysis import PeerAnalysis, PeerGroupDefinition, SignalContext, analyze_peers
 from .policy_context import ApplicabilityBasis, PolicyContext, PolicyEvent
 from .reconciliation import (
@@ -57,6 +95,14 @@ from .reconciliation import (
     ReconciliationRule,
     reconcile_dataset,
     reconcile_store,
+)
+from .mapping import (
+    AutomatedSchemaMapper,
+    MDRMCrosswalk,
+    MDRMCrosswalkRule,
+    PortfolioValidationReport,
+    build_portfolio_registry,
+    validate_portfolio_dataset,
 )
 from .semantics import MetricDefinition, SemanticRegistry, VerificationStatus, bundled_registry
 from .snc import PublicSNCAggregate, analyze_public_snc
@@ -92,6 +138,7 @@ __all__ = [
     "AnalysisPassport",
     "AnalystDisposition",
     "AnalystFeedbackMetrics",
+    "AutomatedSchemaMapper",
     "AnalystReview",
     "ApplicabilityBasis",
     "AttentionBudget",
@@ -109,8 +156,18 @@ __all__ = [
     "EvidenceLedger",
     "FilingContext",
     "FilingRevision",
+    "DeterministicMockJudgmentProvider",
+    "DisabledJudgmentProvider",
     "IssueTracker",
+    "JudgmentOverlay",
+    "JudgmentProvider",
+    "JudgmentResult",
+    "JudgmentState",
+    "POST_HOC_JUDGMENT_EVALUATION",
+    "QUESTION_SET_VERSION",
     "LFBORegimeAnalyzer",
+    "MDRMCrosswalk",
+    "MDRMCrosswalkRule",
     "MaterialChange",
     "MetricDefinition",
     "ModelRiskProfile",
@@ -125,7 +182,9 @@ __all__ = [
     "PeerGroupDefinition",
     "PolicyContext",
     "PolicyEvent",
+    "PortfolioValidationReport",
     "PublicEntity",
+    "TypeSafeJudgmentProvider",
     "PublicSNCAggregate",
     "ReconciliationRule",
     "RegulatoryObservation",
@@ -143,8 +202,13 @@ __all__ = [
     "analyze_peers",
     "analyze_public_snc",
     "attach_peer_context",
+    "build_judgment_state",
+    "build_portfolio_registry",
     "bundled_registry",
     "compare_review_states",
+    "build_review_activity",
+    "build_revision_audit",
+    "verify_monitoring_snapshot",
     "dependency_inventory",
     "detect_material_changes",
     "evaluate_signal_usefulness",
@@ -157,10 +221,27 @@ __all__ = [
     "lagged_correlations",
     "matched_evaluation",
     "reconcile_dataset",
+    "replay_recorded_judgments",
     "reconcile_store",
     "review_state_from_dict",
     "run_baselines",
     "run_falsification",
     "software_identity",
+    "validate_portfolio_dataset",
     "walk_forward_validate",
+    "BinaryEventLabel",
+    "ChallengeReview",
+    "ConventionalChallengeResult",
+    "LaggedFeature",
+    "PanelLogitConfig",
+    "VARChallengeConfig",
+    "walk_forward_panel_logit",
+    "walk_forward_var",
+    "ChallengeEvaluationDesign",
+    "evaluate_challenge_results",
+    "ContingencyDesign",
+    "ContingencyResult",
+    "ContingencyScore",
+    "ContingencyThresholdResult",
+    "evaluate_contingency",
 ]

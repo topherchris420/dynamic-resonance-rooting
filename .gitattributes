@@ -11,3 +11,10 @@
 *.svg text eol=lf
 *.sh text eol=lf
 *.ipynb text eol=lf
+
+# Frozen source snapshots are verified against preregistered byte hashes.
+src/drr_framework/external_benchmark/data/*.index -text
+
+# Preserve Matplotlib's generated SVG path formatting.
+results/expected/robustness-benchmark/comparison.svg -whitespace
+results/expected/robustness-benchmark/* linguist-generated=true

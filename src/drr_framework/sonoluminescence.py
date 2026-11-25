@@ -65,9 +65,12 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union, cast
 
 import numpy as np
+
+# NumPy < 2 (Python 3.8) only has trapz; newer releases remove that alias.
+_trapezoid = cast(Callable[..., Any], getattr(np, "trapezoid", None) or getattr(np, "trapz", None))
 
 logger = logging.getLogger(__name__)
 
@@ -1008,26 +1011,14 @@ class OpticalElectricalTransducer:
         c_s = acoustic_driver.sound_speed_m_s
         p_driver = acoustic_driver.waveform(time)
         acoustic_power = (p_driver**2 / (rho * c_s)) * acoustic_resonator.input_area_m2
-        acoustic_energy_joules = (
-            float(np.trapezoid(acoustic_power, time))
-            if hasattr(np, "trapezoid")
-            else float(np.trapz(acoustic_power, time))
-        )
+        acoustic_energy_joules = float(_trapezoid(acoustic_power, time))
 
         # 2. Modeled optical emission energy proxy (scaled for consistency)
-        integrated_emission = (
-            float(np.trapezoid(emission_intensity, time))
-            if hasattr(np, "trapezoid")
-            else float(np.trapz(emission_intensity, time))
-        )
+        integrated_emission = float(_trapezoid(emission_intensity, time))
         optical_energy_joules = 1e-10 * integrated_emission
 
         # 3. Modeled electrical energy
-        electrical_energy_joules = (
-            float(np.trapezoid(electrical_power, time))
-            if hasattr(np, "trapezoid")
-            else float(np.trapz(electrical_power, time))
-        )
+        electrical_energy_joules = float(_trapezoid(electrical_power, time))
 
         # Overall efficiency ratio
         transduction_efficiency = (

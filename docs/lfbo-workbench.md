@@ -4,8 +4,8 @@ The LFBO workbench reduces the mechanical work around public regulatory-data
 monitoring while keeping interpretation and supervisory judgment with people. Its
 governing sequence is:
 
-> machine organizes → machine tests → machine prioritizes → analyst investigates →
-> analyst interprets
+> machine organizes → machine tests → machine prioritizes → optional typed judgment →
+> analyst investigates → analyst interprets
 
 It is not an automated supervision system. Outputs are research diagnostics and may
 not be represented as supervisory ratings, findings, MRAs, MRIAs, enforcement
@@ -29,8 +29,12 @@ recommendations, legal conclusions, governance assessments, or proof of causatio
 7. Challenge flagged results across windows, transformations, scaling, lags, methods,
    correction rules, variable omissions, and data-vintage alternatives.
 8. Write content-addressed evidence and apply the configured attention budget.
-9. Record analyst dispositions separately from immutable analytical claims.
-10. Generate a concise Morning Brief and institution brief containing only new,
+9. Optionally ask a typed-judgment provider bounded questions about the evidence
+   already selected for review. This step is off by default and does not change
+   the mathematics, the evidence, or the attention rank.
+10. Record analyst dispositions separately from immutable analytical claims and
+    from typed judgments.
+11. Generate a concise Morning Brief and institution brief containing only new,
     changed, weakened, or unresolved material items.
 
 Disabling DRR does not disable ingestion, reconstruction, reconciliation, change
@@ -65,6 +69,46 @@ snapshot intentionally contains only three verified March 2026 FR Y-9C Schedule 
 items. An absent, ambiguous, future-known, synthetic, or unverified definition is
 blocked by default. Synthetic definitions require both the `SYN_` namespace and an
 explicit `allow_synthetic=True` configuration.
+
+## Portfolio-scale automated mapping and data validation
+
+To eliminate the burden of manual per-MDRM coding and spreadsheet mapping when scaling
+across a broad supervisory portfolio (hundreds of institutions and multi-form regulatory series),
+DRR provides automated taxonomy mapping, cross-form crosswalk translation, and pre-ingestion
+portfolio dataset validation:
+
+- **Automated Schema Mapper (`AutomatedSchemaMapper`)**: Automatically expands `SemanticRegistry` snapshots with valid, provenance-backed definitions across reporting forms (FR Y-9C, FFIEC 031/041/051, FFIEC 002, FR Y-15) without requiring line-by-line manual JSON entries.
+- **Cross-Form Crosswalk (`MDRMCrosswalk`)**: Translates equivalent MDRM items across reporting form families (e.g., holding company `BHCK` codes to commercial bank Call Report `RCFD`/`RCON` codes).
+- **Portfolio Data Validation Engine (`validate_portfolio_dataset`)**: Audits broad portfolio DataFrames/CSVs prior to ingestion for schema drift, unmapped MDRM codes, float RSSD ID formatting errors, null distributions, and zero-variance series.
+- **Auto-Generated Registry Patches**: Automatically constructs `PortfolioValidationReport` auto-patch registries to remediate unmapped metrics in a single step while maintaining point-in-time semantic rigor.
+
+```python
+from drr_framework.supervisory import (
+    bundled_registry,
+    validate_portfolio_dataset,
+    ingest_wide_filing,
+)
+
+# 1. Validate portfolio dataset & auto-generate registry patch
+report = validate_portfolio_dataset(
+    "portfolio_q1_2026.csv",
+    bundled_registry(),
+    form="FR Y-9C",
+    reporting_period="2026-03-31",
+    available_as_of="2026-09-12T14:00:00Z",
+    auto_generate_patches=True,
+)
+
+print(report.summary())
+
+# 2. Ingest atomically using the auto-patched registry
+store = ingest_wide_filing(
+    df,
+    report.auto_patch_registry,
+    context,
+    metric_columns=["BHCK0081", "BHCK2170", "BHCK3210"],
+)
+```
 
 ## Filing input contract
 
@@ -114,6 +158,23 @@ selects the latest filing known at that cutoff. Re-ingesting an older original f
 cannot displace a known amendment. Conflicting values with the same filing timestamp
 are blocked for reconciliation. `compare_vintages` and `filing_revision_history`
 expose the history explicitly.
+
+The workbench's `observation_revisions` audit uses the **exact observation IDs in the
+two review states**, rather than substituting whatever a later store reconstructs at
+the old cutoff. It retains both complete source records, changed fields, numeric and
+percent revisions when comparable, and concurrent changes to the corresponding
+metric's signals. These are same-period filing revisions, not quarterly movements.
+Concurrent signal transitions are descriptive and do not attribute causation.
+
+An absent historical source is `source_unavailable`; null values are `missing_value`;
+unit, definition, perimeter, or provenance changes are `incomparable`. None of these
+produces a numeric difference. A zero prior value has no percent revision. A raw
+revision outside floating-point range is `numeric_overflow`; an overflowing percent
+revision is withheld with an explicit limitation. The Filing revisions panel, Morning
+Brief, and `filing-revisions.json` expose the same audit,
+which is covered by the monitoring payload's passport hash. Initial reviews have no
+revision comparison. Observations outside the intersection of the two review scopes
+are not described as filing revisions.
 
 Date-only cutoffs mean midnight UTC. Callers that need end-of-day scope should pass an
 explicit timestamp. A later local download cannot prove what a different system knew
@@ -179,7 +240,71 @@ timestamped records stored separately, so a disposition never rewrites the claim
 observations, appearing/disappearing/strengthening/weakening signals, data exceptions,
 policy events, entity relationships, DRR relationships, and failed robustness results.
 `AttentionBudget(top_n=5)` ranks only unresolved changes and can truthfully return
-“Nothing material changed.” Blocked data never produces that message.
+“Nothing material changed.” Blocked data never produces that message. Judgment
+does not enter this ranking. `MonitoringSignal.review_complexity` stays unset by
+the judgment layer so an external answer cannot change the content-addressed
+review state. Complexity is shown only on the separate judgment overlay.
+
+## Typed judgment overlay
+
+After evidence, falsification, review-state comparison, and attention selection,
+an optional provider may characterize the packets already in `review_first`.
+The workbench depends on `JudgmentProvider.evaluate`, not on a vendor SDK.
+Shipped providers are TypeSafe Jev (`typesafe`), a deterministic offline mock
+(`mock`), and an explicit disabled provider. Remote judgment requires
+`judgment_enabled=true` and `TYPESAFE_API_KEY`. It is not a dependency of
+ordinary analysis.
+
+Question set `evidence-packet-v1` asks six atomic questions: evidence adequacy,
+scope overreach, material contradiction, review complexity, material limitations,
+and whether additional human scrutiny is warranted. Choice answers keep their
+option, probabilities, and model confidence. Noul answers keep the yes-probability
+only. Those quantities are not statistical confidence and are not blended into
+one score.
+
+Policy `v2` is deterministic presentation logic:
+
+| Condition | Outcome |
+| --- | --- |
+| Provider or answer failure | `JUDGMENT_UNAVAILABLE` |
+| Evidence adequacy is `insufficient` | `INSUFFICIENT_EVIDENCE` |
+| Adequacy is `limited`, or a Noul is strictly above 0.5 | `REVIEW_CAREFULLY` |
+| Adequacy is `adequate` and no Noul is above 0.5 | `EVIDENCE_REVIEWABLE` |
+
+`EVIDENCE_REVIEWABLE` means the packet is coherent enough for ordinary human review
+under this policy. It is a description of the packet, not an approval of the claim
+and not a supervisory conclusion. Policy `v1` stored that same rule as `READY`.
+Those records still load. The policy never removes a signal from review and never
+creates an `AnalystReview`.
+
+Judgments are append-only and content-addressed. A later model version produces
+a new record. The analytical passport records judgment configuration when the
+feature is enabled, and excludes judgment answers from the monitoring output hash.
+Replay reads the recorded artifacts. `walk_forward_validate` does not call a
+judgment provider. A judgment applied to a past review after the fact is
+`POST-HOC JUDGMENT EVALUATION`, not historical evidence.
+
+When the TypeSafe provider is enabled, the model-risk profile records it as an
+optional third-party dependency. That record is not a risk tier, independent
+validation, or supervisory endorsement. See
+[typed judgment](typed-judgment.md) and [security posture](security-posture.md).
+
+The live server keeps analytical evidence separate from current human activity:
+
+| Surface | Content |
+| --- | --- |
+| `GET /api/snapshot` | The original canonical analytical snapshot; unchanged by reviews |
+| `GET /api/review-activity` | Current dispositions and attention queue, tied to an analysis ID and a separate review cutoff |
+| `POST /api/review` | An append-only disposition for evidence in the current snapshot |
+
+Resolving an item (`useful`, `explained`, `noisy`, or `dismissed`) removes it from
+active triage and promotes the next eligible deferred candidate. Reopening it
+(`unresolved` or `investigate`) restores its original score and rank among that run's
+candidates. Scores and analytical signals are not recalculated from the analyst's
+opinion. Refresh the page after recording a disposition; the queue also reconstructs
+from persisted reviews on restart. The current activity cutoff is displayed separately
+from the historical analytical cutoff. Historical exports continue to include only
+reviews available at the analytical cutoff.
 
 ## Analysis passport
 
@@ -192,6 +317,11 @@ integrity and reproducibility evidence; they are not digital signatures. The
 `monitoring` output hash is explicitly the stable ID of the complete monitoring
 payload before the passport field is appended; the passport records that scope and
 the verified prior review-state ID.
+
+`verify_monitoring_snapshot(snapshot)` checks the passport ID, review-state ID, shared
+analytical cutoff, and monitoring output hash. Serving and export reject inconsistent
+snapshots; export also checks its supplied state/passport before creating files. This
+detects content inconsistency, not malicious recomputation of every hash.
 
 ## Local operation
 
@@ -225,8 +355,11 @@ boundaries. SR 11-7 and SR 21-8 are recorded only as superseded historical refer
 
 This is a validation-readiness architecture, not a statement of SR 26-2 compliance or
 independent validation. The guidance is nonbinding, risk-based, and outside the scope
-of generative/agentic AI; deploying an LLM beside this deterministic workbench would
-require a separate risk assessment and evidence boundary.
+of generative/agentic AI. Optional TypeSafe judgment is a separate, disabled-by-default
+dependency with its own evidence boundary. Enabling it is not a statement of SR 26-2
+compliance, independent validation, or supervisory endorsement. Deploying a remote
+judgment provider beside this workbench requires a separate organizational review,
+especially anywhere nonpublic supervisory data could be in scope.
 
 ## Performance and incremental recomputation
 

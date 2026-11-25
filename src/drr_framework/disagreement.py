@@ -7,9 +7,11 @@ observational scales. High-confidence macro-level signals are prevented from sil
 filtering, or smoothing out conflicting metrics from local/micro-level observations.
 """
 
-from dataclasses import dataclass, field
+from copy import deepcopy
+from dataclasses import dataclass
+import re
 from enum import Enum
-from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Union, cast
 
 
 class ObservationalScale(str, Enum):
@@ -45,6 +47,11 @@ NEGATIVE_POLARITY_TERMS: Set[str] = {
 }
 
 
+def _scale_value(scale: Union["ObservationalScale", str]) -> str:
+    """Value of a perspective scale; ``__post_init__`` has already normalized it."""
+    return cast(ObservationalScale, scale).value
+
+
 @dataclass(frozen=True)
 class ObservationalPerspective:
     """
@@ -68,6 +75,11 @@ class ObservationalPerspective:
 
     def __post_init__(self) -> None:
         """Validate fields upon instantiation."""
+        for name in ("source_id", "evidence_provenance"):
+            if not isinstance(getattr(self, name), str) or not getattr(self, name).strip():
+                raise ValueError(f"{name} must be a nonempty string")
+        if not isinstance(self.dissent_logged, bool):
+            raise TypeError("dissent_logged must be a bool")
         # Normalize and validate scale
         scale_val = self.scale
         if isinstance(scale_val, ObservationalScale):
@@ -75,19 +87,23 @@ class ObservationalPerspective:
         elif isinstance(scale_val, str):
             try:
                 scale_enum = ObservationalScale(scale_val.upper())
-            except ValueError:
+            except ValueError as err:
                 valid_scales = [s.value for s in ObservationalScale]
                 raise ValueError(
                     f"Invalid scale '{scale_val}'. Must be one of {valid_scales}"
-                )
+                ) from err
         else:
-            raise TypeError(f"Scale must be ObservationalScale or str, got {type(scale_val).__name__}")
+            raise TypeError(
+                f"Scale must be ObservationalScale or str, got {type(scale_val).__name__}"
+            )
 
         # Override scale to normalized Enum using object.__setattr__ due to frozen=True
         object.__setattr__(self, "scale", scale_enum)
 
         # Validate confidence_score range
-        if not isinstance(self.confidence_score, (int, float)):
+        if isinstance(self.confidence_score, bool) or not isinstance(
+            self.confidence_score, (int, float)
+        ):
             raise TypeError(
                 f"confidence_score must be float or int, got {type(self.confidence_score).__name__}"
             )
@@ -99,7 +115,9 @@ class ObservationalPerspective:
         # Validate indicators and isolate mapping against external caller mutations
         if not isinstance(self.indicators, dict):
             raise TypeError(f"indicators must be a dict, got {type(self.indicators).__name__}")
-        object.__setattr__(self, "indicators", dict(self.indicators))
+        if any(not isinstance(k, str) or not k.strip() for k in self.indicators):
+            raise ValueError("Indicator names must be nonempty strings")
+        object.__setattr__(self, "indicators", deepcopy(self.indicators))
 
 
 class DRR_ScopeResolver:
@@ -111,9 +129,7 @@ class DRR_ScopeResolver:
     scales (LOCAL/MICRO/MESO).
     """
 
-    def __init__(
-        self, perspectives: Optional[Sequence[ObservationalPerspective]] = None
-    ) -> None:
+    def __init__(self, perspectives: Optional[Sequence[ObservationalPerspective]] = None) -> None:
         """Initialize the scope resolver with an optional sequence of perspectives."""
         self._perspectives: List[ObservationalPerspective] = []
         if perspectives:
@@ -130,7 +146,7 @@ class DRR_ScopeResolver:
             raise TypeError(
                 f"Expected ObservationalPerspective instance, got {type(perspective).__name__}"
             )
-        self._perspectives.append(perspective)
+        self._perspectives.append(deepcopy(perspective))
 
     def add_perspective(self, perspective: ObservationalPerspective) -> None:
         """Alias for register_perspective."""
@@ -139,7 +155,7 @@ class DRR_ScopeResolver:
     @property
     def perspectives(self) -> List[ObservationalPerspective]:
         """Return a copy of the registered perspectives."""
-        return list(self._perspectives)
+        return deepcopy(self._perspectives)
 
     def _extract_state_string(
         self,
@@ -147,23 +163,15 @@ class DRR_ScopeResolver:
         default: str = "undetermined",
     ) -> str:
         """Helper to extract representative state strings for given scales."""
-        matching_perspectives = [
-            p for p in self._perspectives if p.scale in target_scales
-        ]
+        matching_perspectives = [p for p in self._perspectives if p.scale in target_scales]
         if not matching_perspectives:
             return default
 
         states: List[str] = []
         for p in matching_perspectives:
-            # Check for explicit state keys first
-            for key in ("macro_state", "local_state", "state", "status", "trend"):
-                if key in p.indicators:
-                    states.append(str(p.indicators[key]))
-                    break
-            else:
-                # Fallback to indicator values
-                for val in p.indicators.values():
-                    states.append(str(val))
+            # A primary state label must not conceal a conflicting secondary
+            # indicator in the human-readable summary either.
+            states.extend(str(value) for value in p.indicators.values())
 
         if states:
             # Remove duplicate strings while preserving order
@@ -173,145 +181,155 @@ class DRR_ScopeResolver:
 
     @staticmethod
     def _get_text_polarity(text: str) -> Optional[str]:
-        """Classify text polarity as 'positive', 'negative', or None."""
-        words = set(text.lower().replace(",", " ").split())
-        has_pos = bool(words & POSITIVE_POLARITY_TERMS)
-        has_neg = bool(words & NEGATIVE_POLARITY_TERMS)
-        if has_pos and not has_neg:
+        """Classify an exact descriptor, never infer sentiment from arbitrary prose.
+
+        Negated, qualified, mixed and numeric indicators require human interpretation.
+        The label is a lexical observation, not a claim about economic desirability.
+        """
+        descriptor = re.sub(r"[.,!?:;]+$", "", text.strip().lower()).strip()
+        if descriptor in POSITIVE_POLARITY_TERMS:
             return "positive"
-        if has_neg and not has_pos:
+        if descriptor in NEGATIVE_POLARITY_TERMS:
             return "negative"
         return None
 
-    def _detect_scale_divergence(
-        self,
-    ) -> Tuple[bool, str, str]:
-        """
-        Inspect indicators across ALL registered scales and detect polar divergence.
-
-        Returns:
-            Tuple of (has_divergence, macro_state_str, local_state_str)
-        """
-        macro_state = self._extract_state_string(
-            [ObservationalScale.MACRO], default="stabilizing"
-        )
-        local_state = self._extract_state_string(
-            [ObservationalScale.LOCAL, ObservationalScale.MICRO], default="deteriorating"
-        )
-
-        # Collect state text and polarities per represented scale
-        scale_polarities: Dict[ObservationalScale, str] = {}
-        for scale in ObservationalScale:
-            scale_text = self._extract_state_string([scale], default="")
-            if scale_text:
-                pol = self._get_text_polarity(scale_text)
-                if pol:
-                    scale_polarities[scale] = pol
-
-        # Divergence exists if any pair of represented scales have opposite polarities
-        # (e.g. MACRO positive vs LOCAL negative, or MESO positive vs MICRO negative)
-        has_divergence = False
-        polarities = list(scale_polarities.values())
-        if "positive" in polarities and "negative" in polarities:
-            has_divergence = True
-
-        return has_divergence, macro_state, local_state
-
     def generate_drr_conclusion(self) -> Dict[str, Any]:
+        """Preserve each indicator and report only the scopes actually supplied.
+
+        Textual polarity cannot establish comparable populations, time horizons,
+        indicator meanings, model accuracy or a substantive consensus.
         """
-        Synthesis Engine: Evaluates registered perspectives and generates a structured conclusion.
-
-        If divergent trends are detected across scales, the engine deliberately refuses
-        to force a single consensus state. Instead, it returns a structured payload
-        matching the specific natural language template and an intellectual humility block.
-
-        Returns:
-            Dict containing conclusion string, divergence status, non-erasure ledger,
-            and intellectual humility metadata.
-        """
-        has_divergence, macro_state, local_state = self._detect_scale_divergence()
-
-        macro_perspectives = [
-            p for p in self._perspectives if p.scale == ObservationalScale.MACRO
+        assessments = [
+            {
+                "perspective_index": index,
+                "source_id": p.source_id,
+                "scale": _scale_value(p.scale),
+                "indicator": key,
+                "value": deepcopy(value),
+                "polarity": self._get_text_polarity(value) if isinstance(value, str) else None,
+            }
+            for index, p in enumerate(self._perspectives)
+            for key, value in p.indicators.items()
         ]
-        local_perspectives = [
+        # Compare individual indicators. Combining text at a scale first would erase
+        # opposing observations whenever one scale contains both polarities.
+        positive = [i for i, a in enumerate(assessments) if a["polarity"] == "positive"]
+        negative = [i for i, a in enumerate(assessments) if a["polarity"] == "negative"]
+        pairs = [
+            {
+                "positive_indicator": i,
+                "negative_indicator": j,
+                "cross_scale": assessments[i]["scale"] != assessments[j]["scale"],
+            }
+            for i in positive
+            for j in negative
+        ]
+        has_divergence = bool(pairs)
+        represented = [
+            s for s in ObservationalScale if any(p.scale == s for p in self._perspectives)
+        ]
+        states = {s.value: self._extract_state_string([s]) for s in represented}
+        macro_state = states.get("MACRO", "undetermined")
+        local_state = self._extract_state_string(
+            [ObservationalScale.LOCAL, ObservationalScale.MICRO]
+        )
+        unclassified = sum(a["polarity"] is None for a in assessments)
+        fully_classified = (
+            bool(assessments) and not unclassified and all(p.indicators for p in self._perspectives)
+        )
+        if has_divergence:
+            cross_scale = any(pair["cross_scale"] for pair in pairs)
+            status = (
+                "divergent_scopes_preserved" if cross_scale else "divergent_perspectives_preserved"
+            )
+            conclusion_text = (
+                "Opposing indicator descriptions are present in the supplied observations. "
+                + "; ".join(f"{scale}: {state}" for scale, state in states.items())
+                + ". Every indicator remains attributed in the ledger; confidence does not resolve the disagreement."
+            )
+        elif len(represented) >= 2 and fully_classified:
+            # Retained for compatibility; this is lexical concordance, not a
+            # verified consensus about the underlying system.
+            status = "concordant_consensus"
+            conclusion_text = (
+                "Recognized indicator descriptions exhibit textual concordance across the supplied scopes. "
+                "This does not establish agreement about the underlying system."
+            )
+        elif not self._perspectives:
+            status = "no_perspectives"
+            conclusion_text = "No observational perspectives registered in scope resolver."
+        else:
+            status = "indeterminate"
+            conclusion_text = (
+                "The supplied observations do not establish cross-scope agreement or divergence. "
+                "Missing scopes and unclassified indicators remain unresolved."
+            )
+        macro = [p for p in self._perspectives if p.scale == ObservationalScale.MACRO]
+        local = [
             p
             for p in self._perspectives
             if p.scale in (ObservationalScale.LOCAL, ObservationalScale.MICRO)
         ]
 
-        macro_avg_conf = (
-            sum(p.confidence_score for p in macro_perspectives) / len(macro_perspectives)
-            if macro_perspectives
-            else 0.0
-        )
-        local_avg_conf = (
-            sum(p.confidence_score for p in local_perspectives) / len(local_perspectives)
-            if local_perspectives
-            else 0.0
-        )
-
-        if has_divergence:
-            conclusion_text = (
-                f"Aggregate financial-system indicators support {macro_state}, while "
-                f"material indicators for the evaluated population support {local_state}. "
-                f"These findings operate at different observational scopes and should "
-                f"be interpreted together rather than collapsed into a single state."
+        def confidence_label(perspectives):
+            return (
+                f"{sum(p.confidence_score for p in perspectives) / len(perspectives):.2f}"
+                if perspectives
+                else "unavailable"
             )
-            status = "divergent_scopes_preserved"
-        else:
-            if self._perspectives:
-                all_states = self._extract_state_string(
-                    list(ObservationalScale), default="concordant"
-                )
-                conclusion_text = (
-                    f"Observational indicators across registered scopes exhibit concordance "
-                    f"supporting {all_states}."
-                )
-            else:
-                conclusion_text = "No observational perspectives registered in scope resolver."
-            status = "concordant_consensus"
 
-        # Construct intellectual humility metadata block explicitly separating
-        # "accuracy within a representation" from "completeness of that representation"
-        intellectual_humility = {
+        humility = {
             "accuracy_within_representation": (
-                f"Statistical and model representations are evaluated as internally accurate "
-                f"within their designated observational boundaries (MACRO avg confidence: "
-                f"{macro_avg_conf:.2f}, LOCAL/MICRO avg confidence: {local_avg_conf:.2f})."
+                "Accuracy is not verified by this resolver. Confidence is supplied by the caller "
+                f"(MACRO avg confidence: {confidence_label(macro)}, "
+                f"LOCAL/MICRO avg confidence: {confidence_label(local)}). "
+                "These descriptive averages neither validate evidence nor weight the conclusion."
             ),
             "completeness_of_representation": (
-                "Incomplete representation acknowledged. No single observational scale or "
-                "aggregated index captures total systemic reality. Macro-prudential "
-                "averages omit local distributional variance; local surveys omit macro "
-                "contagion pathways."
+                "No single observational scale captures the whole system. Population, period, "
+                "measurement meaning and evidence quality require separate review."
             ),
             "non_erasure_invariant_maintained": True,
             "dissent_logged_summary": {
-                p.source_id: p.dissent_logged for p in self._perspectives
+                source: any(p.dissent_logged for p in self._perspectives if p.source_id == source)
+                for source in dict.fromkeys(p.source_id for p in self._perspectives)
             },
+            "dissent_records": [
+                {
+                    "perspective_index": i,
+                    "source_id": p.source_id,
+                    "dissent_logged": p.dissent_logged,
+                }
+                for i, p in enumerate(self._perspectives)
+            ],
         }
-
-        # Defensively copy indicator mappings in non-erasure ledger to isolate from caller mutations
-        registered_ledger = [
+        ledger = [
             {
                 "source_id": p.source_id,
-                "scale": p.scale.value if isinstance(p.scale, Enum) else str(p.scale),
+                "scale": _scale_value(p.scale),
                 "confidence_score": p.confidence_score,
-                "indicators": dict(p.indicators),
+                "indicators": deepcopy(p.indicators),
                 "evidence_provenance": p.evidence_provenance,
                 "dissent_logged": p.dissent_logged,
             }
             for p in self._perspectives
         ]
-
         return {
             "status": status,
             "has_divergence": has_divergence,
             "conclusion": conclusion_text,
             "macro_state": macro_state,
             "local_state": local_state,
-            "perspectives_evaluated": len(self._perspectives),
-            "registered_perspectives": registered_ledger,
-            "intellectual_humility": intellectual_humility,
+            "perspectives_evaluated": len(ledger),
+            "registered_perspectives": ledger,
+            "indicator_assessments": assessments,
+            "divergence_pairs": pairs,
+            "scope_coverage": {
+                "represented": [s.value for s in represented],
+                "missing": [s.value for s in ObservationalScale if s not in represented],
+                "unclassified_indicators": unclassified,
+                "empty_perspectives": sum(not p.indicators for p in self._perspectives),
+            },
+            "comparison_basis": "lexical descriptors only; cross-scope comparability is not established",
+            "intellectual_humility": humility,
         }

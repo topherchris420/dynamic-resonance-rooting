@@ -2,10 +2,45 @@
 
 ## Trust boundary
 
-The workbench is local-first and makes no network request during import, ingestion,
-analysis, briefing, or review. Public files must be obtained and approved outside the
-runtime, then supplied locally with their authoritative HTTPS citation and SHA-256.
-There is no telemetry, cloud dependency, hidden model call, or required LLM.
+The workbench is local-first. In the default local-only configuration it makes no
+network request during import, ingestion, analysis, briefing, review, or typed
+judgment. Public files must be obtained and approved outside the runtime, then
+supplied locally with their authoritative HTTPS citation and SHA-256. There is no
+telemetry, cloud dependency, hidden model call, or required LLM. No external
+judgment provider is required.
+
+### Local-only mode (default)
+
+`judgment_enabled` is false. The typed-judgment layer is not invoked, so there are
+zero judgment network requests. Installing `typesafe-sdk` is unnecessary. Analytical
+evidence, attention ranking, falsification, and analyst dispositions are unchanged
+by the presence of the optional judgment code.
+
+### Optional remote typed judgment
+
+Setting `judgment_enabled` true with `judgment_provider: typesafe` is an explicit
+outbound network boundary. Only a minimized, versioned evidence packet for items
+already selected by the deterministic attention budget is eligible to be sent to
+`https://api.typesafe.ai`. Credentials stay in the local `TYPESAFE_API_KEY`
+environment variable. They are not written to config exports, analysis passports,
+evidence entries, judgment artifacts, audit events, logs, or error messages.
+Network, authentication, rate-limit, timeout, and malformed-response failures are
+stored as `JUDGMENT_UNAVAILABLE`. The workbench does not silently fall back to
+another model, hide the analytical signal, or change its attention rank.
+
+The `mock` and `disabled` providers stay in process. A disabled provider records
+`JUDGMENT_UNAVAILABLE` only when judgment was explicitly enabled.
+
+Nonpublic supervisory information, examination workpapers, confidential institution
+data, and personally identifiable information are outside the supported security
+boundary. Enabling a remote judgment provider in those environments requires a
+separate organizational review. This repository targets public regulatory data and
+deterministic synthetic demonstrations.
+
+TypeSafe documents that Jev is not trained on customer requests or responses, and
+that enterprise zero-data-retention is a separate provider arrangement. This
+repository does not implement or certify that arrangement. See
+<https://docs.typesafe.ai/legal.md> and <https://docs.typesafe.ai/models.md>.
 
 The optional review server binds to IPv4 loopback only. It validates the `Host` and
 `Origin`, requires an unpredictable per-process review token, accepts JSON only, caps
@@ -20,10 +55,13 @@ session, rate-limit, and operations controls.
 - Source artifacts carry SHA-256 digests; normalized records, evidence entries,
   reviews, audit events, review states, semantic registries, and passports have stable
   content-derived IDs.
-- Evidence is immutable and analyst dispositions are append-only. SQLite deny-update/
-  deny-delete triggers protect the evidence, review, and audit tables in the local
-  ledger. Security/operation audit events reject token, secret, credential, and
-  rationale fields; analyst rationale remains confined to the review table.
+- Evidence is immutable and analyst dispositions are append-only. Typed judgments,
+  when enabled, are a separate append-only table keyed by evidence id. SQLite
+  deny-update/deny-delete triggers protect the evidence, review, judgment, and
+  audit tables in the local ledger. Security/operation audit events reject token,
+  secret, credential, and rationale fields; analyst rationale remains confined to
+  the review table. Judgment audit events record provider, model alias, status,
+  policy outcome, and content ids, not the outbound packet or credentials.
 - Static exports use exclusive creation and reject divergent overwrites.
 - Historical exports are cut off at the run's `as_of` timestamp and include only the
   run's evidence IDs. Review-state exports use a `{state, state_id}` envelope, and

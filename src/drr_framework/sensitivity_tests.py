@@ -8,7 +8,12 @@ from typing import Any, Dict, List, Optional, Tuple, cast
 import numpy as np
 
 from .analysis import DynamicResonanceRooting
-from .modules import DepthCalculator, ResonanceDetector, RootingAnalyzer
+from .modules import (
+    DepthCalculator,
+    ResonanceDetector,
+    RootingAnalyzer,
+    phase_randomized_surrogate,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -75,6 +80,15 @@ def run_parameter_sensitivity_experiment(
     }
 
 
+def fourier_surrogate(series: np.ndarray, rng: np.random.Generator) -> np.ndarray:
+    """Real-valued phase-randomized surrogate with the same power spectrum.
+
+    This is the one-series form of :func:`drr_framework.modules.phase_randomized_surrogate`,
+    which :class:`RootingAnalyzer` offers as ``surrogate_method="phase_randomization"``.
+    """
+    return phase_randomized_surrogate(np.asarray(series, dtype=float), rng)
+
+
 def run_placebo_and_null_tests(
     n_samples: int = 500,
     sampling_rate: float = 100.0,
@@ -91,13 +105,15 @@ def run_placebo_and_null_tests(
     g_det = detector.detect(gaussian_noise, method="welch", sampling_rate=sampling_rate)
     g_depth = depth_calc.calculate(gaussian_noise, window_size=128, sampling_rate=sampling_rate)
 
-    # Null 2: Phase-Shuffled Signal (Destroys non-linear dynamic structure)
+    # Null 2: Fourier-transform surrogate. Randomizing the phases of a real
+    # spectrum (Hermitian symmetry kept, DC and Nyquist untouched) preserves the
+    # power spectrum exactly and destroys any phase structure beyond it. The
+    # reported reduction is the original depth minus the surrogate depth; a
+    # value near zero means depth is carried by the spectrum alone.
     t = np.arange(n_samples) / sampling_rate
     sine_signal = np.sin(2 * np.pi * 10 * t) + rng.normal(scale=0.1, size=n_samples)
-    fft_val = np.fft.fft(sine_signal)
-    phases = rng.uniform(0, 2 * np.pi, size=n_samples)
-    shuffled_fft = np.abs(fft_val) * np.exp(1j * phases)
-    phase_shuffled = np.real(np.fft.ifft(shuffled_fft))
+    phase_shuffled = fourier_surrogate(sine_signal, rng)
+    original_depth = depth_calc.calculate(sine_signal, window_size=128, sampling_rate=sampling_rate)
 
     ps_det = detector.detect(phase_shuffled, method="welch", sampling_rate=sampling_rate)
     ps_depth = depth_calc.calculate(phase_shuffled, window_size=128, sampling_rate=sampling_rate)
@@ -116,8 +132,11 @@ def run_placebo_and_null_tests(
         },
         "phase_shuffled": {
             "dominant_freq": [float(f) for f in ps_det.get("dominant_freq", [])[:2]],
+            "original_resonance_depth": float(original_depth["resonance_depth"]),
             "resonance_depth": float(ps_depth["resonance_depth"]),
-            "depth_reduction_from_shuffle": float(ps_depth["resonance_depth"]),
+            "depth_reduction_from_shuffle": float(
+                original_depth["resonance_depth"] - ps_depth["resonance_depth"]
+            ),
         },
         "decorrelated_multivariate": {
             "significant_edges_count": len(rooting_null["significant_edges"]),

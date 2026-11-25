@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from .common import DECISION_BOUNDARY
+from .judgment import display_policy_outcome
 
 
 def generate_morning_brief(result):
@@ -31,6 +32,13 @@ def generate_morning_brief(result):
             lines += [
                 f"- **{s['claim']}** — {item['novelty']}. Materiality {s['materiality']:.0f}/100; data confidence {s['confidence']:.0%}. [Why am I seeing this?](evidence/{s['evidence_id']}.md)"
             ]
+            overlay = ((result.get("judgment") or {}).get("overlays") or {}).get(s["evidence_id"])
+            if overlay:
+                lines.append(
+                    "  - Typed judgment policy: "
+                    + display_policy_outcome(overlay.get("policy_outcome"))
+                    + ". This is not the analytical score and it is not an analyst disposition."
+                )
     elif any(e["severity"] == "important" for e in result["quality"]):
         lines.append(
             "No material signal cleared the review queue. Data-quality blockers require attention before interpreting this as a quiet period."
@@ -46,6 +54,25 @@ def generate_morning_brief(result):
             "",
             f"{len(attention['deferred'])} additional items are deferred by the attention budget and remain visible in the queue.",
         ]
+    lines += ["", "## Filing Revisions", ""]
+    for revision in result.get("observation_revisions", []):
+        old, new = revision["previous"], revision["current"]
+        label = revision["observation_key"]
+        if old and new:
+            label = f"{new['institution_id']} · {new['form']} · {new['metric']} · {new['reporting_period']}"
+            lines.append(
+                f"- {label}: {old['value']} {old['unit']} → {new['value']} {new['unit']} "
+                f"({old['source_vintage']} → {new['source_vintage']}). "
+                f"Comparison: {revision['comparison_status']}. {revision['limitation']}"
+            )
+        else:
+            lines.append(f"- {label}: {revision['limitation']}")
+        for transition in revision["concurrent_signal_changes"]:
+            lines.append(
+                f"  - Concurrent signal change: {transition['transition'].replace('_', ' ')} — {transition['claim']}."
+            )
+    if not result.get("observation_revisions"):
+        lines.append("No same-period filing revisions among the compared observations.")
     lines += ["", "## Deprioritized", ""]
     for s in attention["deprioritized"]:
         revised = any(
