@@ -7,7 +7,9 @@ Usage::
 
 The protocol in ``experiments/v3_reconstruction/protocol.json`` fixes every
 design choice. ``--smoke`` shrinks trial counts for a quick wiring check; its
-output is not a study result.
+output is not a study result. ``--verify-against FILE`` exits non-zero unless
+the new artifact matches FILE in every count, label and trial index, with
+floats equal to a relative tolerance of 1e-6 (environment and runtime ignored).
 """
 
 from __future__ import annotations
@@ -15,11 +17,21 @@ from __future__ import annotations
 import argparse
 import copy
 import json
+import os
+import sys
 import time
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
-from drr_framework.v3_reconstruction import assemble, build_tasks, run_task
+for _name in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):
+    os.environ.setdefault(_name, "1")
+
+from drr_framework.v3_reconstruction import (  # noqa: E402
+    assemble,
+    build_tasks,
+    replay_differences,
+    run_task,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 PROTOCOL = ROOT / "experiments" / "v3_reconstruction" / "protocol.json"
@@ -41,11 +53,12 @@ def _shrink(protocol: dict) -> dict:
     return p
 
 
-def main() -> None:
+def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--workers", type=int, default=1)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--smoke", action="store_true")
+    parser.add_argument("--verify-against", type=Path, default=None)
     args = parser.parse_args()
 
     protocol = json.loads(PROTOCOL.read_text(encoding="utf-8"))
@@ -67,7 +80,20 @@ def main() -> None:
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(artifact, indent=1, sort_keys=True) + "\n", encoding="utf-8")
     print(f"wrote {args.output}")
+    held = sum(bool(f["holds"]) for f in artifact["findings"])
+    print(f"registered findings that hold: {held} of {len(artifact['findings'])}")
+    if args.verify_against is None:
+        return 0
+    expected = json.loads(args.verify_against.read_text(encoding="utf-8"))
+    stored = json.loads(args.output.read_text(encoding="utf-8"))
+    problems = replay_differences(stored, expected)
+    for problem in problems[:50]:
+        print(f"  MISMATCH  {problem}")
+    if len(problems) > 50:
+        print(f"  ... and {len(problems) - 50} more")
+    print(f"{'PASS' if not problems else 'FAIL'}  replay matches {args.verify_against}")
+    return 0 if not problems else 1
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

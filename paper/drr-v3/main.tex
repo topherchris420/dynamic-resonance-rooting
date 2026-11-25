@@ -101,8 +101,8 @@ features improved squared error by 0.34\%, short of the registered 1\% and not
 significant after correction. In a lead--lag breakdown study, signed correlation
 detected reversals faster. The original v3 study scripts were lost. An
 independent reconstruction, registered before any run, reproduces all 12 of its
-registered findings, and every one of the 123 Monte Carlo rates it compares is
-consistent with the published value. DRR outputs are diagnostics, not causal,
+registered findings, and none of the 123 Monte Carlo rates it compares differs
+significantly from the published value. DRR outputs are diagnostics, not causal,
 policy, or supervisory conclusions.
 
 \smallskip
@@ -668,9 +668,12 @@ test, with Holm correction across all 123 rates. Long-run correlations must agre
 within 0.01. The QBO values must agree under stated rounding and side-of-0.05
 rules.
 
-\textit{Results.} Every one of F1--F12 holds. All 123 compared rates are
-consistent with the published values (Holm-adjusted $p\ge0.05$ for each; the
-smallest raw $p$ is 0.022). Twenty of 20 QBO quantities agree. The v2 columns
+\textit{Results.} Every one of F1--F12 holds. None of the 123 compared rates
+differs significantly from its published value (Holm-adjusted $p\ge0.05$ for
+each; the smallest raw $p$ is 0.022). This shows no detectable difference, not
+equivalence. Each cell has 200 to 400 trials. By simulation, a single test
+detects a difference of 4 percentage points near a rate of 0.05, or 10 points
+near 0.5, only 40 to 70 percent of the time, before the Holm correction. Twenty of 20 QBO quantities agree. The v2 columns
 share their simulator and seeds with the committed calibration study, and the
 eight committed v2 rows the protocol names (four in full, four over their first
 200 trials) are reproduced trial for trial.
@@ -1153,8 +1156,9 @@ evidence.
 operator. The v3 operators (prewhitened rooting and $\Lambda$) are in the
 package only as the reconstruction module \code{drr\_framework.v3\_reconstruction},
 not yet in the analysis API. The original study scripts and artifacts are lost.
-The public reconstruction agrees with them statistically, not number for number
-(Section~\ref{sec:recon}). The
+The public reconstruction shows no statistically significant difference from
+them, but it does not match them number for number, and the tests cannot rule
+out small differences (Section~\ref{sec:recon}). The
 simulation studies choose families that stress known failure
 modes and cannot cover every realistic process. $\Lambda$ is a line detector and
 does not detect broad peaks at $T=512$. The QBO 30\,hPa line near the Nyquist
@@ -1219,15 +1223,21 @@ and~\ref{fig:qbo} from those files. Seeds: 20260925 (study), 20260926 (addendum)
 Tables~\ref{tab:prop2}--\ref{tab:res} was read from these artifacts or from the
 committed repository artifacts. These files are no longer available.
 
-\textit{Reconstruction.} Running
-\nolinkurl{scripts/run_v3_reconstruction.py} with \code{-{}-workers 4} writes
-\nolinkurl{results/expected/v3_reconstruction/v3_reconstruction.json}. It replays every v3
-study under protocol \code{drr-v3-reconstruction-v1} (SHA-256
-\code{88079def296b\ldots}) with the same seeds, about 12 min on four cores. It
-was run with Python 3.13.18, NumPy 2.5.3 and SciPy 1.18.1. The rendered report
+\textit{Reconstruction.} The command
+{\fontsize{6.1pt}{7.5pt}\selectfont
+\begin{verbatim}
+python scripts/run_v3_reconstruction.py --workers 4 \
+  --output results/expected/v3_reconstruction/v3_reconstruction.json
+\end{verbatim}}
+\noindent replays every v3 study with the same seeds, in about 12 min on four
+cores. The protocol is \code{drr-v3-reconstruction-v1}, with SHA-256
+\code{88079def296b\ldots}. The committed artifact was produced with Python 3.13.18, NumPy 2.5.3 and SciPy 1.18.1. The rendered report
 beside the JSON artifact lists every compared value. The protocol's assumptions
 and the clarifications logged before the run are in
-\code{experiments/v3\_reconstruction/}.
+\code{experiments/v3\_reconstruction/}. A CI workflow
+(\code{v3-reconstruction.yml}) reruns the full study on every pull request into
+the main branch and fails unless every count, label and trial index matches the committed
+artifact.
 
 \textit{Committed evidence.} Values in Sections~\ref{sec:nulls}
 and~\ref{sec:external} and Fig.~\ref{fig:depnoise} are read from artifacts under

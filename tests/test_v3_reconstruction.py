@@ -133,3 +133,29 @@ def test_committed_artifact_is_consistent():
     import hashlib
 
     assert artifact["protocol_sha256"] == hashlib.sha256(protocol_text.encode()).hexdigest()
+
+
+def test_replay_differences_flags_changed_counts_but_not_float_noise():
+    from drr_framework.v3_reconstruction import replay_differences
+
+    expected = {
+        "environment": {"numpy": "2.5.3"},
+        "runtime_seconds": 692.4,
+        "results": {"count": 25, "trials": [1, 4, 9], "corr": 0.2177, "holds": True},
+    }
+    same = {
+        "environment": {"numpy": "2.3.5"},
+        "runtime_seconds": 801.0,
+        "results": {"count": 25, "trials": [1, 4, 9], "corr": 0.2177 * (1 + 1e-9), "holds": True},
+    }
+    assert replay_differences(same, expected) == []
+    changed = json.loads(json.dumps(same))
+    changed["results"]["count"] = 26
+    changed["results"]["trials"] = [1, 4, 10]
+    changed["results"]["corr"] = 0.2180
+    changed["results"]["holds"] = False
+    problems = replay_differences(changed, expected)
+    assert len(problems) == 4
+    missing = json.loads(json.dumps(same))
+    del missing["results"]["count"]
+    assert replay_differences(missing, expected) == ["results/count: present in only one artifact"]

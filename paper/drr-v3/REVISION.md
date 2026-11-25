@@ -46,9 +46,10 @@ code is `src/drr_framework/v3_reconstruction.py` and
 `scripts/run_v3_reconstruction.py`; the artifact and its rendered report are in
 `results/expected/v3_reconstruction/`.
 
-- All 12 registered findings (F1–F12) hold. All 123 compared Monte Carlo rates
-  are consistent with the published values under Fisher tests with Holm
-  correction. All 20 QBO quantities agree. The eight committed v2 rows the
+- All 12 registered findings (F1–F12) hold. None of the 123 compared Monte
+  Carlo rates differs significantly from its published value under Fisher tests
+  with Holm correction. The paper states that this shows no detectable
+  difference, not equivalence, and gives the tests' power. All 20 QBO quantities agree. The eight committed v2 rows the
   protocol names reproduce trial for trial.
 - One comparison failed its rule: the long-run raw reverse correlation at
   φ = 0.9 is 0.218, against 0.228 in Table 1. Prop. 2 predicts 0.219, so the
@@ -61,6 +62,10 @@ code is `src/drr_framework/v3_reconstruction.py` and
 - New Table 5 compares published and rebuilt values for the cells the claims
   rest on. The ledger marks the v3 rows "reconstructed" and adds a row for
   F1–F12. Contribution C7, next step (1) and the conclusion are updated.
+- The appendix gives the full reproduction command, including `--output`.
+- `.github/workflows/v3-reconstruction.yml` replays the full reconstruction on
+  every pull request into `main` and fails unless every count, label and trial
+  index matches the committed artifact (floats to a relative 1e-6).
 
 **Corrections and clarifications to the September text**
 
