@@ -28,6 +28,8 @@
 \renewcommand{\figurename}{Figure}
 \titleformat{\section}{\centering\normalsize\scshape}{\Roman{section}.}{0.5em}{}
 \titleformat{\subsection}{\normalsize\itshape}{\Alph{subsection}.}{0.5em}{}
+\renewcommand{\thesection}{\Roman{section}}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
 \titlespacing*{\section}{0pt}{1.2ex plus .3ex}{0.8ex}
 \titlespacing*{\subsection}{0pt}{1ex plus .2ex}{0.5ex}
 \setlist{nosep,leftmargin=*}
@@ -91,8 +93,8 @@ claim. On NOAA quasi-biennial-oscillation winds the holdout false-alarm rate was
 0.272 against a 0.05 tolerance. In a daily cryptocurrency-return holdout, DRR
 features improved squared error by 0.34\%, short of the registered 1\% and not
 significant after correction. In a lead--lag breakdown study, signed correlation
-detected reversals faster. The v3 simulation results are manuscript-reported;
-supporting scripts are not yet public. DRR outputs are diagnostics, not causal,
+detected reversals faster. The v3 simulation results come from scripts that are
+not yet public. DRR outputs are diagnostics, not causal,
 policy, or supervisory conclusions.
 
 \smallskip
@@ -156,8 +158,8 @@ failure to the circular-shift seam (Section~\ref{sec:nulls}).
 stratospheric winds and on two market tasks, none of which supported its claim,
 reported in full with every comparison (Section~\ref{sec:external}).
 \item \emph{An evidence ledger.} A claim-status discipline (supported,
-not\_supported, withdrawn) separating public evidence from manuscript-reported
-results awaiting release of supporting artifacts (Section~\ref{sec:ledger},
+not\_supported, withdrawn) separating results that readers can replay from the
+public repository from v3 results whose scripts are not yet public (Section~\ref{sec:ledger},
 Appendix).
 \end{enumerate}
 
@@ -584,7 +586,7 @@ AR(2) oscillator, $r=0.95$ & .980 & .035 & .575 & .510\\
 \multicolumn{5}{p{0.95\columnwidth}}{\scriptsize Italic: not interpretable as
 power, because the same cutoff fires on .983 of AR(0.9) series without any line.
 The $-3.0$\,dB line in white noise (all methods 1.000) is omitted. The column
-for $\Lambda$ comes from a hash-pinned addendum run (Appendix).}
+for $\Lambda$ comes from a separate addendum run (Appendix).}
 \end{tabular}
 \end{table}
 
@@ -655,7 +657,7 @@ textbook result \cite{grangernewbold}.
 }{%
 \begin{tikzpicture}
 \begin{axis}[
-  width=\columnwidth, height=5.0cm,
+  width=\columnwidth, height=4.6cm,
   ymode=log, ymin=0.02, ymax=1.1,
   ytick={0.02,0.05,0.1,0.2,0.5,1}, yticklabels={.02,.05,.1,.2,.5,1},
   symbolic x coords={W,H70,H85,H95,GARCH,RW},
@@ -779,7 +781,7 @@ supported its claim.
 including the ones that favored DRR.}
 \label{tab:external}
 \setlength{\tabcolsep}{3pt}
-\begin{tabular}{@{}p{0.2\columnwidth}p{0.4\columnwidth}p{0.32\columnwidth}@{}}
+\begin{tabular}{@{}L{0.21\columnwidth}L{0.42\columnwidth}L{0.29\columnwidth}@{}}
 \toprule
 Test & Decisive outcome & Status\\
 \midrule
@@ -964,7 +966,7 @@ lists the current entries that this paper relies on.
 ``Ext.'': external, preregistered.}
 \label{tab:ledger}
 \setlength{\tabcolsep}{2.5pt}
-\begin{tabular}{@{}p{0.52\columnwidth}cp{0.3\columnwidth}@{}}
+\begin{tabular}{@{}L{0.55\columnwidth}cL{0.3\columnwidth}@{}}
 \toprule
 Claim & Class & Status\\
 \midrule
@@ -1078,8 +1080,8 @@ restores power without giving up size. Resonance depth could not separate rhythm
 from memory, and a theorem now explains why. Resonance is redefined so that the
 distinction becomes a test with measured size and power. The framework's three
 preregistered external claims all failed and are reported as such. A method that
-publishes where it breaks, with the scripts that break it, is a stronger
-foundation than one that does not.
+publishes where it breaks is a stronger foundation than one that does not.
+Releasing the v3 scripts will let readers check the rest.
 
 \medskip
 \noindent\textit{Data and code availability.} Code for the operators and all
@@ -1121,7 +1123,7 @@ studies verify their sealed ledgers by replay with platform-tolerant numerical
 comparison.
 
 \footnotesize
-\begin{thebibliography}{99}\setlength{\itemsep}{0pt}
+\begin{thebibliography}{99}\setlength{\itemsep}{-0.8pt}\setlength{\parsep}{0pt}
 \bibitem{holland} J.~H. Holland, \emph{Adaptation in Natural and Artificial Systems}. Cambridge, MA: MIT Press, 1992.
 \bibitem{mitchell} M.~Mitchell, \emph{Complexity: A Guided Tour}. New York: Oxford Univ. Press, 2009.
 \bibitem{ditlevsen} P.~D. Ditlevsen and S.~J. Johnsen, ``Tipping points: Early warning and wishful thinking,'' \emph{Geophys. Res. Lett.}, vol.~37, L19703, 2010.

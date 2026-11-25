@@ -6,8 +6,15 @@ Diagnostics for Complex Adaptive Systems*. The September 2026 version (SSRN
 `ssrn-5285993-sep2026.pdf`. `main.pdf` is the compiled revision.
 
 Build: `latexmk -pdf main.tex`, or run `pdflatex main.tex` twice. You need a
-standard TeX Live install with `pgfplots`. Figures 1–3 and the QBO figure are
-cropped from the September PDF, so keep that file next to `main.tex`.
+standard TeX Live install with `pgfplots`. `main.tex` uses the vector figures in
+`figures/` when they are present and falls back to cropping the September PDF
+otherwise. Figure 4 is drawn inline with pgfplots.
+
+`figures/figure_{1,2,3,5}.pdf` were cut from the September PDF with
+`pdftocairo -pdf -r 72 -f PAGE -l PAGE -x X -y Y -W W -H H -paperw W -paperh H
+-nocenter -noshrink`. Unlike an `\includegraphics` crop, this drops the rest of
+the page, so the compiled PDF carries no hidden September text. To use the
+original figure sources instead, overwrite those files.
 
 ## What changed
 
@@ -45,8 +52,10 @@ artifact under `results/expected/`:
 - Remark 1 now points forward to the measured seam failure.
 - The §VIII-B QBO reverse-edge discussion notes that the monthly QBO is close
   to the coherent-oscillator regime, where the v2 null is anti-conservative.
-- Limitations now state that the v3 operators and their study scripts are not
-  yet in the repository.
+- The abstract, C6, Limitations, data availability and the appendix now say
+  that the v3 scripts and artifacts are not yet public. The conclusion and the
+  Table 4 note no longer imply that readers can rerun them.
+- Section cross-references now use the same Roman numerals as the headings.
 
 **Unchanged:** Thm. 1, Props. 1–2 and their proofs, and every value in the
 original Tables 1–5 and Figures 1–4. The September tables and figures appear
@@ -56,13 +65,12 @@ because the new figure is placed earlier.
 ## Open items for the author
 
 - The v3 study scripts (`run_study.py`, `run_spectral_excess.py`,
-  `make_figures.py`) and their JSON artifacts are cited as accompanying the
-  manuscript, but they are not in this repository. Tables 1–4 (v3 columns), the
-  Λ column and Figures 2–4 cannot be checked from the repository until they
-  are added.
+  `make_figures.py`) and their JSON artifacts are not public. Until they are
+  released, the v3 columns of Tables 1–4, the Λ column and Figures 2, 3 and 5
+  cannot be checked independently.
 - The September appendix reported a test count (398 passed, 18 skipped) at
   commit `862c4f7`. The revision drops it because the suite has changed and was
   not rerun for this revision.
-- The figure crops come from the September PDF. If the figure sources are
-  available, replacing the crops with the original vector files would be
-  cleaner.
+- `figures/` holds crops of the September figures. If the original figure
+  sources are available, overwrite those files with them; `main.tex` will pick
+  them up without further changes.
