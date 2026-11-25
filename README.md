@@ -28,6 +28,8 @@ Start with a simulated oscillator, a sensor recording, or your own regularly sam
 | **Do two rhythms keep time?** | Experimental `n:m` phase-synchrony test with a data-quality gate | Phase-locking value, shift-test p-value, inconclusive labels, and evidence records |
 | **What could a bounded input change?** | Navigation engine and matched control experiments | Proposed interventions and comparison metrics in a simulated system |
 
+The experimental [DRR-Mellin research extension](docs/mellin-multiscale.md) explores growth exponents, log-scale oscillations and smoothed prime-sum reconstruction through an opt-in Python API. Finite numerical diagnostics do not certify spectral poles or zero-free regions.
+
 The phase-synchrony features are **experimental and off by default**. See the [mathematical extensions](docs/mathematical-extensions.md) for assumptions and definitions.
 
 ## Quick start
