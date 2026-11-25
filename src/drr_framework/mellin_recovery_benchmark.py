@@ -113,8 +113,8 @@ REFERENCES = [
     "Lomb (1976), Astrophys. Space Sci. 39, 447-462, https://doi.org/10.1007/BF00648343",
     "Scargle (1982), Astrophys. J. 263, 835-853, https://doi.org/10.1086/160554",
     "Roy & Kailath (1989), IEEE Trans. ASSP 37, 984-995, https://doi.org/10.1109/29.32276",
-    "Zhou & Sornette (2002), Physica D 165, 94-125, "
-    "https://doi.org/10.1016/S0167-2789(02)00381-0",
+    "Zhou & Sornette (2002), Int. J. Mod. Phys. C 13, 137, "
+    "https://doi.org/10.1142/S0129183102003024",
     "Stoica & Moses (2005), Spectral Analysis of Signals, Prentice Hall",
 ]
 
@@ -947,6 +947,33 @@ def _factor_table(
     return lines
 
 
+def _regime_table(rows: Sequence[Mapping[str, Any]], cfg: Mapping[str, Any]) -> List[str]:
+    """Paired DRR-minus-comparator differences by design, noise model and envelope strength."""
+    lines = [
+        "| Design | Noise | abs(beta) | DRR recovered | vs Lomb-Scargle | vs NLS "
+        "| DRR detected and recovered | vs Lomb-Scargle | vs NLS |",
+        "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+    ]
+    abs_betas = sorted({abs(b) for b in cfg["holdout"]["betas"]})
+    for design in cfg["holdout"]["designs"]:
+        for noise in cfg["holdout"]["noises"]:
+            for b in abs_betas:
+                chosen = select(rows, {"design": [design["id"]], "noise": [noise], "abs_beta": [b]})
+                cells = []
+                for name in ("recovered", "detected_and_recovered"):
+                    primary = pooled(chosen, PRIMARY, name)
+                    cells.append(f"{primary.mean():.3f}")
+                    for c in ("lomb_scargle", "nls"):
+                        other = pooled(chosen, c, name)
+                        diff = paired_difference(primary, other)
+                        p = mcnemar_greater(primary, other)["p_value"]
+                        cells.append(
+                            f"{diff['mean']:+.3f} ± {1.959963984540054 * diff['se']:.3f} (p = {p:.1g})"
+                        )
+                lines.append(f"| {design['id']} | {noise} | {b:g} | " + " | ".join(cells) + " |")
+    return lines
+
+
 def _hypothesis_detail(h: Mapping[str, Any]) -> str:
     if "comparisons" in h:
         parts = []
@@ -1068,6 +1095,16 @@ def render_report(artifact: Mapping[str, Any]) -> str:
             "## Detected and recovered by noise model and envelope strength",
             "",
             *_factor_table(signal_rows, mechanism, "detected_and_recovered"),
+            "",
+            "## Exploratory: where the DRR-Mellin scan differs from Lomb-Scargle and NLS",
+            "",
+            "Not preregistered; added after the held-out run to locate the regime behind H1 "
+            "and H3. Entries are mean paired differences (DRR-Mellin scan minus comparator) "
+            "with a 95% normal interval and an unadjusted one-sided exact McNemar p-value "
+            "for DRR > comparator; 36 comparisons per endpoint, so read small p-values "
+            "against that multiplicity.",
+            "",
+            *_regime_table(signal_rows, cfg),
             "",
             "## Accuracy among recovered trials",
             "",
@@ -1197,15 +1234,15 @@ def render_figure(artifact: Mapping[str, Any], path) -> None:
                 ax.set_xlabel("integrated SNR (dB)", color="#191919")
             ax.tick_params(colors="#666666")
     handles, labels = axes[0][0].get_legend_handles_labels()
-    fig.legend(
-        handles, labels, loc="upper center", ncol=5, frameon=False, bbox_to_anchor=(0.5, 1.0)
-    )
     fig.suptitle(
         "Held-out recovery of a hidden log-periodic mode (pooled over designs and sign of β)",
-        y=0.955,
+        y=0.995,
         fontsize=10.5,
         color="#191919",
     )
-    fig.tight_layout(rect=(0, 0, 1, 0.93))
+    fig.legend(
+        handles, labels, loc="upper center", ncol=5, frameon=False, bbox_to_anchor=(0.5, 0.965)
+    )
+    fig.tight_layout(rect=(0, 0, 1, 0.925))
     fig.savefig(path, dpi=150, facecolor="white")
     plt.close(fig)
