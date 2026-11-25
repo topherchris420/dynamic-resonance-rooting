@@ -9,7 +9,6 @@ from pathlib import Path
 
 from drr_framework.finance.holdout.study import evaluate, select, verify_lock, verify_replay
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 

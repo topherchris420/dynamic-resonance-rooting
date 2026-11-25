@@ -362,7 +362,7 @@ def _channel_checks(
 
     # A drift presupposes one oscillation that can be followed from segment to
     # segment; without a dominant band, segment peaks scatter at random.
-    drift = (
+    drift: Dict[str, Any] = (
         frequency_drift(series, sampling_rate)
         if oscillatory
         else {

@@ -236,8 +236,7 @@ class EvidenceLedger:
             except OSError:
                 pass
         with self._connect() as db:
-            db.executescript(
-                """
+            schema = """
                 CREATE TABLE IF NOT EXISTS evidence (id TEXT PRIMARY KEY, payload TEXT NOT NULL);
                 CREATE TABLE IF NOT EXISTS reviews (id TEXT PRIMARY KEY, evidence_id TEXT NOT NULL,
                     reviewed_at TEXT NOT NULL, payload TEXT NOT NULL, FOREIGN KEY(evidence_id) REFERENCES evidence(id));
@@ -276,7 +275,7 @@ class EvidenceLedger:
                     BEFORE DELETE ON judgments
                     BEGIN SELECT RAISE(ABORT, 'judgments are append-only'); END;
             """
-            )
+            db.executescript(schema)
         try:
             self.path.chmod(0o600)
         except OSError:
