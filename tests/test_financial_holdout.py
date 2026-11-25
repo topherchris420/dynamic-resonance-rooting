@@ -31,7 +31,6 @@ from drr_framework.finance.holdout.study import (
     verify_replay,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
