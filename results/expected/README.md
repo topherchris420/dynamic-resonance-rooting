@@ -28,6 +28,15 @@ simulated channel pairs, one character per trial, with nine hypotheses fixed
 before the held-out run. Regenerate it and its Markdown companion with
 `python scripts/run_resonance_math_benchmark.py --output-dir results/expected --workers 4`.
 
+`mellin_recovery/` is the preregistered DRR-Mellin hidden-mode recovery
+benchmark: how often the DRR-Mellin scan, `log_spectrum`, Lomb-Scargle in
+ln x, periodogram-initialized NLS and ESPRIT recover an off-grid log-periodic
+mode under white, scale-proportional and Student-t noise, one character per
+trial, with five hypotheses fixed before the held-out run. Replay it into a
+fresh directory and compare every trial with
+`python scripts/run_mellin_recovery_benchmark.py --workers 4 --output-dir /tmp/mellin-recovery --verify-against results/expected/mellin_recovery`.
+See [the protocol and interpretation](../../docs/mellin-recovery-benchmark.md).
+
 `robustness-benchmark/` retains the fixed exploratory comparison of DRR rooting
 with raw and AR(1)-residual correlation baselines. It contains the pre-execution
 protocol, independent calibration maxima, all trial/window decisions, a rendered
