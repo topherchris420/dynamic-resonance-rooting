@@ -1,0 +1,54 @@
+name: Financial holdout replay
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reproduce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      OMP_NUM_THREADS: "1"
+      OPENBLAS_NUM_THREADS: "1"
+      MKL_NUM_THREADS: "1"
+      LOKY_MAX_CPU_COUNT: "1"
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install pinned numerical environment
+        run: python -m pip install -e ".[dev]" -c experiments/financial_holdout/requirements.txt
+      - name: Verify timing, accounting and artifact integrity
+        run: python -m pytest tests/test_financial_holdout.py -q
+      - name: Replay every validation trial without test prices
+        run: >-
+          python scripts/run_financial_holdout.py select
+          --output-dir /tmp/financial-selection
+          --verify-against experiments/financial_holdout/selection
+      - name: Replay the complete registered holdout
+        run: >-
+          python scripts/run_financial_holdout.py evaluate
+          --selection-dir /tmp/financial-selection
+          --output-dir /tmp/financial-results
+          --verify-against results/expected/financial_holdout
+      - name: Preserve positive and negative results
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: financial-holdout-replay
+          path: |
+            /tmp/financial-selection
+            /tmp/financial-results
+          if-no-files-found: error
+          retention-days: 90

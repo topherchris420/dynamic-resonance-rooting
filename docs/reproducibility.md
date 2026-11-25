@@ -93,10 +93,51 @@ distributions. It takes about four minutes. `--trials-scale 0.1` gives a quick
 look. `tests/test_calibration_study.py` reruns a prefix of the committed rows and
 requires an exact match.
 
+## Dependent-noise null study
+
+```bash
+python scripts/run_dependent_noise_study.py --output-dir results/expected
+```
+
+The study answers the question in [MATH_RESEARCH.md](MATH_RESEARCH.md): which
+surrogate assumptions keep lag-search false alarms controlled under long memory
+or dependent noise. It simulates independent channels of fractional Gaussian
+noise (exact Davies–Harte embedding, Hurst exponent 0.5 to 0.95), GARCH(1,1)
+noise, and random walks, measures the family-wise error of the circular-shift,
+phase-randomization, and permutation nulls on each, and measures power to
+recover a lag-2 edge when every channel has long memory. The six hypotheses
+and the decision rule are fixed in `drr_framework.dependent_noise.DEFAULT_CONFIG`
+before the run, and the artifact `dependent_noise_null_study.json` records each
+outcome beside its rule. It takes about ten minutes. `--trials-scale 0.1` gives
+a quick look. The exit code reports the integrity checks only; a hypothesis
+that is not supported is recorded, not hidden. `tests/test_dependent_noise_study.py`
+reruns a prefix of committed rows exactly and recomputes every outcome from the
+rows.
+
+## Phase and harmonic benchmark
+
+```bash
+python scripts/run_resonance_math_benchmark.py --output-dir results/expected --workers 4
+```
+
+The study asks whether the experimental `n:m` phase-synchrony test adds value to
+DRR's relationship tests. It simulates coupled and deliberately misleading
+channel pairs, applies DRR rooting, conventional baselines, the phase test, its
+ablations, an oriented-area test, and gated combinations, and writes
+`resonance_math_benchmark.json` with a rendered Markdown companion. Development
+conditions set the methods; held-out conditions, methods, thresholds and nine
+hypotheses were committed with a SHA-256 fingerprint before the held-out run,
+and the artifact records whether its configuration still matches. Rows are
+identical for any number of workers; each trial has its own seed stream, so any
+trial reruns alone. It takes about fourteen minutes on four workers.
+`--trials-scale 0.1` gives a quick look. `tests/test_resonance_math_benchmark.py`
+recomputes every rate and outcome from the per-trial codes and reruns a prefix of
+committed rows exactly.
+
 ## Landing page evidence
 
-`index.html` embeds the calibration and QBO numbers it charts. After
-regenerating either artifact, run:
+`index.html` embeds the calibration, null-study, and QBO numbers it charts.
+After regenerating any artifact, run:
 
 ```bash
 python scripts/sync_site_evidence.py

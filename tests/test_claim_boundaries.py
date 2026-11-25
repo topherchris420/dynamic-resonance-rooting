@@ -7,6 +7,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 ARTIFACT = ROOT / "results" / "expected" / "qbo_structural_change_benchmark.json"
+NULL_STUDY = ROOT / "results" / "expected" / "dependent_noise_null_study.json"
 
 
 def _read(name: str) -> str:
@@ -23,11 +24,12 @@ def test_architecture_names_core_substrate_and_adapters():
     assert "A domain claim stays in its adapter." in architecture
 
 
-def test_benchmark_documents_point_at_both_artifacts():
+def test_benchmark_documents_point_at_every_artifact():
     for name in ("DRR_BENCHMARKS.md", "DRR_VALIDATION_REPORT.md"):
         text = _read(name)
         assert "qbo_structural_change_benchmark.json" in text, name
         assert "rooting_calibration_study.json" in text, name
+        assert "dependent_noise_null_study.json" in text, name
 
 
 def test_withdrawn_figures_do_not_return():
@@ -70,6 +72,38 @@ def test_benchmark_calibration_rows_are_the_artifact_rows():
     assert len(calibration_rows) >= 20
     for row in calibration_rows:
         assert row in rendered, row
+
+
+def test_benchmark_null_study_rows_are_the_artifact_rows():
+    from drr_framework.dependent_noise import render_dependent_noise_report
+
+    artifact = json.loads(NULL_STUDY.read_text(encoding="utf-8"))
+    rendered = set(render_dependent_noise_report(artifact).splitlines())
+    methods = {"circular_shift", "phase_randomization", "permutation"}
+    for name in ("DRR_BENCHMARKS.md", "docs/MATH_RESEARCH.md"):
+        rows = [
+            line
+            for line in _read(name).splitlines()
+            if line.startswith(("| fGn", "| GARCH", "| Random walk"))
+            and line.split("|")[2].strip() in methods
+        ]
+        assert len(rows) >= 26, name
+        for row in rows:
+            assert row in rendered, (name, row)
+
+
+def test_hypothesis_outcomes_in_the_docs_are_the_artifact_outcomes():
+    """Each preregistered hypothesis is named with its recorded outcome, not a softer word."""
+    artifact = json.loads(NULL_STUDY.read_text(encoding="utf-8"))
+    research = _read("docs/MATH_RESEARCH.md")
+    for hypothesis in artifact["hypotheses"]:
+        line = next(
+            (line for line in research.splitlines() if line.startswith(f"| {hypothesis['id']} |")),
+            None,
+        )
+        assert line is not None, hypothesis["id"]
+        assert hypothesis["outcome"] in line, (hypothesis["id"], line)
+    assert "NOT TESTED" not in research
 
 
 def test_reviewed_claim_status_is_the_status_named_in_the_docs():

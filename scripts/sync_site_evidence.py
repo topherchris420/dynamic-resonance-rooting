@@ -5,9 +5,10 @@
     python scripts/sync_site_evidence.py --check  # exit 1 if the page is stale
 
 ``index.html`` carries a ``<script type="application/json" id="evidence-data">``
-block. Every number the page shows about calibration or external evidence is
-read from that block, and that block is generated here from
-``results/expected``. ``tests/test_site_evidence.py`` fails when they drift.
+block. Every number the page shows about calibration, the dependent-noise null
+study, or external evidence is read from that block, and that block is
+generated here from ``results/expected``. ``tests/test_site_evidence.py`` fails
+when they drift.
 """
 
 from __future__ import annotations
@@ -23,6 +24,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PAGE = ROOT / "index.html"
 CALIBRATION = ROOT / "results" / "expected" / "rooting_calibration_study.json"
 QBO = ROOT / "results" / "expected" / "qbo_structural_change_benchmark.json"
+DEPENDENT = ROOT / "results" / "expected" / "dependent_noise_null_study.json"
 BLOCK = re.compile(
     r'(<script type="application/json" id="evidence-data">)(.*?)(</script>)', re.DOTALL
 )
@@ -57,6 +59,20 @@ def build_evidence() -> Dict[str, Any]:
             "q95": _round(row["depth_q95"]),
         }
 
+    dependent = json.loads(DEPENDENT.read_text(encoding="utf-8"))
+    dependent_cfg = dependent["config"]
+    nulls: Dict[str, Dict[str, Any]] = {}
+    for row in dependent["size"]:
+        entry = nulls.setdefault(
+            row["process"],
+            {"process": row["process"], "label": row["label"], "stationary": row["stationary"]},
+        )
+        entry[row["surrogate_method"]] = _round(row["family_wise_error"]["rate"])
+        entry[row["surrogate_method"] + "_ci"] = [
+            _round(bound) for bound in row["family_wise_error"]["ci95"]
+        ]
+    process_order = [spec["id"] for spec in dependent_cfg["size"]["processes"]]
+
     drr = next(model for model in qbo["models"] if model["role"] == "drr")
     return {
         "calibration": {
@@ -77,6 +93,30 @@ def build_evidence() -> Dict[str, Any]:
                 for row in calibration["power"]
             ],
             "depth": depth,
+        },
+        "dependent_noise": {
+            "source": "results/expected/dependent_noise_null_study.json",
+            "alpha": dependent_cfg["alpha"],
+            "n_samples": dependent_cfg["n_samples"],
+            "n_surrogates": dependent_cfg["n_surrogates"],
+            "size_trials": dependent_cfg["size"]["n_trials"],
+            "coupled_trials": dependent_cfg["coupled"]["n_trials"],
+            "coupling": dependent_cfg["coupled"]["coupling"],
+            "lag": dependent_cfg["coupled"]["lag"],
+            "methods": dependent_cfg["surrogate_methods"],
+            "size": [nulls[key] for key in process_order],
+            "coupled": [
+                {
+                    "hurst": row["hurst"],
+                    "method": row["surrogate_method"],
+                    "rate": _round(row["true_edge_at_true_lag"]["rate"]),
+                    "ci": [_round(bound) for bound in row["true_edge_at_true_lag"]["ci95"]],
+                }
+                for row in dependent["coupled"]
+            ],
+            "hypotheses": [
+                {"id": h["id"], "outcome": h["outcome"]} for h in dependent["hypotheses"]
+            ],
         },
         "qbo": {
             "source": "results/expected/qbo_structural_change_benchmark.json",

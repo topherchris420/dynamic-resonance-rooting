@@ -120,9 +120,13 @@ def wilson_interval(successes: int, trials: int, z: float = Z_95) -> Tuple[float
     return float(max(0.0, center - half)), float(min(1.0, center + half))
 
 
-def _rate(successes: int, trials: int) -> Dict[str, Any]:
+def binomial_rate(successes: int, trials: int) -> Dict[str, Any]:
+    """A Monte Carlo proportion with its count, trial count, and Wilson 95% interval."""
     low, high = wilson_interval(successes, trials)
     return {"rate": successes / trials, "count": successes, "trials": trials, "ci95": [low, high]}
+
+
+_rate = binomial_rate
 
 
 def rooting_size(
@@ -467,6 +471,7 @@ def render_calibration_report(artifact: Mapping[str, Any]) -> str:
 __all__ = [
     "DEFAULT_CONFIG",
     "SCHEMA_VERSION",
+    "binomial_rate",
     "depth_reference",
     "render_calibration_report",
     "rooting_power",

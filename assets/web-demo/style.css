@@ -229,6 +229,7 @@ body.paused .live-dot { background: var(--muted); }
 .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; }
 .swatch.accent { background: var(--acid); }
 .swatch.neutral { background: var(--neutral); }
+.swatch.paper { background: var(--paper); }
 .chart { display: block; width: 100%; height: auto; margin-top: 8px; overflow: visible; }
 .chart text { font: 400 11.5px var(--mono); fill: var(--muted); }
 .chart .value { fill: var(--paper); }

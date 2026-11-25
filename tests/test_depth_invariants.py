@@ -114,7 +114,10 @@ def test_committed_quickstart_outputs_match_a_fresh_run():
     ):
         committed = json.loads(path.read_text(encoding="utf-8"))
         assert committed.keys() == fresh.keys(), path
-        assert committed["significant_edges"] == pytest.approx(fresh["significant_edges"]), path
+        # pytest.approx rejects a list of dicts, so compare edge by edge.
+        assert len(committed["significant_edges"]) == len(fresh["significant_edges"]), path
+        for old, new in zip(committed["significant_edges"], fresh["significant_edges"]):
+            assert old == pytest.approx(new), path
         assert committed["resonance_depth_components"] == pytest.approx(
             fresh["resonance_depth_components"]
         ), path

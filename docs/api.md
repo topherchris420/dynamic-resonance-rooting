@@ -128,10 +128,19 @@ method, inference flag, and the minimum attainable p-value. With
 Rooting graphs use `significant_edges` only. `candidate_edges` are retained for
 inspection, but they do not enter the NetworkX graph.
 
-The default `circular_shift` null keeps each series' autocorrelation, and its
-measured family-wise error stays near `alpha` (see `DRR_BENCHMARKS.md`). Use
-`surrogate_method="permutation"` only for serially independent data: on AR(1)
-series at 0.9 it reports a false edge 85% of the time.
+Three nulls are available, each named for the assumption it makes about a
+series. `DRR_BENCHMARKS.md` reports the measured family-wise error of each.
+
+| `surrogate_method` | Assumes | Keeps | Use when |
+| --- | --- | --- | --- |
+| `circular_shift` (default) | stationarity | each series' joint distribution, except at one seam | the series are stationary, whatever their memory or marginal |
+| `phase_randomization` | a stationary linear Gaussian process | each series' periodogram, hence its sample autocorrelation at every lag | a Gaussian linear null is the right comparison and the seam is a concern |
+| `permutation` | serial independence | each series' marginal distribution | the series are white noise; on AR(1) at 0.9 it reports a false edge 85% of the time |
+
+All three assume at least stationarity. On a random walk every one is
+inflated (family-wise error 0.27–0.89 at a nominal 0.05 in
+`results/expected/dependent_noise_null_study.json`), so difference or detrend
+such series first.
 
 ### Calibration
 
@@ -150,6 +159,108 @@ row["family_wise_error"]  # {"rate", "count", "trials", "ci95"}
 behind `results/expected/rooting_calibration_study.json`. Use `rooting_size` and
 `rooting_power` to check a configuration of your own (sample length, lags,
 surrogate count) before trusting its p-values.
+
+### Dependent-noise nulls
+
+```python
+from drr_framework.dependent_noise import make_null_process, null_false_alarms
+
+draw = make_null_process({"family": "fractional_gaussian_noise", "hurst": 0.9}, 512, 3)
+row = null_false_alarms(
+    draw, n_trials=200, max_lag=4, n_surrogates=99, alpha=0.05,
+    surrogate_method="circular_shift", seed=1,
+)
+row["family_wise_error"]  # {"rate", "count", "trials", "ci95"}
+```
+
+`drr_framework.dependent_noise` holds exact simulators for fractional Gaussian
+noise (`simulate_fractional_gaussian_noise`, Davies–Harte embedding, any Hurst
+exponent in (0, 1)), GARCH(1,1) noise (`simulate_garch`), random walks
+(`simulate_random_walk`), and a lag-coupled long-memory triple
+(`simulate_long_memory_pair`). `null_false_alarms` measures the family-wise
+error of any null on any draw function; `coupled_edge_recovery` measures power.
+`run_dependent_noise_study()` runs the preregistered study behind
+`results/expected/dependent_noise_null_study.json`, whose hypotheses and decision
+rule are fixed in `DEFAULT_CONFIG` before the rows are seen.
+
+## Experimental mathematical features
+
+Off by default and experimental. Definitions, assumptions and proofs are in
+[mathematical-extensions.md](mathematical-extensions.md); measured behavior is in
+[resonance-math-report.md](resonance-math-report.md).
+
+```python
+from drr_framework import DynamicResonanceRooting, analyze_mathematical_features
+
+results = DynamicResonanceRooting(sampling_rate=250.0).analyze_system(
+    data, multivariate=True, mathematical_features=True
+)
+features = results["mathematical_features"]
+features["evidence_record"]["conclusion"]  # {"status": ..., "reasons": [...]}
+```
+
+`mathematical_features` also accepts a mapping of keyword arguments for
+`analyze_mathematical_features(data, sampling_rate, *, column_names=None,
+timestamps=None, phase_options=None, quality_thresholds=None,
+negative_controls=19, recurrence_points=1000, random_state=0, data_source=None)`.
+That function interpolates `NaN` gaps or irregular `timestamps` onto a regular
+grid (recorded), runs the data-quality gate, tests every channel pair for phase
+synchronization, runs the same test on phase-randomized copies as negative
+controls, describes each channel with recurrence quantification and a
+second-order linear recurrence, and returns a deterministic evidence record.
+Every other result of `analyze_system` is unchanged. On the command line,
+`drr-analyze ... --mathematical-features` adds the same section to the report.
+
+### `PhaseSynchronyAnalyzer`
+
+```python
+from drr_framework.phase_sync import PhaseSynchronyAnalyzer
+
+result = PhaseSynchronyAnalyzer(sampling_rate=250.0).analyze(data, column_names=("a", "b"))
+pair = result["pairs"][0]
+pair["status"]          # synchronized | not_detected | inconclusive | not_tested
+pair["selected_ratio"]  # [n, m] with f_b / f_a close to n / m
+pair["plv"], pair["adjusted_p_value"], pair["effective_samples"]
+```
+
+The p-value counts every circular shift of the seam-corrected phasor, so it is
+deterministic and its smallest value is `1 / n_shifts`. Holm's procedure adjusts
+across pairs. A pair that is not significant with fewer than
+`min_effective_samples` (20) effective phase samples is `inconclusive`, never
+evidence of no relationship. The module also exposes
+`band_limited_analytic_signal`, `instantaneous_frequency`, `phase_locking_value`,
+`farey_ratio_candidates`, `phase_shift_test`, `effective_phase_samples`,
+`phase_difference_dynamics`, `windowed_phase_locking`, and `single_change_point`.
+
+### Data quality and abstention
+
+```python
+from drr_framework.data_quality import assess_series_quality, regularize_series
+
+values, report = regularize_series(raw_with_nans, timestamps=times, sampling_rate=250.0)
+quality = assess_series_quality(values, 250.0, regularization=report)
+quality["abstain"], quality["reasons"], quality["warnings"]
+```
+
+`detrended_fluctuation` returns the DFA exponent and `frequency_drift` the
+quadratic-phase drift test. The thresholds are in `DEFAULT_THRESHOLDS`.
+
+### Recurrence, geometry and evidence
+
+- `recurrence.recurrence_quantification(x, ...)`: determinism, laminarity, mean
+  diagonal length, recurrence period at a fixed recurrence rate.
+- `recurrence.second_order_recurrence(x, sampling_rate)`: AR(2) roots, frequency,
+  damping time, quality factor.
+- `trajectory_geometry.oriented_area_matrix(data)`: equal to the antisymmetrized
+  lag-one cross-covariance, so no information beyond second-order statistics.
+- `math_evidence.MathematicalEvidenceRecord` and `MathematicalStatement`: typed
+  records whose statements are `proven`, `empirical`, or `hypothesis`.
+
+### Benchmark
+
+`drr_framework.resonance_math_benchmark.run_benchmark(config=None, workers=1)`
+runs the preregistered study behind `results/expected/resonance_math_benchmark.json`.
+`run_condition` and `run_trial` rerun any row or trial with its seed schedule.
 
 ## Dataset Adapters
 

@@ -65,14 +65,12 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union, cast
 
 import numpy as np
 
-try:
-    _trapezoid = np.trapezoid
-except AttributeError:  # pragma: no cover - NumPy < 2 (Python 3.8) only has trapz
-    _trapezoid = np.trapz  # type: ignore[attr-defined]
+# NumPy < 2 (Python 3.8) only has trapz; newer releases remove that alias.
+_trapezoid = cast(Callable[..., Any], getattr(np, "trapezoid", None) or getattr(np, "trapz", None))
 
 logger = logging.getLogger(__name__)
 

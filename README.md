@@ -1,43 +1,70 @@
 # Dynamic Resonance Rooting
 
-![Dynamic Resonance Rooting research banner](assets/drr-hero.svg)
+**Measure the rhythm. Trace the lag. Keep the evidence.**
+
+Dynamic Resonance Rooting (DRR) is an open-source Python research framework for exploring **what repeats, what leads, and what changes** in multivariate time series. Find recurring frequencies, test relationships between signals, and export a record that others can inspect and reproduce.
 
 [![CI](https://github.com/topherchris420/dynamic-resonance-rooting/actions/workflows/python-app.yml/badge.svg)](https://github.com/topherchris420/dynamic-resonance-rooting/actions/workflows/python-app.yml)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8%2B-0B5D63)](pyproject.toml)
 [![MIT license](https://img.shields.io/badge/license-MIT-0B5D63)](LICENSE)
 
-**Measure the rhythm. Trace the lag. Keep the evidence.**
+**[Run your first analysis](#quick-start)** · **[Explore the browser lab](#live-lab)** · **[Inspect the evidence](#what-the-evidence-says)** · **[Contribute](#contribute)**
 
-Dynamic Resonance Rooting (DRR) is an open-source Python research framework for multivariate time series. It looks for oscillatory structure, estimates lagged relationships between signals, measures resonance depth, and surfaces structural change diagnostics with explicit provenance and review boundaries.
+[![Dynamic Resonance Rooting: resonance detection, rooting analysis, and stability diagnostics](assets/drr-hero.svg)](#live-lab)
 
-The outputs are **diagnostics**. A directed edge is a statistical lead–lag relationship under a chosen estimator and null model; it does not establish causation. A result in one domain does not automatically generalize to another.
+> **Research status:** DRR produces diagnostics. A directed edge is a statistical lead–lag relationship under a chosen estimator and null model; it does not establish causation. Evidence from one domain does not automatically transfer to another.
 
-The layers are DRR core → validation substrate → domain adapters. The DRR core is the numerical operator stack. The validation substrate checks the implementation against specification tests, synthetic ground truth, leakage checks, and preregistered external evidence. Domain adapters keep analyses scoped to their own application and do not inherit claims from other domains.
+<a id="what-it-does"></a>
 
-**Start here:** [Run the synthetic example](#quick-start) · [Inspect the evidence](#what-the-evidence-says) · [Try the live lab](index.html) · [Choose a workflow](#choose-a-workflow) · [Read the architecture](docs/architecture.md)
+## What you can explore
 
-## What it does
+Start with a simulated oscillator, a sensor recording, or your own regularly sampled CSV. DRR connects signal analysis to explicit tests and reproducible outputs.
 
-| Question | DRR component | What you get |
+| Your question | Tools to explore it | What you get |
 | --- | --- | --- |
-| Which rhythms recur, and for how long? | FFT, Welch, wavelet, and resonance-depth operators | Frequencies, spectral power, and depth components |
-| Which signal tends to lead another? | Lagged correlation or transfer entropy with surrogate testing | Candidate edges, tested edges, lags, and p-values |
-| Has the system's structure shifted? | State-space, topology, and structural-surprise diagnostics | Estimated states, changes, and uncertainty to investigate |
-| Can a bounded input change a simulated state? | Navigation engine and matched control experiments | Proposed interventions and comparison metrics for a modeled system |
+| **What repeats?** | FFT, Welch, wavelets, and resonance depth | Dominant frequencies, spectral power, and depth components |
+| **What tends to lead?** | Lagged correlation or transfer entropy with surrogate tests | Candidate edges, significant edges, lags, and p-values |
+| **What changed?** | State-space, topology, and structural-surprise diagnostics | Estimated states, structural changes, and uncertainty to investigate |
+| **Do two rhythms keep time?** | Experimental `n:m` phase-synchrony test with a data-quality gate | Phase-locking value, shift-test p-value, inconclusive labels, and evidence records |
+| **What could a bounded input change?** | Navigation engine and matched control experiments | Proposed interventions and comparison metrics in a simulated system |
 
-The core operates on a numeric series. The **validation substrate** includes synthetic ground truth, specification and leakage tests, surrogate inference, and a preregistered external comparison. The **domain adapters** apply the same core to specific workflows, such as physics, sensing, macro policy, banking supervision, or typed judgment. A universal claim is about the operators; a domain claim stays in the adapter.
+The experimental [DRR-Mellin research extension](docs/mellin-multiscale.md) explores growth exponents, log-scale oscillations and smoothed prime-sum reconstruction through an opt-in Python API. Finite numerical diagnostics do not certify spectral poles or zero-free regions.
+
+The phase-synchrony features are **experimental and off by default**. See the [mathematical extensions](docs/mathematical-extensions.md) for assumptions and definitions.
 
 ## Quick start
 
-Use Python 3.8 or newer. For a checkout of the current code:
+Use **Python 3.8 or newer**. From a terminal:
 
 ```bash
 git clone https://github.com/topherchris420/dynamic-resonance-rooting.git
 cd dynamic-resonance-rooting
 python -m pip install -e .
+drr-reproduce --no-artifacts
 ```
 
-This example generates three synthetic channels: a 12.5 Hz source, a copy delayed by two samples, and an independent distractor. It then runs the spectral, depth, and rooting operators. The random seed keeps the example deterministic.
+Your first run analyzes three synthetic channels: a **12.5 Hz source**, a copy delayed by **two samples**, and an independent distractor. It prints a JSON summary without writing files. Look for these fields:
+
+```json
+{
+  "expected_edge": "dim_0 -> dim_1",
+  "expected_edge_detected": true,
+  "expected_lag_samples": 2
+}
+```
+
+This is an excerpt of the output. The fixture checks recovery of known, injected structure; it does not establish performance on your own data.
+
+To save the summary as JSON and CSV:
+
+```bash
+drr-reproduce --output-dir results/reproduction
+```
+
+<details>
+<summary><strong>Use the Python API</strong></summary>
+
+The same synthetic generator lets you work directly with the spectral, depth, and rooting operators:
 
 ```python
 from drr_framework import DynamicResonanceRooting, generate_coupled_oscillator
@@ -53,70 +80,137 @@ result = DynamicResonanceRooting(tau=2, sampling_rate=200).analyze_system(
     rooting_random_state=42,
 )
 
-print(result["resonances"]["dim_0"]["dominant_freq"])
-print(result["resonance_depths"])
+print("Dominant frequency (Hz):", result["resonances"]["dim_0"]["dominant_freq"])
+print("Resonance depths:", result["resonance_depths"])
 for edge in result["rooting_analysis"]["significant_edges"]:
     print(edge["source"], "→", edge["target"], "lag:", edge["lag"])
 ```
 
-On the checked synthetic fixture, the selected edge is `dim_0 → dim_1` at lag `2`. `candidate_edges` are exploratory; `significant_edges` pass the selected surrogate test and correction. With 25 surrogates, the check is stable and reproducible.
+On this seeded fixture, look for a dominant frequency near **12.5 Hz** and `dim_0 → dim_1` at lag `2`. `candidate_edges` are exploratory; `significant_edges` pass the selected surrogate test and correction. The small budget of 25 surrogates keeps this example quick; choose an appropriate inference budget for your study.
 
-For the packaged, deterministic benchmark without writing output files:
-
-```bash
-drr-reproduce --no-artifacts
-```
-
-Or run the complete example and write JSON/CSV artifacts to a directory you choose:
-
-```bash
-drr-reproduce --output-dir results/reproduction
-```
-
-## What the evidence says
-
-The synthetic oscillator checks whether the implementation recovers **known, injected** frequency and lag. It is a specification check, not evidence of general predictive performance.
-
-A [Monte Carlo calibration study](DRR_BENCHMARKS.md) measures the statistical behavior of the operators on simulated systems where the answer is known. Its [artifact](results/expected/rooting_calibration_study.json) is regenerated with `python scripts/run_calibration_study.py`.
-
-| Question | Measured answer (512 samples, 99 surrogates, α = 0.05) |
-| --- | --- |
-| Does the rooting test keep its false-alarm rate? | Yes. Family-wise error is 0.040–0.062 on independent AR(1) series from white noise to 0.97. The legacy permutation null reaches 0.97 and is only for serially independent data. |
-| Does it find real lead–lag edges? | A 0.3 coupling is recovered in 99.5% of trials, 0.2 in 66%. Strong memory in every channel lowers power and makes the target appear to lead its source. |
-| Is resonance depth a test? | No. It separates a clear tone from white noise, but red noise at AR 0.9 scores above a −9 dB tone. Compare it against a surrogate or red-noise reference. |
-
-The repository also contains a [preregistered external comparison](docs/external-evidence.md) on the NOAA CPC quasi-biennial oscillation series. Its reviewed [machine-readable artifact](results/expected/qbo_structural_change_benchmark.json) records the current claim as **not supported** (`not_supported`): the full DRR holdout false-alarm rate exceeds the preregistered tolerance. This result is specific to the equatorial stratospheric zonal-wind comparison and does not establish results in other domains.
-
-To reproduce that comparison from the vendored public-data snapshots:
-
-```bash
-python scripts/run_structural_change_benchmark.py --output-dir results/expected
-```
-
-The [protocol](src/drr_framework/external_benchmark/data/preregistration.json) fixes the dataset checksums, disruption windows, holdout, baselines, ablations, tolerance, and decision rule. The [review memo](DRR_VALIDATION_REPORT.md) explains the evidence and current conclusion.
+</details>
 
 ## Live lab
 
-Open [`index.html`](index.html) in a browser to run DRR on a streaming three-channel system whose truth you set: coupling, delay, rhythm, and noise. Each 512-sample window is analyzed in the page by [`drr-engine.js`](assets/web-demo/drr-engine.js), a port of the Python operators that [`tests/test_web_engine_parity.py`](tests/test_web_engine_parity.py) checks against this package to 1e-9. The lab keeps a running count of recovered edges, misses, and false alarms, so you can watch the test hold its 5% rate when you cut the link.
+**Set the truth. See what DRR finds.** The browser lab streams three channels while you control coupling, delay, rhythm, and noise. Compare the detected graph with the known relationship and watch the tally of recovered edges, misses, and false alarms.
+
+After cloning the repository, run this from its root directory. The lab does not require installing the Python package:
+
+```bash
+python -m http.server 8000 --bind 127.0.0.1
+```
+
+Open **[the local lab](http://127.0.0.1:8000/#lab)** in your browser. Stop the server with `Ctrl+C` when finished. The repository's [`index.html`](index.html) link shows the source on GitHub; the local server runs the page.
+
+Try this short experiment:
+
+1. **Observe the default system.** Compare “DRR found” with “Ground truth” as new windows arrive.
+2. **Change the delay.** Set it to four samples, click **New window**, and check the estimated lag.
+3. **Cut the link.** Every reported edge is now a false alarm. Collect several windows, then raise the noise and see how the results change.
+
+Each 512-sample window runs through a [JavaScript port of the operators](assets/web-demo/drr-engine.js), with [parity tests against the Python package](tests/test_web_engine_parity.py). The evidence charts use committed benchmark artifacts, including the external result that did not support the claim.
+
+## Analyze your own data
+
+Start with the included CSV, then substitute your file, signal columns, and sampling rate:
+
+```bash
+drr-analyze data/raw/coupled_oscillator_sample.csv \
+  --columns dim_0 dim_1 dim_2 --sampling-rate 200 \
+  --time-column time_seconds --output-dir results/my-first-analysis
+```
+
+| Output | What it contains |
+| --- | --- |
+| `report.md` | A readable summary of channel frequencies, depth, tested edges, and interpretation boundaries |
+| `analysis.json` | Full results, source SHA-256, parameters, random seed, dependency versions, and null assumption |
+
+Use a **new output directory for every run**. The command preserves channel names and never silently drops or imputes rows. Selected values must be numeric and finite; supplied timestamps must be numeric seconds with uniform spacing matching the sampling rate.
+
+The default uses **99 circular-shift surrogates with max-statistic correction**. Its stationarity assumption is not automatically verified. `--n-surrogates 0` explicitly disables inference. Follow the [CSV analysis guide](docs/user-guide.md#analyze-a-csv) for preprocessing, null selection, and troubleshooting.
+
+<a id="a-rhythm-is-not-yet-a-reason"></a>
+
+## What the evidence says
+
+**A rhythm is not yet a reason.** DRR treats a compelling pattern as the start of an investigation. Known answers, counterexamples, and unsupported claims all belong in the record.
+
+| Evidence | What it establishes | Read the record |
+| --- | --- | --- |
+| **Synthetic oscillator** | Recovery of a known injected frequency and lag; a specification check | [Reproduction guide](docs/reproducibility.md) |
+| **Monte Carlo calibration** | False-alarm rates and detection power on specified simulated systems; resonance depth remains descriptive | [Benchmarks](DRR_BENCHMARKS.md) · [Artifact](results/expected/rooting_calibration_study.json) |
+| **Dependent-noise study** | Near-nominal false-alarm rates for the default circular-shift null on tested stationary long-memory processes; every tested null fails on random walks | [Protocol and outcomes](docs/MATH_RESEARCH.md) · [Artifact](results/expected/dependent_noise_null_study.json) |
+| **Paired robustness comparison** | Existing rooting procedures versus separately calibrated raw and AR(1)-residual correlation baselines, with weak coupling and before/after regime changes | [Design and limits](docs/ROBUSTNESS_BENCHMARK.md) · [Report and figure](results/expected/robustness-benchmark/report.md) |
+| **Phase and harmonic study** | Better detection of tested 1:2 and 2:3 couplings, weaker detection of ordinary 1:1 coupling, and failure modes for existing rooting | [Report](docs/resonance-math-report.md) · [Artifact](results/expected/resonance_math_benchmark.json) |
+| **External NOAA QBO comparison** | **Not supported:** the full DRR holdout false-alarm rate exceeded the preregistered tolerance | [External evidence](docs/external-evidence.md) · [Artifact](results/expected/qbo_structural_change_benchmark.json) |
+| **Registered financial holdout** | **Not supported:** DRR's forecast improvements over the simplest baselines were too small and not significant after correction, despite positive cost-adjusted returns | [Design and replay](docs/financial-holdout.md) · [All outcomes](results/expected/financial_holdout/report.md) |
+| **Registered lead–lag breakdown study** | **Not supported:** signed correlation detected reversals and lag changes faster; the false-alarm comparability gate failed, and market DRR warnings were too sparse for inference | [Design and replay](docs/lead-lag-breakdown.md) · [All outcomes](results/expected/lead_lag_breakdown/report.md) |
+
+The QBO conclusion applies to the equatorial stratospheric zonal-wind comparison. It does not establish results in other domains. The [review memo](DRR_VALIDATION_REPORT.md) and [limitations](DRR_LIMITATIONS.md) explain the current boundaries.
+
+<details>
+<summary><strong>Benchmark details and reproduction commands</strong></summary>
+
+- **Calibration:** with 512 samples, 99 surrogates, and α = 0.05, family-wise error is 0.040–0.0625 on independent AR(1) series with coefficients from 0 to 0.97. A 0.3 coupling is recovered in 99.5% of trials; a 0.2 coupling in 66%. Strong memory in every channel lowers power and can reverse apparent direction. Red noise can also score above a weak tone on resonance depth.
+- **Dependent noise:** the default circular-shift null measures 0.0475–0.060 on fractional Gaussian noise with Hurst exponents from 0.5 to 0.95, and 0.055 on the tested GARCH(1,1) noise. On random walks, all tested nulls fail (0.27–0.89). Preprocessing needs its own justification; differencing alone does not establish stationarity for arbitrary data.
+- **Phase and harmonics:** on held-out simulations, mostly 2048 samples, the experimental phase test detects 1:2 and 2:3 coupling in 28.0–35.5% of pairs, versus 2.5–5.0% for rooting. Its ordinary 1:1 detection rate is lower, so that preregistered hypothesis was **not supported**. Existing rooting also reports false edges in 14.5% of the tested independent coherent-oscillator pairs; stationary noise results do not cover every oscillatory system.
+
+From the repository root, regenerate each study into a local reproduction directory:
+
+```bash
+python scripts/run_calibration_study.py --output-dir results/reproduction
+python scripts/run_dependent_noise_study.py --output-dir results/reproduction
+python scripts/run_robustness_benchmark.py --output-dir results/robustness-full
+python scripts/run_resonance_math_benchmark.py --output-dir results/reproduction
+python scripts/run_structural_change_benchmark.py --output-dir results/reproduction
+```
+
+These studies take longer than the quick start. The external comparison reads vendored public-data snapshots; its [preregistration](src/drr_framework/external_benchmark/data/preregistration.json) fixes dataset checksums, disruption windows, holdout, baselines, ablations, tolerance, and the decision rule.
+
+</details>
 
 ## Choose a workflow
 
-| If you're exploring… | Start with | Details |
+| If you're exploring… | Start with | Guide |
 | --- | --- | --- |
 | Oscillators and nonlinear systems | `python examples/physics_lab.py` | [Physics and methods](docs/audience-guide.md) |
 | Sensing and micro-Doppler analog signals | `python examples/sensing_systems_resonance_depth.py` | [Examples](docs/examples.md) |
 | State estimation and filtering | `python examples/state_space_lab.py` | [API reference](docs/api.md) |
-| Macroeconomic and market research | `python examples/quant_macro_lab.py --offline` | [Quant research guide](docs/quant-research.md) |
+| Macroeconomic and market research | `python examples/quant_macro_lab.py --offline` | [Quant research](docs/quant-research.md) |
+| Preregistered financial forecasting | `python scripts/run_financial_holdout.py select --output-dir /tmp/drr-selection` | [Locked holdout study](docs/financial-holdout.md) |
+| Lead–lag breakdown detection | `python scripts/run_breakdown_study.py calibrate --output-dir /tmp/breakdown-calibration` | [Registered detection study](docs/lead-lag-breakdown.md) |
 | Public-data supervisory monitoring | `drr-monitor --demo` | [LFBO workbench](docs/lfbo-workbench.md) |
-| Multiple perspectives on the same system | `DRR_ScopeResolver` | [Scope resolution](docs/scope-resolution.md) |
+| Multiple perspectives on one system | `DRR_ScopeResolver` | [Scope resolution](docs/scope-resolution.md) |
 
-The LFBO demo uses **synthetic** observations and exports a local review artifact. Use `drr-monitor --demo --serve` to open its loopback-only review interface. The workbench reconstructs data vintages and keeps the review boundary explicit.
+The LFBO demo uses **synthetic observations** and exports a local review artifact. Add `--serve` to open its loopback-only review interface. The scope resolver keeps conflicting observations attributable to their source and scale; it does not decide which observation is true.
 
-The scope resolver keeps conflicting observations attributable to their source and scale. It does not decide which observation is true. For the underlying data contracts and caveats, see the [LFBO workbench](docs/lfbo-workbench.md).
+<a id="reading-map"></a>
+
+## How the pieces fit
+
+**DRR core → validation substrate → domain adapters.** The core contains numerical operators. The validation substrate tests specifications, synthetic ground truth, leakage, and preregistered external evidence. Domain adapters scope those methods to particular applications. **Sharing an operator never transfers an evidence claim.**
+
+| To go deeper | Start here |
+| --- | --- |
+| Learn the core and its outputs | [User guide](docs/user-guide.md) · [API reference](docs/api.md) |
+| Understand the design and compare methods | [Architecture](docs/architecture.md) · [Method crosswalk](docs/method-crosswalk.md) |
+| Explore experimental mathematics | [Mathematical extensions](docs/mathematical-extensions.md) · [Phase and harmonic report](docs/resonance-math-report.md) |
+| Assess a domain workflow | [Validation readiness](docs/validation-readiness-guide.md) · [Security posture](docs/security-posture.md) |
 
 ## Installation and development
 
-The base package is `drr-framework`. Optional integrations can be installed separately:
+The base package is `drr-framework`. Install development tools and run the project checks from the repository root:
+
+```bash
+python -m pip install -e ".[dev]"
+python -m pytest
+python -m compileall src examples scripts tests
+python -m ruff check .
+python -m black --check .
+```
+
+<details>
+<summary><strong>Optional integrations</strong></summary>
 
 | Extra | Purpose |
 | --- | --- |
@@ -126,25 +220,29 @@ The base package is `drr-framework`. Optional integrations can be installed sepa
 | `econometrics`, `contingency` | Supplementary statistical and binary metrology workflows |
 | `dev` | Formatting, linting, and test tools |
 
-For example: `python -m pip install -e ".[dev]"`. Read [pyproject.toml](pyproject.toml) for exact dependencies and Python version markers. To run the project checks:
+Install an extra with `python -m pip install -e ".[EXTRA]"`, replacing `EXTRA` with a name above. See [pyproject.toml](pyproject.toml) for exact dependencies and Python version markers, and the [developer guide](docs/developer-guide.md) for setup details.
 
-```bash
-python -m pip install -e ".[dev]"
-python -m pytest
-python -m ruff check .
-python -m black --check .
-```
+</details>
 
-## Reading map
+<a id="cite-and-contribute"></a>
 
-- [User guide](docs/user-guide.md) and [API reference](docs/api.md) for the core.
-- [Architecture](docs/architecture.md) and [method crosswalk](docs/method-crosswalk.md) for design and conventional comparators.
-- [External evidence](docs/external-evidence.md) and [reproducibility](docs/reproducibility.md) for claim scope and reproduction.
-- [Quant research](docs/quant-research.md), [LFBO workbench](docs/lfbo-workbench.md), and [validation readiness](docs/validation-readiness-guide.md) for domain workflows.
-- [Security posture](docs/security-posture.md) and [developer guide](docs/developer-guide.md) for operation and contributions.
+## Contribute
 
-## Cite and contribute
+**Help make the next result easier to trust.** Research, code, documentation, examples, and reproducible counterexamples are all welcome. Start with one focused improvement:
 
-Please use [CITATION.cff](CITATION.cff) when citing the software. Contributions that sharpen a definition, add a falsifiable baseline, expose a failure mode, or make a result easier to reproduce are welcome.
+| Contribution | A useful first step |
+| --- | --- |
+| **Improve the first run** | Try the quick start on a clean environment and [report an unclear step](https://github.com/topherchris420/dynamic-resonance-rooting/issues/new?template=documentation.md) |
+| **Challenge a method** | Propose a falsifiable baseline or share a failure mode through a [research question](https://github.com/topherchris420/dynamic-resonance-rooting/issues/new?template=research_question.md) |
+| **Fix a reproducible problem** | [Report a bug](https://github.com/topherchris420/dynamic-resonance-rooting/issues/new?template=bug_report.md) with the command, seed, environment, and expected versus actual result |
+| **Build an example** | Show a small, reproducible workflow with stated assumptions, expected outputs, and limitations |
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md), then [browse open issues](https://github.com/topherchris420/dynamic-resonance-rooting/issues) or open a focused pull request. For security concerns, follow [SECURITY.md](SECURITY.md).
+
+If DRR is useful to your work, **star the repository** and share an example others can reproduce. A careful counterexample is a contribution, too.
+
+## Cite and credit
+
+Created by **Christopher Woodyard**. Use [CITATION.cff](CITATION.cff) when citing the software, and include the version or commit used in your analysis.
 
 Copyright © Christopher Woodyard. Released under the [MIT License](LICENSE).
