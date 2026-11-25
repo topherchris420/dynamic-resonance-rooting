@@ -32,7 +32,6 @@ from drr_framework.supervisory.vintage import (
 )
 import drr_framework.supervisory.challenge_models as challenges
 
-
 VARIABLES = ("SYN_X", "SYN_Y")
 EVENT = "Synthetic quarter event; zeros explicitly sampled as non-events"
 
