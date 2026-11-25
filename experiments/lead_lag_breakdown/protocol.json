@@ -1,0 +1,55 @@
+{
+  "id": "drr-lead-lag-breakdown-v1",
+  "registered_utc": "2026-11-14",
+  "question": "Does a fixed DRR fingerprint detect lead-lag breakdown sooner than conventional detectors under the same calibrated false-alarm budget?",
+  "methods": ["drr", "rooting_only", "spectral_only", "signed_correlation", "var_cusum", "var_bocpd"],
+  "baselines": ["signed_correlation", "var_cusum", "var_bocpd"],
+  "detector": {
+    "window": 64,
+    "stride": 8,
+    "fit": 256,
+    "max_lag": 3,
+    "fingerprint": "Existing RootingAnalyzer: two directed max-absolute correlations and selected lags/3. Existing DepthCalculator: depth, four components and frequency for each series, last 64 samples, depth window 32. No causal or significance interpretation.",
+    "distance": "Root-mean-square deviation from fit-period feature means, divided by fit-period sample std with floor 0.05. Full DRR is the fixed primary candidate; no model selection.",
+    "correlation": "Same distance on six signed correlations, both directions at lags 1,2,3.",
+    "var": "Fit a two-variable VAR(3) with intercept and ridge 0.001 on the first 256 observations standardized using only that fit period. Residual energy is mean squared error divided by per-output fit residual variance.",
+    "cusum": "Upper residual-energy CUSUM: S=max(0,S+energy-1.5); starts at zero after fit.",
+    "bocpd": "Adams-MacKay normal/inverse-gamma Student-t BOCPD on standardized log residual energy; prior mu=0,kappa=1,alpha=3,beta=2, constant hazard 1/128. Score posterior probability of run length <=8. No truncation or retrospective segmentation."
+  },
+  "simulation": {
+    "length": 768,
+    "change": 512,
+    "calibration_replicates": 64,
+    "test_replicates": 96,
+    "calibration_seed": 130000,
+    "test_seed": 730000,
+    "nulls": ["unchanged", "volatility_only"],
+    "changes": ["drop", "reverse", "lag_shift", "gradual_drop"],
+    "challenges": ["common_driver"],
+    "generator": "x_t=0.4*x_(t-1)+e_x; y_t=0.2*y_(t-1)+b*x_(t-lag)+e_y, b=0.7, lag=1, independent standardized Student-t(5) innovations. At change: b=0 (drop), b=-0.7 (reverse), lag=3 (lag_shift), b declines to zero linearly over 64 observations (gradual_drop). Volatility-only multiplies both observed series by 3 after change, leaving latent coupling fixed. Common-driver challenge adds 2*z_t to both observed channels after change, without changing the latent equation; observed relationships can change, so this is a confounding diagnostic, not a null with known unchanged observable dependence.",
+    "pairing": "Same innovations across all methods and scenarios for each replicate. Calibration and evaluation seed ranges disjoint. Detector receives observations only, never change times or scenario labels.",
+    "false_alarm_budget": 0.05,
+    "threshold": "For each method and null type take the ceil((n+1)*0.95)-th order statistic of maximum score over the full post-fit monitoring horizon; use the larger threshold. Strict > crossings. This matches a calibrated pathwise budget, not guaranteed identical realized holdout false-alarm rates.",
+    "outcome": "First alarm only. Alarm before change or no alarm after change receives delay penalty 256; otherwise delay=alarm_time-change. Publish hit rate, pre-change alarms, misses, conditional delay and penalized delay. Never compare only detected cases.",
+    "false_alarm_gate": "On each held-out null, DRR and every baseline must have one-sided 95% Wilson upper bound <=0.12; DRR false-alarm fraction must not exceed any baseline by more than 0.03.",
+    "inference": "Paired replicate bootstrap, 9999 resamples, seed 9182; resample replicates jointly across scenarios/methods. Centered one-sided plus-one p-values and pointwise percentile 95% intervals. Holm across 15 tests: DRR vs each of 3 baselines on each of 4 changes and on their equally weighted aggregate.",
+    "success": "False-alarm gate passes; pooled penalized delay at least 8 observations smaller than every baseline with Holm p<=0.05 for each pooled comparison; no individual change has DRR mean penalized delay more than 8 observations worse than any baseline. Otherwise NOT SUPPORTED."
+  },
+  "market": {
+    "symbols": ["BTCUSDT", "ETHUSDT"],
+    "interval": "1h",
+    "months": ["2026-01", "2026-02", "2026-03", "2026-04", "2026-05", "2026-06", "2026-07", "2026-08", "2026-09"],
+    "calibration_months": ["2026-02", "2026-03"],
+    "test_months": ["2026-04", "2026-05", "2026-06", "2026-07", "2026-08", "2026-09"],
+    "data": "Binance Vision monthly spot hourly klines; verify upstream ZIP SHA-256 and pin normalized OHLCV snapshot. Exact UTC hourly calendar; abort on duplicates, gaps, nonfinite or impossible OHLCV. Never impute. Current historical vintage, not original publication-time data; CC BY-NC-SA 4.0 and source dataset terms.",
+    "input": "Hourly log close returns. At each calendar month, refit all detectors and VAR on only the preceding 256 return rows. Score every 8 hours starting at the eighth observation of the month. No refit within month.",
+    "warning_threshold": "Per-method higher 95th percentile of February-March scores with a mature 24-hour outcome. Freeze before April-September evaluation. This is a warning-rate budget, not a known false-alarm rate in real data.",
+    "target": "Over the next 24 hours, frozen VAR forecast squared errors summed across both outputs divided by the corresponding zero-return forecast squared errors. Both errors use fit-standardized units. Higher ratios mean a weaker forecasting relationship. Only timestamps with a complete future 24 hours inside the month are scored; report all exclusions.",
+    "inference": "Difference between mean target after warnings and mean target without warnings, separately per method. Paired circular blocks of 21 scored timestamps (~7 days), 1999 replicates, seed 9183; recompute conditional means in each resample. No eligible inference with fewer than 20 warnings or 20 non-warnings or >5% undefined resamples. Pointwise 95% intervals only; descriptive external validation, never proof of true break time or a second confirmatory success gate.",
+    "risk": "Descriptive only: equal-weight long spot portfolio; after a warning at hourly bar t, set both weights to zero from open t+2 through the next 24 hourly holdings, overlapping warnings extend the interval. Normal weights 0.5 each. Carry warning state across month boundaries; full-hourly test path, first entry and terminal liquidation included. Costs 0/15/30 bps one-way, existing self-financing portfolio accounting. Compare each warning strategy with always-long and a constant exposure matching its realized average exposure. Matching is an ex-post attribution control, not a deployable strategy. Report net growth, max drawdown, worst-5% mean hourly loss, exposure and turnover; no Sharpe or significance claims. Any lower loss from simply lower exposure is not evidence of warning timing value."
+  },
+  "publication": {
+    "required": "Protocol commit before scoring; separate calibration/code/data lock commit before held-out evaluation; every simulated episode, score and alarm; all thresholds, null rates, test results and controls; every market warning, future target and risk outcome; input/source/environment hashes; deterministic offline CI replay. Never tune on failed holdout outcomes or suppress negative results.",
+    "scope": "Only lead-lag breakdown and descriptive risk attribution are implemented here. HAR-RV/GARCH volatility forecasting is a separate future study. Simulation results cannot establish real-market early detection, causality or trading edge. Historical 2026 data were not used in the earlier 2018-2025 daily-return study, but are public and not independently blinded."
+  }
+}
