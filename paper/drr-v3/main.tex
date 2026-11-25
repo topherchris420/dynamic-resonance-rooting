@@ -33,6 +33,10 @@
 \titlespacing*{\section}{0pt}{1.2ex plus .3ex}{0.8ex}
 \titlespacing*{\subsection}{0pt}{1ex plus .2ex}{0.5ex}
 \setlist{nosep,leftmargin=*}
+\setlength{\textfloatsep}{9pt plus 2pt minus 2pt}
+\setlength{\dbltextfloatsep}{9pt plus 2pt minus 2pt}
+\setlength{\floatsep}{8pt plus 2pt minus 2pt}
+\setlength{\abovecaptionskip}{4pt}
 
 \newtheorem{theorem}{Theorem}
 \newtheorem{proposition}{Proposition}
@@ -69,21 +73,23 @@ Lead--Lag Diagnostics for Complex Adaptive Systems\par}
 framework that summarizes multivariate time series with three diagnostics:
 resonance (recurrent spectral modes), rooting (directed lead--lag edges), and
 resonance depth (a composite rhythm score). We report four groups of results.
-\emph{First}, we prove that for Gaussian signals every gain- and offset-invariant
-score, resonance depth included, depends on the data only through the shape of
-the power spectrum. This explains why depth ranks AR(1) noise at $\phi=0.9$
+\emph{First}, we prove that for stationary Gaussian signals the probability
+distribution of every gain- and offset-invariant score, resonance depth
+included, depends on the process only through the shape of its power spectrum. This explains why depth ranks AR(1) noise at $\phi=0.9$
 above a $-9$\,dB spectral line. We therefore redefine resonance as a spectral
-line above the best-fitting monotone (``memory without rhythm'') continuum and
-test it with a Monte Carlo spectral-excess statistic $\Lambda$. On 1,500
-simulated rhythm-free series, $\Lambda$ holds its false-alarm rate between 0.037
-and 0.067 at a nominal 0.05, where a fixed depth cutoff reaches 0.997, and it
+line above the best-fitting monotone continuum, a null class we adopt for
+``memory without rhythm,'' and test it with a Monte Carlo spectral-excess statistic $\Lambda$. On 1,500
+simulated rhythm-free series, $\Lambda$'s measured false-alarm rate is between
+0.037 and 0.067 at a nominal 0.05, where a fixed depth cutoff reaches 0.997, and it
 detects a $-9$\,dB line in AR(0.9) noise in 80\% of trials. \emph{Second}, we
 derive in closed form that lagged correlation makes a target appear to lead its
 own source with correlation $c\phi^{\ell+d}$, and show that channel-wise
 prewhitening removes the artifact in population. At $\phi=0.9$ and 512 samples,
 prewhitened rooting recovers a 0.3 coupling at its true lag in 300 of 300
-systems, against 40\% for the current test. \emph{Third}, we map where the
-circular-shift surrogate null holds. Its family-wise error is 0.048--0.060 on
+systems, against 40\% for the current test. \emph{Third}, we measure where the
+implemented circular-shift test stays calibrated, beyond the idealized
+conditions under which its family-wise error is guaranteed. Its measured
+family-wise error is 0.048--0.060 on
 fractional Gaussian noise up to Hurst exponent 0.95 and 0.055 under GARCH(1,1),
 but it reaches 0.28 on random walks, 0.145 on independent coherent oscillators
 at a shared frequency, and 0.150 on independent series that share an amplitude
@@ -137,21 +143,22 @@ error rates and published failures, not through breadth.
 The contributions are:
 \begin{enumerate}[label=\textbf{C\arabic*}]
 \item \emph{A spectral-sufficiency theorem} (Thm.~\ref{thm:suff}). Under
-Gaussianity, depth and every other affine-invariant score are functionals of
-spectral shape. The theorem explains the red-noise confusion, predicts that
-phase-randomized placebos have no power, and fixes the only well-posed null for
-resonance: a spectral one.
+Gaussianity, the distribution of depth, and of every other affine-invariant
+score, is determined by spectral shape. The theorem explains the red-noise
+confusion, predicts that phase-randomized placebos have no power, and shows that
+any null hypothesis for such a score must be stated in terms of the spectrum.
 \item \emph{A falsifiable definition of resonance and a calibrated test.}
-Resonance is a spectral line above the best monotone continuum, the class of
-continua that memory alone can produce. The spectral-excess test $\Lambda$ and
+Resonance is a spectral line above the best monotone continuum. Monotone
+spectra are the null class we adopt for memory without rhythm; the class is a
+modeling choice, not a property of every process with memory. The spectral-excess test $\Lambda$ and
 a calibrated depth score $D^*$ are evaluated on 16 simulated families
 (Section~\ref{sec:calres}).
 \item \emph{Closed-form analysis of lagged-correlation rooting under memory},
 and a prewhitened rooting operator that provably removes the reverse-lead
 artifact. Size, power, and lag localization are compared with the v2 test and a
 Granger F-test (Section~\ref{sec:calroot}).
-\item \emph{The validity region of the surrogate null.} Measured family-wise
-error under fractional Gaussian noise, GARCH, random walks, coherent
+\item \emph{The measured calibration of the implemented test.} Family-wise
+error, measured by simulation, under fractional Gaussian noise, GARCH, random walks, coherent
 oscillators, and shared trends, with an ablation that traces the oscillator
 failure to the circular-shift seam (Section~\ref{sec:nulls}).
 \item \emph{Three complete negative results.} Preregistered tests on
@@ -254,7 +261,9 @@ these operators.
 \caption{DRR v3. Blue boxes are the calibrated operators introduced here. Every
 output enters an evidence ledger with a machine-readable claim status before
 any interpretation, and nothing crosses the review boundary without
-independent validation.}
+independent validation. The bound FWER${}\le\alpha$ is the guarantee of
+Prop.~\ref{prop:exact} under its assumptions; the implemented test's
+calibration is measured in Sections~\ref{sec:calroot} and~\ref{sec:nulls}.}
 \label{fig:pipeline}
 \end{figure}
 
@@ -281,7 +290,11 @@ is also $\le\alpha$. Hence the family-wise error is at most $\alpha$.
 \end{proof}
 
 \begin{remark}\label{rem:seam}
-The implementation departs from Prop.~\ref{prop:exact} in two ways. Real
+Throughout, we keep two statements apart: the guarantee of
+Prop.~\ref{prop:exact}, which is exact under circular stationarity and mutual
+independence, and the calibration of the implemented test, which is an
+empirical estimate reported with a Wilson interval. The implementation departs
+from Prop.~\ref{prop:exact} in two ways. Real
 series are stationary rather than circularly stationary, so rotation creates a
 seam. Offsets are drawn uniformly from the subset of $G$ whose pairwise
 circular separations exceed $L$, which avoids surrogates that re-create the
@@ -323,16 +336,21 @@ randomize phases \cite{theiler}. For Gaussian input they sample, approximately,
 the input's own law, so a depth placebo against them has power near its size.
 The repository's measured depth change of about 0.005 under phase
 randomization \cite{drr} is therefore the predicted outcome, not a defect of
-the placebo. (c) Any well-posed null hypothesis for depth is a statement about
-the spectrum.
+the placebo. (c) For Gaussian data, any null hypothesis about the distribution of depth is
+a statement about the spectrum.
 \end{corollary}
 
 Thm.~\ref{thm:suff} turns a vague notion (``persistent modal structure'') into
-a sharp question: which spectra count as having no rhythm? Memory alone
-produces spectra that are monotone in frequency. White noise, AR(1) at any
-$\phi$, and sums of positively correlated AR(1) processes with white noise are
-all monotone. An interior spectral maximum, from a deterministic line or a
-stochastic oscillator, is exactly what memory cannot produce.
+a sharp question: which spectra count as having no rhythm? The answer is a
+choice of null model, not a fact about memory. The monotone class contains white
+noise, which has no memory, and many processes that do: AR(1) at any $\phi$, and
+sums of AR(1) processes with positive coefficients and white noise. Not all do: an AR(2)
+process with complex roots has memory and an interior spectral peak, and so does
+any stochastic oscillator. We adopt the monotone class as the null for
+``memory without rhythm'' because it contains the red-noise backgrounds that
+cause the false alarms documented here, and it excludes interior maxima, the
+feature that a rhythm adds. A different null class, such as AR($p$) of bounded
+order, would define a different notion of resonance.
 
 \begin{definition}[Resonance, v3]\label{def:res}
 A trace exhibits a resonance at level $\alpha$ if a level-$\alpha$ test rejects
@@ -484,8 +502,8 @@ AR(2) $r=.95$ osc. & .153 & .023 & 1.000 & .007 & .997 & .017\\
 \end{tabular}
 \end{table}
 
-\textit{Size.} All three procedures hold nominal family-wise error on every
-null, including independent narrowband oscillators at a shared frequency, which
+\textit{Size.} The measured family-wise error of all three procedures is near
+nominal on every null, including independent narrowband oscillators at a shared frequency, which
 strongly cross-correlate by chance (Table~\ref{tab:size}). Every Wilson interval
 covers 0.05. The v2 rows share seeds with the committed calibration study and
 reproduce its values exactly.
@@ -608,7 +626,8 @@ which red noise places near zero frequency, so a line at 0.0625 is never the
 depth target. $\Lambda$ detects the same line in 80\% of series and every line at
 $-5.5$\,dB or stronger, and it locates it within one bin in 99\% of its
 rejections. This is the second practical consequence of Thm.~\ref{thm:suff}:
-since depth is a spectral functional, test the spectrum directly.
+since the distribution of depth is a functional of the spectrum, test the
+spectrum directly.
 
 \textit{A limit worth stating.} Stochastic oscillators with broad peaks ($r=0.8$
 and 0.9) are rejected at close to the nominal rate by $\Lambda$ (0.055, 0.070). A
@@ -618,11 +637,13 @@ realization. A band-averaged multiscale variant of $\Lambda$ was piloted and gav
 no gain, so it was not carried forward. At $r=0.95$, $\Lambda$ and isotonic $D^*$
 reach 0.51--0.58.
 
-\section{Where the Surrogate Null Holds}\label{sec:nulls}
+\section{Where the Implemented Test Stays Calibrated}\label{sec:nulls}
 
-Prop.~\ref{prop:exact} needs two things: independence across channels and
-(circular) stationarity within each. Sections~\ref{sec:calroot}
-and~\ref{sec:calres} test only short-memory linear Gaussian processes. Two
+The guarantee of Prop.~\ref{prop:exact} needs two things: independence across
+channels and (circular) stationarity within each. Outside those conditions,
+only measurement can show whether the implemented test stays calibrated.
+Sections~\ref{sec:calroot} and~\ref{sec:calres} measure it only on
+short-memory linear Gaussian processes. Two
 committed studies push the null further, and a third compares rooting with
 prewhitening-style baselines. All three use 512 samples, lags 1--4, 99
 surrogates, $\alpha=0.05$, and max-statistic correction, and they test the v2
@@ -1010,14 +1031,16 @@ intended use.
 
 \textit{What DRR now is.} DRR consists of two calibrated tests and a descriptive
 score, each with a known error profile and now a mapped validity region.
-Rooting is a family-wise-controlled, lag-localized lead--lag screen. Its power
-matches Granger in linear settings, and its null holds on stationary processes
-with short or moderately long memory and heavy-tailed volatility. $\Lambda$ is a
+Rooting is a lag-localized lead--lag screen. Its family-wise error is
+guaranteed under the idealized conditions of Prop.~\ref{prop:exact}, and its
+measured family-wise error is near nominal on the stationary processes tested,
+with short or moderately long memory and heavy-tailed volatility. Its power
+matches Granger in linear settings. $\Lambda$ is a
 size-robust test for spectral lines above any monotone continuum. Depth,
 reported as $D^*$, says how rhythmic a trace is relative to memory, not whether
 it is. The pieces are standard: surrogates, red-noise nulls, isotonic regression,
-and prewhitening. What is new is the theorem that ties depth to the spectrum and
-the resulting redefinition of resonance. Also new is the explicit composition of
+and prewhitening. What is new is the theorem that ties the distribution of depth to
+the spectrum and the resulting redefinition of resonance. Also new is the explicit composition of
 these pieces under one ledger in which failures are first-class results.
 
 \textit{What it is not.} Rooting is pairwise. A common driver of two channels
@@ -1072,8 +1095,10 @@ monitor, ablations, and the decision rule, under a new protocol ID.
 \section{Conclusion}
 
 DRR asks readers to check error rates rather than trust definitions. The rooting
-test holds its family-wise error at the nominal level on the stationary
-processes tested, including long memory and GARCH noise. It fails on coherent
+test's family-wise error is guaranteed only under circular stationarity and
+mutual independence. In simulation, its measured family-wise error stayed near
+the nominal level on the stationary processes tested, including long memory
+and GARCH noise. It fails on coherent
 oscillators, shared trends, and random walks, and we now know why. Its lead--lag
 estimator failed under memory. The reason is derived in closed form, and the fix
 restores power without giving up size. Resonance depth could not separate rhythm

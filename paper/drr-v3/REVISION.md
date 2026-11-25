@@ -21,7 +21,7 @@ original figure sources instead, overwrite those files.
 **New evidence from the repository after commit `862c4f7`.** Every number is read from a committed
 artifact under `results/expected/`:
 
-- **New Section VII, "Where the Surrogate Null Holds."**
+- **New Section VII, "Where the Implemented Test Stays Calibrated."**
   - Dependent-noise null study: fGn up to H = 0.95, GARCH(1,1) and random
     walks, for three nulls. Includes a new pgfplots figure.
   - Phase and harmonic benchmark: rooting is inflated on coherent oscillators
@@ -56,6 +56,14 @@ artifact under `results/expected/`:
   that the v3 scripts and artifacts are not yet public. The conclusion and the
   Table 4 note no longer imply that readers can rerun them.
 - Section cross-references now use the same Roman numerals as the headings.
+- Theorem 1 is described everywhere as a statement about the distribution of an
+  invariant score, not the score itself.
+- The text separates the exact family-wise error guarantee of Prop. 1 (circular
+  stationarity, mutual independence) from the measured calibration of the
+  implemented test.
+- Monotone spectra are presented as the chosen null class for "memory without
+  rhythm", not as a property of all processes with memory; AR(2) with complex
+  roots is given as a counterexample.
 
 **Unchanged:** Thm. 1, Props. 1–2 and their proofs, and every value in the
 original Tables 1–5 and Figures 1–4. The September tables and figures appear
