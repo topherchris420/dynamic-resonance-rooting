@@ -29,12 +29,20 @@ def rectangular_rank_bound(a: int, b: int, c: int) -> int:
     return max(a * b, b * c, c * a, ceiling)
 
 
+def strassen_applies(n: int) -> bool:
+    """Whether ``strassen_step`` runs Strassen at size ``n`` rather than falling back to NumPy."""
+    return n >= 2 and n % 2 == 0
+
+
 def strassen_step(a: np.ndarray, b: np.ndarray) -> np.ndarray:
-    """One level of Strassen with BLAS leaves; no claim of exponent 9/4."""
+    """One level of Strassen with BLAS leaves; no claim of exponent 9/4.
+
+    Sizes where ``strassen_applies`` is false fall back to plain ``a @ b``.
+    """
     if a.ndim != 2 or a.shape != b.shape or a.shape[0] != a.shape[1]:
         raise ValueError("equal square matrices required")
     n = a.shape[0]
-    if n < 2 or n % 2:
+    if not strassen_applies(n):
         return a @ b
     h = n // 2
     a11, a12, a21, a22 = a[:h, :h], a[:h, h:], a[h:, :h], a[h:, h:]
@@ -61,7 +69,7 @@ def _time_pair(
 ) -> dict:
     reference, actual = baseline(), candidate()
     finite = bool(np.isfinite(reference).all() and np.isfinite(actual).all())
-    error = float(np.linalg.norm(actual - reference) / max(1.0, np.linalg.norm(reference)))
+    error = float(np.linalg.norm(actual - reference) / max(1.0, float(np.linalg.norm(reference))))
     elementwise_close = bool(np.allclose(actual, reference, rtol=1e-9, atol=1e-10))
     accurate = finite and error <= 1e-10 and elementwise_close
     timings: dict = {"baseline": [], "candidate": []}
@@ -109,13 +117,19 @@ def benchmark(sizes=(64, 128, 256, 512), seeds=(19, 73, 127), repeats: int = 7) 
                     base = partial(matmul, w, x)
                 base_setup = perf_counter() - start
                 start = perf_counter()
+                gated = True
                 if case == "dense":
                     trial = partial(strassen_step, a, b)
                     storage: Optional[dict] = None
+                    # An odd size runs NumPy in both arms, so a timing gap is noise.
+                    gated = strassen_applies(n)
+                    method = "strassen_one_level" if gated else "numpy_fallback_odd_size"
                 elif case == "gram_action":
                     trial = partial(gram_action, f, x)
                     storage = {"baseline": int(gram.nbytes), "candidate": int(f.nbytes)}
+                    method = "factorized_gram_action"
                 else:
+                    method = "scipy_csr"
                     csr = sparse.csr_matrix(w)
                     trial = partial(matmul, csr, x)
                     storage = {
@@ -134,10 +148,15 @@ def benchmark(sizes=(64, 128, 256, 512), seeds=(19, 73, 127), repeats: int = 7) 
                         "baseline_setup_seconds": base_setup,
                         "candidate_setup_seconds": candidate_setup,
                         "operator_storage_bytes": storage,
+                        "candidate_method": method,
+                        "speed_gates_applicable": gated,
                         "passes_one_shot_gate": result["accurate"]
                         and baseline_total >= 1.2 * candidate_total,
                     }
                 )
+                if not gated:
+                    result["passes_reused_operation_gate"] = None
+                    result["passes_one_shot_gate"] = None
                 rows.append(result)
     return {
         "study": "Project IX/IV",

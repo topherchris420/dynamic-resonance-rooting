@@ -12,7 +12,9 @@ or apply directly to restricted sparse or factorized workloads.
 Before collecting performance results, fix the following synthetic study:
 - Sizes 64, 128, 256, 512; seeds 19, 73, 127; seven timed repetitions per method,
   alternating method order after an untimed correctness evaluation.
-- Dense square: NumPy/BLAS versus one Strassen level with BLAS leaves.
+- Dense square: NumPy/BLAS versus one Strassen level with BLAS leaves. Odd sizes
+  (none in the default study) fall back to NumPy in both arms; those rows record
+  `candidate_method: numpy_fallback_odd_size` and null speed gates (not applicable).
 - DRR-like Gram operator: explicit F F^T times eight vectors versus F(F^T X),
   with feature count floor(sqrt(n)). Factors are supplied, not inferred.
 - Sparse transition: dense matrix versus SciPy CSR, with 2% expected nonzero entries.

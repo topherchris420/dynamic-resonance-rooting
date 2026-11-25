@@ -5,6 +5,7 @@ from drr_framework.project_ix_iv import (
     benchmark,
     gram_action,
     rectangular_rank_bound,
+    strassen_applies,
     strassen_step,
 )
 
@@ -48,3 +49,23 @@ def test_report_schema_and_accuracy():
         assert row["relative_frobenius_error"] <= 1e-10
     with pytest.raises(ValueError):
         benchmark(sizes=(16,), repeats=1)
+
+
+def test_odd_size_dense_rows_are_fallbacks_without_speed_gates():
+    assert [strassen_applies(n) for n in (1, 2, 3, 16, 17)] == [False, True, False, True, False]
+    report = benchmark(sizes=(3, 4), seeds=(19,), repeats=3)
+    assert report["all_accurate"]
+    rows = {(row["case"], row["n"]): row for row in report["rows"]}
+    odd = rows[("dense", 3)]
+    assert odd["candidate_method"] == "numpy_fallback_odd_size"
+    assert odd["speed_gates_applicable"] is False
+    assert odd["passes_one_shot_gate"] is None
+    assert odd["passes_reused_operation_gate"] is None
+    even = rows[("dense", 4)]
+    assert even["candidate_method"] == "strassen_one_level"
+    assert even["speed_gates_applicable"] is True
+    assert isinstance(even["passes_one_shot_gate"], bool)
+    assert isinstance(even["passes_reused_operation_gate"], bool)
+    for case in ("gram_action", "sparse_transition"):
+        assert rows[(case, 3)]["speed_gates_applicable"] is True
+        assert isinstance(rows[(case, 3)]["passes_one_shot_gate"], bool)
