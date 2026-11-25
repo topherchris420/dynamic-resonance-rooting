@@ -52,7 +52,8 @@ code is `src/drr_framework/v3_reconstruction.py` and
   protocol names reproduce trial for trial.
 - One comparison failed its rule: the long-run raw reverse correlation at
   φ = 0.9 is 0.218, against 0.228 in Table 1. Prop. 2 predicts 0.219, so the
-  published value is the one off. The paper says so; Table 1 is unchanged.
+  published value is the one off. Table 1 keeps 0.228, as the author chose, with
+  a footnote giving the rebuilt 0.218 and the predicted 0.219.
 - New exploratory observation, not registered: Λ's maximum lands on the last
   interior Fourier bin more often than chance. The unexplained 2.0-month line
   in the 30 hPa QBO series sits on that bin, and the QBO text now says it may
@@ -99,8 +100,6 @@ because the new figure is placed earlier.
   still show the original values; the reconstruction checks them statistically
   but not number for number. Figures 2, 3 and 5 were not redrawn from the
   reconstruction.
-- Decide whether Table 1 should keep 0.228 for the φ = 0.9 raw reverse
-  correlation or switch to the reconstructed 0.218 with a note.
 - The September appendix reported a test count (398 passed, 18 skipped) at
   commit `862c4f7`. The revision drops it because the suite has changed and was
   not rerun for this revision.

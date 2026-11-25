@@ -440,7 +440,7 @@ simulation. $z$ denotes the noncentrality of the true edge.}
  & $\phi=0.5$ & $\phi=0.9$ & $\phi=0.97$\\
 \midrule
 Reverse corr.\ $c\phi^3$, predicted & 0.037 & 0.219 & 0.274\\
-\quad simulated ($T=4\times10^5$) & 0.038 & 0.228 & 0.276\\
+\quad simulated ($T=4\times10^5$) & 0.038 & 0.228$^{\dagger}$ & 0.276\\
 Prewhitened reverse corr., predicted & 0 & 0 & 0\\
 \quad simulated & $-0.000$ & 0.002 & $-0.000$\\
 Raw $z=c\sqrt T/\kappa(\phi)$ & 5.26 & 2.20 & 1.18\\
@@ -448,6 +448,9 @@ Prewhitened $z=c\sqrt T$ & 6.79 & 6.79 & 6.79\\
 Raw exact-lag recovery (measured) & 0.990 & 0.403 & 0.120\\
 Prewhitened (measured) & 1.000 & 1.000 & 1.000\\
 \bottomrule
+\multicolumn{4}{p{0.95\columnwidth}}{\scriptsize $^{\dagger}$Value from the
+original run, kept as published. The independent reconstruction gives 0.218,
+against 0.219 predicted (Section~\ref{sec:recon}).}
 \end{tabular}
 \end{table}
 
