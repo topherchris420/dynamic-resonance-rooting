@@ -1,0 +1,6121 @@
+{
+ "comparison": {
+  "long_run": [
+   {
+    "paper": 0.038,
+    "quantity": "raw reverse corr phi=0.5",
+    "reconstructed": 0.03742124815813044,
+    "verdict": "consistent"
+   },
+   {
+    "paper": 0.228,
+    "quantity": "raw reverse corr phi=0.9",
+    "reconstructed": 0.21770241886034994,
+    "verdict": "differs"
+   },
+   {
+    "paper": 0.276,
+    "quantity": "raw reverse corr phi=0.97",
+    "reconstructed": 0.27676170034422776,
+    "verdict": "consistent"
+   },
+   {
+    "paper": -0.0,
+    "quantity": "prewhitened reverse corr phi=0.5",
+    "reconstructed": 0.0004992736623278463,
+    "verdict": "consistent"
+   },
+   {
+    "paper": 0.002,
+    "quantity": "prewhitened reverse corr phi=0.9",
+    "reconstructed": -0.000239843470272345,
+    "verdict": "consistent"
+   },
+   {
+    "paper": -0.0,
+    "quantity": "prewhitened reverse corr phi=0.97",
+    "reconstructed": 0.002711141909058585,
+    "verdict": "consistent"
+   }
+  ],
+  "monte_carlo_cells": [
+   {
+    "cell": "table2/ar1_0.0/v2",
+    "difference": 0.0005000000000000004,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 25,
+    "paper_rate": 0.062,
+    "paper_trials": 400,
+    "reconstructed_count": 25,
+    "reconstructed_rate": 0.0625,
+    "reconstructed_trials": 400,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table2/ar1_0.0/v3",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 26,
+    "paper_rate": 0.065,
+    "paper_trials": 400,
+    "reconstructed_count": 26,
+    "reconstructed_rate": 0.065,
+    "reconstructed_trials": 400,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table2/ar1_0.0/granger",
+    "difference": -0.005499999999999998,
+    "fisher_p": 0.8648658283396664,
+    "holm_p": 1.0,
+    "paper_count": 19,
+    "paper_rate": 0.048,
+    "paper_trials": 400,
+    "reconstructed_count": 17,
+    "reconstructed_rate": 0.0425,
+    "reconstructed_trials": 400,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table2/ar1_0.5/v2",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 16,
+    "paper_rate": 0.04,
+    "paper_trials": 400,
+    "reconstructed_count": 16,
+    "reconstructed_rate": 0.04,
+    "reconstructed_trials": 400,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table2/ar1_0.5/v3",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 26,
+    "paper_rate": 0.065,
+    "paper_trials": 400,
+    "reconstructed_count": 26,
+    "reconstructed_rate": 0.065,
+    "reconstructed_trials": 400,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table2/ar1_0.5/granger",
+    "difference": -0.0005000000000000004,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 23,
+    "paper_rate": 0.058,
+    "paper_trials": 400,
+    "reconstructed_count": 23,
+    "reconstructed_rate": 0.0575,
+    "reconstructed_trials": 400,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table2/ar1_0.9/v2",
+    "difference": -0.0005000000000000004,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 19,
+    "paper_rate": 0.048,
+    "paper_trials": 400,
+    "reconstructed_count": 19,
+    "reconstructed_rate": 0.0475,
+    "reconstructed_trials": 400,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table2/ar1_0.9/v3",
+    "difference": -0.0005000000000000004,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 23,
+    "paper_rate": 0.058,
+    "paper_trials": 400,
+    "reconstructed_count": 23,
+    "reconstructed_rate": 0.0575,
+    "reconstructed_trials": 400,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table2/ar1_0.9/granger",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 20,
+    "paper_rate": 0.05,
+    "paper_trials": 400,
+    "reconstructed_count": 20,
+    "reconstructed_rate": 0.05,
+    "reconstructed_trials": 400,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table2/ar1_0.97/v2",
+    "difference": 0.0005000000000000004,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 25,
+    "paper_rate": 0.062,
+    "paper_trials": 400,
+    "reconstructed_count": 25,
+    "reconstructed_rate": 0.0625,
+    "reconstructed_trials": 400,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table2/ar1_0.97/v3",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 16,
+    "paper_rate": 0.04,
+    "paper_trials": 400,
+    "reconstructed_count": 16,
+    "reconstructed_rate": 0.04,
+    "reconstructed_trials": 400,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table2/ar1_0.97/granger",
+    "difference": -0.0005000000000000004,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 23,
+    "paper_rate": 0.058,
+    "paper_trials": 400,
+    "reconstructed_count": 23,
+    "reconstructed_rate": 0.0575,
+    "reconstructed_trials": 400,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table2/ar2_0.95/v2",
+    "difference": -0.0005000000000000004,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 23,
+    "paper_rate": 0.058,
+    "paper_trials": 400,
+    "reconstructed_count": 23,
+    "reconstructed_rate": 0.0575,
+    "reconstructed_trials": 400,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table2/ar2_0.95/v3",
+    "difference": 0.0075,
+    "fisher_p": 0.6961325443437472,
+    "holm_p": 1.0,
+    "paper_count": 12,
+    "paper_rate": 0.03,
+    "paper_trials": 400,
+    "reconstructed_count": 15,
+    "reconstructed_rate": 0.0375,
+    "reconstructed_trials": 400,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table2/ar2_0.95/granger",
+    "difference": -0.0050000000000000044,
+    "fisher_p": 0.8682495425089911,
+    "holm_p": 1.0,
+    "paper_count": 20,
+    "paper_rate": 0.05,
+    "paper_trials": 400,
+    "reconstructed_count": 18,
+    "reconstructed_rate": 0.045,
+    "reconstructed_trials": 400,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar1_0.0/v2_exact",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 300,
+    "paper_rate": 1.0,
+    "paper_trials": 300,
+    "reconstructed_count": 300,
+    "reconstructed_rate": 1.0,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar1_0.0/v2_rev",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 0,
+    "paper_rate": 0.0,
+    "paper_trials": 300,
+    "reconstructed_count": 0,
+    "reconstructed_rate": 0.0,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar1_0.0/v3_exact",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 300,
+    "paper_rate": 1.0,
+    "paper_trials": 300,
+    "reconstructed_count": 300,
+    "reconstructed_rate": 1.0,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar1_0.0/v3_rev",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 0,
+    "paper_rate": 0.0,
+    "paper_trials": 300,
+    "reconstructed_count": 0,
+    "reconstructed_rate": 0.0,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar1_0.0/granger_any",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 300,
+    "paper_rate": 1.0,
+    "paper_trials": 300,
+    "reconstructed_count": 300,
+    "reconstructed_rate": 1.0,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar1_0.0/granger_rev",
+    "difference": -0.006333333333333332,
+    "fisher_p": 0.6859270045884647,
+    "holm_p": 1.0,
+    "paper_count": 4,
+    "paper_rate": 0.013,
+    "paper_trials": 300,
+    "reconstructed_count": 2,
+    "reconstructed_rate": 0.006666666666666667,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar1_0.5/v2_exact",
+    "difference": 0.00666666666666671,
+    "fisher_p": 0.6237447672418857,
+    "holm_p": 1.0,
+    "paper_count": 297,
+    "paper_rate": 0.99,
+    "paper_trials": 300,
+    "reconstructed_count": 299,
+    "reconstructed_rate": 0.9966666666666667,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar1_0.5/v2_rev",
+    "difference": -0.013,
+    "fisher_p": 0.12374896183756848,
+    "holm_p": 1.0,
+    "paper_count": 4,
+    "paper_rate": 0.013,
+    "paper_trials": 300,
+    "reconstructed_count": 0,
+    "reconstructed_rate": 0.0,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar1_0.5/v3_exact",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 300,
+    "paper_rate": 1.0,
+    "paper_trials": 300,
+    "reconstructed_count": 300,
+    "reconstructed_rate": 1.0,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar1_0.5/v3_rev",
+    "difference": -0.003,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 1,
+    "paper_rate": 0.003,
+    "paper_trials": 300,
+    "reconstructed_count": 0,
+    "reconstructed_rate": 0.0,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar1_0.5/granger_any",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 300,
+    "paper_rate": 1.0,
+    "paper_trials": 300,
+    "reconstructed_count": 300,
+    "reconstructed_rate": 1.0,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar1_0.5/granger_rev",
+    "difference": -0.01,
+    "fisher_p": 0.24874791318864775,
+    "holm_p": 1.0,
+    "paper_count": 3,
+    "paper_rate": 0.01,
+    "paper_trials": 300,
+    "reconstructed_count": 0,
+    "reconstructed_rate": 0.0,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar1_0.8/v2_exact",
+    "difference": 0.010000000000000009,
+    "fisher_p": 0.8549471474798059,
+    "holm_p": 1.0,
+    "paper_count": 216,
+    "paper_rate": 0.72,
+    "paper_trials": 300,
+    "reconstructed_count": 219,
+    "reconstructed_rate": 0.73,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar1_0.8/v2_rev",
+    "difference": -0.007000000000000006,
+    "fisher_p": 0.888528233396895,
+    "holm_p": 1.0,
+    "paper_count": 29,
+    "paper_rate": 0.097,
+    "paper_trials": 300,
+    "reconstructed_count": 27,
+    "reconstructed_rate": 0.09,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar1_0.8/v3_exact",
+    "difference": 0.0030000000000000027,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 299,
+    "paper_rate": 0.997,
+    "paper_trials": 300,
+    "reconstructed_count": 300,
+    "reconstructed_rate": 1.0,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar1_0.8/v3_rev",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 0,
+    "paper_rate": 0.0,
+    "paper_trials": 300,
+    "reconstructed_count": 0,
+    "reconstructed_rate": 0.0,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar1_0.8/granger_any",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 300,
+    "paper_rate": 1.0,
+    "paper_trials": 300,
+    "reconstructed_count": 300,
+    "reconstructed_rate": 1.0,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar1_0.8/granger_rev",
+    "difference": 0.010333333333333333,
+    "fisher_p": 0.37290794540314265,
+    "holm_p": 1.0,
+    "paper_count": 1,
+    "paper_rate": 0.003,
+    "paper_trials": 300,
+    "reconstructed_count": 4,
+    "reconstructed_rate": 0.013333333333333334,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar1_0.9/v2_exact",
+    "difference": -0.0030000000000000027,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 121,
+    "paper_rate": 0.403,
+    "paper_trials": 300,
+    "reconstructed_count": 120,
+    "reconstructed_rate": 0.4,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar1_0.9/v2_rev",
+    "difference": 0.03666666666666668,
+    "fisher_p": 0.23688444271606637,
+    "holm_p": 1.0,
+    "paper_count": 36,
+    "paper_rate": 0.12,
+    "paper_trials": 300,
+    "reconstructed_count": 47,
+    "reconstructed_rate": 0.15666666666666668,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar1_0.9/v3_exact",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 300,
+    "paper_rate": 1.0,
+    "paper_trials": 300,
+    "reconstructed_count": 300,
+    "reconstructed_rate": 1.0,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar1_0.9/v3_rev",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 0,
+    "paper_rate": 0.0,
+    "paper_trials": 300,
+    "reconstructed_count": 0,
+    "reconstructed_rate": 0.0,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar1_0.9/granger_any",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 300,
+    "paper_rate": 1.0,
+    "paper_trials": 300,
+    "reconstructed_count": 300,
+    "reconstructed_rate": 1.0,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar1_0.9/granger_rev",
+    "difference": 0.010333333333333333,
+    "fisher_p": 0.37290794540314265,
+    "holm_p": 1.0,
+    "paper_count": 1,
+    "paper_rate": 0.003,
+    "paper_trials": 300,
+    "reconstructed_count": 4,
+    "reconstructed_rate": 0.013333333333333334,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar1_0.97/v2_exact",
+    "difference": -0.006666666666666668,
+    "fisher_p": 0.898899376702655,
+    "holm_p": 1.0,
+    "paper_count": 36,
+    "paper_rate": 0.12,
+    "paper_trials": 300,
+    "reconstructed_count": 34,
+    "reconstructed_rate": 0.11333333333333333,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar1_0.97/v2_rev",
+    "difference": -0.0003333333333333244,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 32,
+    "paper_rate": 0.107,
+    "paper_trials": 300,
+    "reconstructed_count": 32,
+    "reconstructed_rate": 0.10666666666666667,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar1_0.97/v3_exact",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 300,
+    "paper_rate": 1.0,
+    "paper_trials": 300,
+    "reconstructed_count": 300,
+    "reconstructed_rate": 1.0,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar1_0.97/v3_rev",
+    "difference": -0.003,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 1,
+    "paper_rate": 0.003,
+    "paper_trials": 300,
+    "reconstructed_count": 0,
+    "reconstructed_rate": 0.0,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar1_0.97/granger_any",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 300,
+    "paper_rate": 1.0,
+    "paper_trials": 300,
+    "reconstructed_count": 300,
+    "reconstructed_rate": 1.0,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar1_0.97/granger_rev",
+    "difference": 0.003333333333333334,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 3,
+    "paper_rate": 0.01,
+    "paper_trials": 300,
+    "reconstructed_count": 4,
+    "reconstructed_rate": 0.013333333333333334,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar2_0.95/v2_exact",
+    "difference": -0.012999999999999984,
+    "fisher_p": 0.7293586911191922,
+    "holm_p": 1.0,
+    "paper_count": 46,
+    "paper_rate": 0.153,
+    "paper_trials": 300,
+    "reconstructed_count": 42,
+    "reconstructed_rate": 0.14,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar2_0.95/v2_rev",
+    "difference": 0.006999999999999999,
+    "fisher_p": 0.800949689113117,
+    "holm_p": 1.0,
+    "paper_count": 7,
+    "paper_rate": 0.023,
+    "paper_trials": 300,
+    "reconstructed_count": 9,
+    "reconstructed_rate": 0.03,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar2_0.95/v3_exact",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 300,
+    "paper_rate": 1.0,
+    "paper_trials": 300,
+    "reconstructed_count": 300,
+    "reconstructed_rate": 1.0,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar2_0.95/v3_rev",
+    "difference": -0.007,
+    "fisher_p": 0.4991652754590985,
+    "holm_p": 1.0,
+    "paper_count": 2,
+    "paper_rate": 0.007,
+    "paper_trials": 300,
+    "reconstructed_count": 0,
+    "reconstructed_rate": 0.0,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar2_0.95/granger_any",
+    "difference": 0.0030000000000000027,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 299,
+    "paper_rate": 0.997,
+    "paper_trials": 300,
+    "reconstructed_count": 300,
+    "reconstructed_rate": 1.0,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3/ar2_0.95/granger_rev",
+    "difference": -0.010333333333333333,
+    "fisher_p": 0.45037225802981323,
+    "holm_p": 1.0,
+    "paper_count": 5,
+    "paper_rate": 0.017,
+    "paper_trials": 300,
+    "reconstructed_count": 2,
+    "reconstructed_rate": 0.006666666666666667,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table3_text/ar2_0.95/v2_any",
+    "difference": 0.017000000000000015,
+    "fisher_p": 0.7244684437551565,
+    "holm_p": 1.0,
+    "paper_count": 91,
+    "paper_rate": 0.303,
+    "paper_trials": 300,
+    "reconstructed_count": 96,
+    "reconstructed_rate": 0.32,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "power/c0.1/v3_any",
+    "difference": 0.0063333333333333575,
+    "fisher_p": 0.9201947514041579,
+    "holm_p": 1.0,
+    "paper_count": 62,
+    "paper_rate": 0.207,
+    "paper_trials": 300,
+    "reconstructed_count": 64,
+    "reconstructed_rate": 0.21333333333333335,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "power/c0.1/granger_any",
+    "difference": 0.012999999999999984,
+    "fisher_p": 0.7609931457453207,
+    "holm_p": 1.0,
+    "paper_count": 59,
+    "paper_rate": 0.197,
+    "paper_trials": 300,
+    "reconstructed_count": 63,
+    "reconstructed_rate": 0.21,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "power/c0.2/v3_any",
+    "difference": -0.00666666666666671,
+    "fisher_p": 0.8976269432286602,
+    "holm_p": 1.0,
+    "paper_count": 267,
+    "paper_rate": 0.89,
+    "paper_trials": 300,
+    "reconstructed_count": 265,
+    "reconstructed_rate": 0.8833333333333333,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "power/c0.2/granger_any",
+    "difference": -0.006333333333333302,
+    "fisher_p": 0.9001150899317603,
+    "holm_p": 1.0,
+    "paper_count": 265,
+    "paper_rate": 0.883,
+    "paper_trials": 300,
+    "reconstructed_count": 263,
+    "reconstructed_rate": 0.8766666666666667,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "power/c0.5/v2_any",
+    "difference": -0.00666666666666671,
+    "fisher_p": 0.888528233396895,
+    "holm_p": 1.0,
+    "paper_count": 273,
+    "paper_rate": 0.91,
+    "paper_trials": 300,
+    "reconstructed_count": 271,
+    "reconstructed_rate": 0.9033333333333333,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "power/c0.5/v2_rev",
+    "difference": -0.013333333333333364,
+    "fisher_p": 0.8065168186028496,
+    "holm_p": 1.0,
+    "paper_count": 153,
+    "paper_rate": 0.51,
+    "paper_trials": 300,
+    "reconstructed_count": 149,
+    "reconstructed_rate": 0.49666666666666665,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "power/c0.5/v3_rev",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 0,
+    "paper_rate": 0.0,
+    "paper_trials": 300,
+    "reconstructed_count": 0,
+    "reconstructed_rate": 0.0,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/ar1_0.0/depth_fixed_cut",
+    "difference": 0.010333333333333333,
+    "fisher_p": 0.6715670961778716,
+    "holm_p": 1.0,
+    "paper_count": 10,
+    "paper_rate": 0.033,
+    "paper_trials": 300,
+    "reconstructed_count": 13,
+    "reconstructed_rate": 0.043333333333333335,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/ar1_0.0/dstar_ar1",
+    "difference": -0.006666666666666661,
+    "fisher_p": 0.8601494236326446,
+    "holm_p": 1.0,
+    "paper_count": 18,
+    "paper_rate": 0.06,
+    "paper_trials": 300,
+    "reconstructed_count": 16,
+    "reconstructed_rate": 0.05333333333333334,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/ar1_0.0/dstar_isotonic",
+    "difference": 0.002999999999999999,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 8,
+    "paper_rate": 0.027,
+    "paper_trials": 300,
+    "reconstructed_count": 9,
+    "reconstructed_rate": 0.03,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/ar1_0.0/lambda",
+    "difference": -0.02366666666666667,
+    "fisher_p": 0.2825075785020655,
+    "holm_p": 1.0,
+    "paper_count": 20,
+    "paper_rate": 0.067,
+    "paper_trials": 300,
+    "reconstructed_count": 13,
+    "reconstructed_rate": 0.043333333333333335,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/ar1_0.5/depth_fixed_cut",
+    "difference": -0.056333333333333346,
+    "fisher_p": 0.18489104591605515,
+    "holm_p": 1.0,
+    "paper_count": 133,
+    "paper_rate": 0.443,
+    "paper_trials": 300,
+    "reconstructed_count": 116,
+    "reconstructed_rate": 0.38666666666666666,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/ar1_0.5/dstar_ar1",
+    "difference": -0.026333333333333334,
+    "fisher_p": 0.1890215040241041,
+    "holm_p": 1.0,
+    "paper_count": 19,
+    "paper_rate": 0.063,
+    "paper_trials": 300,
+    "reconstructed_count": 11,
+    "reconstructed_rate": 0.03666666666666667,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/ar1_0.5/dstar_isotonic",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 6,
+    "paper_rate": 0.02,
+    "paper_trials": 300,
+    "reconstructed_count": 6,
+    "reconstructed_rate": 0.02,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/ar1_0.5/lambda",
+    "difference": -0.013666666666666667,
+    "fisher_p": 0.5328555324785644,
+    "holm_p": 1.0,
+    "paper_count": 14,
+    "paper_rate": 0.047,
+    "paper_trials": 300,
+    "reconstructed_count": 10,
+    "reconstructed_rate": 0.03333333333333333,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/ar1_0.9/depth_fixed_cut",
+    "difference": 0.003666666666666707,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 295,
+    "paper_rate": 0.983,
+    "paper_trials": 300,
+    "reconstructed_count": 296,
+    "reconstructed_rate": 0.9866666666666667,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/ar1_0.9/dstar_ar1",
+    "difference": -0.013333333333333336,
+    "fisher_p": 0.5483098099559333,
+    "holm_p": 1.0,
+    "paper_count": 15,
+    "paper_rate": 0.05,
+    "paper_trials": 300,
+    "reconstructed_count": 11,
+    "reconstructed_rate": 0.03666666666666667,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/ar1_0.9/dstar_isotonic",
+    "difference": 0.0003333333333333348,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 4,
+    "paper_rate": 0.013,
+    "paper_trials": 300,
+    "reconstructed_count": 4,
+    "reconstructed_rate": 0.013333333333333334,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/ar1_0.9/lambda",
+    "difference": -0.013666666666666667,
+    "fisher_p": 0.5328555324785644,
+    "holm_p": 1.0,
+    "paper_count": 14,
+    "paper_rate": 0.047,
+    "paper_trials": 300,
+    "reconstructed_count": 10,
+    "reconstructed_rate": 0.03333333333333333,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/ar1_0.97/depth_fixed_cut",
+    "difference": -0.0003333333333332966,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 299,
+    "paper_rate": 0.997,
+    "paper_trials": 300,
+    "reconstructed_count": 299,
+    "reconstructed_rate": 0.9966666666666667,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/ar1_0.97/dstar_ar1",
+    "difference": 0.033333333333333326,
+    "fisher_p": 0.13992674490879065,
+    "holm_p": 1.0,
+    "paper_count": 15,
+    "paper_rate": 0.05,
+    "paper_trials": 300,
+    "reconstructed_count": 25,
+    "reconstructed_rate": 0.08333333333333333,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/ar1_0.97/dstar_isotonic",
+    "difference": 0.01,
+    "fisher_p": 0.5045008585880912,
+    "holm_p": 1.0,
+    "paper_count": 3,
+    "paper_rate": 0.01,
+    "paper_trials": 300,
+    "reconstructed_count": 6,
+    "reconstructed_rate": 0.02,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/ar1_0.97/lambda",
+    "difference": -0.01033333333333333,
+    "fisher_p": 0.642202608698166,
+    "holm_p": 1.0,
+    "paper_count": 11,
+    "paper_rate": 0.037,
+    "paper_trials": 300,
+    "reconstructed_count": 8,
+    "reconstructed_rate": 0.02666666666666667,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/ar1_0.9_plus_white/depth_fixed_cut",
+    "difference": -0.013000000000000012,
+    "fisher_p": 0.6994756483244347,
+    "holm_p": 1.0,
+    "paper_count": 268,
+    "paper_rate": 0.893,
+    "paper_trials": 300,
+    "reconstructed_count": 264,
+    "reconstructed_rate": 0.88,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/ar1_0.9_plus_white/dstar_ar1",
+    "difference": -0.04033333333333333,
+    "fisher_p": 0.3599860445864813,
+    "holm_p": 1.0,
+    "paper_count": 185,
+    "paper_rate": 0.617,
+    "paper_trials": 300,
+    "reconstructed_count": 173,
+    "reconstructed_rate": 0.5766666666666667,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/ar1_0.9_plus_white/dstar_isotonic",
+    "difference": -0.013333333333333332,
+    "fisher_p": 0.2857619933183373,
+    "holm_p": 1.0,
+    "paper_count": 6,
+    "paper_rate": 0.02,
+    "paper_trials": 300,
+    "reconstructed_count": 2,
+    "reconstructed_rate": 0.006666666666666667,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/ar1_0.9_plus_white/lambda",
+    "difference": -0.0003333333333333313,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 14,
+    "paper_rate": 0.047,
+    "paper_trials": 300,
+    "reconstructed_count": 14,
+    "reconstructed_rate": 0.04666666666666667,
+    "reconstructed_trials": 300,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/line_white_a0.25/depth_fixed_cut",
+    "difference": 0.009999999999999995,
+    "fisher_p": 0.8678568686598851,
+    "holm_p": 1.0,
+    "paper_count": 19,
+    "paper_rate": 0.095,
+    "paper_trials": 200,
+    "reconstructed_count": 21,
+    "reconstructed_rate": 0.105,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/line_white_a0.25/dstar_ar1",
+    "difference": 0.01999999999999999,
+    "fisher_p": 0.6320672079024668,
+    "holm_p": 1.0,
+    "paper_count": 20,
+    "paper_rate": 0.1,
+    "paper_trials": 200,
+    "reconstructed_count": 24,
+    "reconstructed_rate": 0.12,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/line_white_a0.25/dstar_isotonic",
+    "difference": -0.0050000000000000044,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 17,
+    "paper_rate": 0.085,
+    "paper_trials": 200,
+    "reconstructed_count": 16,
+    "reconstructed_rate": 0.08,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/line_white_a0.25/lambda",
+    "difference": -0.010000000000000009,
+    "fisher_p": 0.9185540592225684,
+    "holm_p": 1.0,
+    "paper_count": 80,
+    "paper_rate": 0.4,
+    "paper_trials": 200,
+    "reconstructed_count": 78,
+    "reconstructed_rate": 0.39,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/line_white_a0.5/depth_fixed_cut",
+    "difference": 0.050000000000000044,
+    "fisher_p": 0.14973262321912875,
+    "holm_p": 1.0,
+    "paper_count": 173,
+    "paper_rate": 0.865,
+    "paper_trials": 200,
+    "reconstructed_count": 183,
+    "reconstructed_rate": 0.915,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/line_white_a0.5/dstar_ar1",
+    "difference": 0.05500000000000005,
+    "fisher_p": 0.10561547728687315,
+    "holm_p": 1.0,
+    "paper_count": 173,
+    "paper_rate": 0.865,
+    "paper_trials": 200,
+    "reconstructed_count": 184,
+    "reconstructed_rate": 0.92,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/line_white_a0.5/dstar_isotonic",
+    "difference": 0.010000000000000009,
+    "fisher_p": 0.89161670846898,
+    "holm_p": 1.0,
+    "paper_count": 167,
+    "paper_rate": 0.835,
+    "paper_trials": 200,
+    "reconstructed_count": 169,
+    "reconstructed_rate": 0.845,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/line_white_a0.5/lambda",
+    "difference": 0.0050000000000000044,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 199,
+    "paper_rate": 0.995,
+    "paper_trials": 200,
+    "reconstructed_count": 200,
+    "reconstructed_rate": 1.0,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/line_white_a0.75/depth_fixed_cut",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 200,
+    "paper_rate": 1.0,
+    "paper_trials": 200,
+    "reconstructed_count": 200,
+    "reconstructed_rate": 1.0,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/line_white_a0.75/dstar_ar1",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 200,
+    "paper_rate": 1.0,
+    "paper_trials": 200,
+    "reconstructed_count": 200,
+    "reconstructed_rate": 1.0,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/line_white_a0.75/dstar_isotonic",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 200,
+    "paper_rate": 1.0,
+    "paper_trials": 200,
+    "reconstructed_count": 200,
+    "reconstructed_rate": 1.0,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/line_white_a0.75/lambda",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 200,
+    "paper_rate": 1.0,
+    "paper_trials": 200,
+    "reconstructed_count": 200,
+    "reconstructed_rate": 1.0,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/line_white_a1.0/depth_fixed_cut",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 200,
+    "paper_rate": 1.0,
+    "paper_trials": 200,
+    "reconstructed_count": 200,
+    "reconstructed_rate": 1.0,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/line_white_a1.0/dstar_ar1",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 200,
+    "paper_rate": 1.0,
+    "paper_trials": 200,
+    "reconstructed_count": 200,
+    "reconstructed_rate": 1.0,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/line_white_a1.0/dstar_isotonic",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 200,
+    "paper_rate": 1.0,
+    "paper_trials": 200,
+    "reconstructed_count": 200,
+    "reconstructed_rate": 1.0,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/line_white_a1.0/lambda",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 200,
+    "paper_rate": 1.0,
+    "paper_trials": 200,
+    "reconstructed_count": 200,
+    "reconstructed_rate": 1.0,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/line_ar1_0.9_a0.25/depth_fixed_cut",
+    "difference": 0.0050000000000000044,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 194,
+    "paper_rate": 0.97,
+    "paper_trials": 200,
+    "reconstructed_count": 195,
+    "reconstructed_rate": 0.975,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/line_ar1_0.9_a0.25/dstar_ar1",
+    "difference": -0.010000000000000002,
+    "fisher_p": 0.7867672840905646,
+    "holm_p": 1.0,
+    "paper_count": 8,
+    "paper_rate": 0.04,
+    "paper_trials": 200,
+    "reconstructed_count": 6,
+    "reconstructed_rate": 0.03,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/line_ar1_0.9_a0.25/dstar_isotonic",
+    "difference": -0.004999999999999999,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 3,
+    "paper_rate": 0.015,
+    "paper_trials": 200,
+    "reconstructed_count": 2,
+    "reconstructed_rate": 0.01,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/line_ar1_0.9_a0.25/lambda",
+    "difference": -0.010000000000000009,
+    "fisher_p": 0.879983507874784,
+    "holm_p": 1.0,
+    "paper_count": 26,
+    "paper_rate": 0.13,
+    "paper_trials": 200,
+    "reconstructed_count": 24,
+    "reconstructed_rate": 0.12,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/line_ar1_0.9_a0.5/depth_fixed_cut",
+    "difference": 0.015000000000000013,
+    "fisher_p": 0.3718553310227709,
+    "holm_p": 1.0,
+    "paper_count": 196,
+    "paper_rate": 0.98,
+    "paper_trials": 200,
+    "reconstructed_count": 199,
+    "reconstructed_rate": 0.995,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/line_ar1_0.9_a0.5/dstar_ar1",
+    "difference": 0.03,
+    "fisher_p": 0.13991613369653347,
+    "holm_p": 1.0,
+    "paper_count": 3,
+    "paper_rate": 0.015,
+    "paper_trials": 200,
+    "reconstructed_count": 9,
+    "reconstructed_rate": 0.045,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/line_ar1_0.9_a0.5/dstar_isotonic",
+    "difference": 0.0050000000000000044,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 6,
+    "paper_rate": 0.03,
+    "paper_trials": 200,
+    "reconstructed_count": 7,
+    "reconstructed_rate": 0.035,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/line_ar1_0.9_a0.5/lambda",
+    "difference": 0.010000000000000009,
+    "fisher_p": 0.8996454338513841,
+    "holm_p": 1.0,
+    "paper_count": 160,
+    "paper_rate": 0.8,
+    "paper_trials": 200,
+    "reconstructed_count": 162,
+    "reconstructed_rate": 0.81,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/line_ar1_0.9_a0.75/depth_fixed_cut",
+    "difference": -0.0050000000000000044,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 200,
+    "paper_rate": 1.0,
+    "paper_trials": 200,
+    "reconstructed_count": 199,
+    "reconstructed_rate": 0.995,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/line_ar1_0.9_a0.75/dstar_ar1",
+    "difference": 0.009999999999999998,
+    "fisher_p": 0.6231131986136624,
+    "holm_p": 1.0,
+    "paper_count": 1,
+    "paper_rate": 0.005,
+    "paper_trials": 200,
+    "reconstructed_count": 3,
+    "reconstructed_rate": 0.015,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/line_ar1_0.9_a0.75/dstar_isotonic",
+    "difference": 0.07499999999999998,
+    "fisher_p": 0.022922037439711922,
+    "holm_p": 1.0,
+    "paper_count": 14,
+    "paper_rate": 0.07,
+    "paper_trials": 200,
+    "reconstructed_count": 29,
+    "reconstructed_rate": 0.145,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/line_ar1_0.9_a0.75/lambda",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 200,
+    "paper_rate": 1.0,
+    "paper_trials": 200,
+    "reconstructed_count": 200,
+    "reconstructed_rate": 1.0,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/line_ar1_0.9_a1.0/depth_fixed_cut",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 200,
+    "paper_rate": 1.0,
+    "paper_trials": 200,
+    "reconstructed_count": 200,
+    "reconstructed_rate": 1.0,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/line_ar1_0.9_a1.0/dstar_ar1",
+    "difference": 0.09,
+    "fisher_p": 0.02151736279857225,
+    "holm_p": 1.0,
+    "paper_count": 24,
+    "paper_rate": 0.12,
+    "paper_trials": 200,
+    "reconstructed_count": 42,
+    "reconstructed_rate": 0.21,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/line_ar1_0.9_a1.0/dstar_isotonic",
+    "difference": -0.07999999999999996,
+    "fisher_p": 0.12968226907322472,
+    "holm_p": 1.0,
+    "paper_count": 122,
+    "paper_rate": 0.61,
+    "paper_trials": 200,
+    "reconstructed_count": 106,
+    "reconstructed_rate": 0.53,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/line_ar1_0.9_a1.0/lambda",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 200,
+    "paper_rate": 1.0,
+    "paper_trials": 200,
+    "reconstructed_count": 200,
+    "reconstructed_rate": 1.0,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/ar2_0.8/depth_fixed_cut",
+    "difference": -0.0050000000000000044,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 180,
+    "paper_rate": 0.9,
+    "paper_trials": 200,
+    "reconstructed_count": 179,
+    "reconstructed_rate": 0.895,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/ar2_0.8/dstar_ar1",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 0,
+    "paper_rate": 0.0,
+    "paper_trials": 200,
+    "reconstructed_count": 0,
+    "reconstructed_rate": 0.0,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/ar2_0.8/dstar_isotonic",
+    "difference": -0.015,
+    "fisher_p": 0.6214196207257268,
+    "holm_p": 1.0,
+    "paper_count": 10,
+    "paper_rate": 0.05,
+    "paper_trials": 200,
+    "reconstructed_count": 7,
+    "reconstructed_rate": 0.035,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/ar2_0.8/lambda",
+    "difference": -0.03,
+    "fisher_p": 0.2008219665044715,
+    "holm_p": 1.0,
+    "paper_count": 11,
+    "paper_rate": 0.055,
+    "paper_trials": 200,
+    "reconstructed_count": 5,
+    "reconstructed_rate": 0.025,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/ar2_0.9/depth_fixed_cut",
+    "difference": 0.010000000000000009,
+    "fisher_p": 0.8192315853524277,
+    "holm_p": 1.0,
+    "paper_count": 189,
+    "paper_rate": 0.945,
+    "paper_trials": 200,
+    "reconstructed_count": 191,
+    "reconstructed_rate": 0.955,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/ar2_0.9/dstar_ar1",
+    "difference": 0.0,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 0,
+    "paper_rate": 0.0,
+    "paper_trials": 200,
+    "reconstructed_count": 0,
+    "reconstructed_rate": 0.0,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/ar2_0.9/dstar_isotonic",
+    "difference": 0.015000000000000013,
+    "fisher_p": 0.7999103403333144,
+    "holm_p": 1.0,
+    "paper_count": 37,
+    "paper_rate": 0.185,
+    "paper_trials": 200,
+    "reconstructed_count": 40,
+    "reconstructed_rate": 0.2,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/ar2_0.9/lambda",
+    "difference": -0.020000000000000004,
+    "fisher_p": 0.5284845781376696,
+    "holm_p": 1.0,
+    "paper_count": 14,
+    "paper_rate": 0.07,
+    "paper_trials": 200,
+    "reconstructed_count": 10,
+    "reconstructed_rate": 0.05,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/ar2_0.95/depth_fixed_cut",
+    "difference": 0.0050000000000000044,
+    "fisher_p": 1.0,
+    "holm_p": 1.0,
+    "paper_count": 196,
+    "paper_rate": 0.98,
+    "paper_trials": 200,
+    "reconstructed_count": 197,
+    "reconstructed_rate": 0.985,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/ar2_0.95/dstar_ar1",
+    "difference": 0.015,
+    "fisher_p": 0.6214196207257268,
+    "holm_p": 1.0,
+    "paper_count": 7,
+    "paper_rate": 0.035,
+    "paper_trials": 200,
+    "reconstructed_count": 10,
+    "reconstructed_rate": 0.05,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/ar2_0.95/dstar_isotonic",
+    "difference": -0.03499999999999992,
+    "fisher_p": 0.545896431577692,
+    "holm_p": 1.0,
+    "paper_count": 115,
+    "paper_rate": 0.575,
+    "paper_trials": 200,
+    "reconstructed_count": 108,
+    "reconstructed_rate": 0.54,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   },
+   {
+    "cell": "table4/ar2_0.95/lambda",
+    "difference": -0.065,
+    "fisher_p": 0.2296254819103167,
+    "holm_p": 1.0,
+    "paper_count": 102,
+    "paper_rate": 0.51,
+    "paper_trials": 200,
+    "reconstructed_count": 89,
+    "reconstructed_rate": 0.445,
+    "reconstructed_trials": 200,
+    "verdict": "consistent"
+   }
+  ],
+  "n_cells": 123,
+  "n_consistent": 123,
+  "qbo": [
+   {
+    "paper": 0.95,
+    "quantity": "u30 lag-1 autocorrelation",
+    "reconstructed": 0.9527625133707848,
+    "verdict": "consistent"
+   },
+   {
+    "paper": "about half",
+    "quantity": "u30 share of power in bins 18-24",
+    "reconstructed": 0.5254597478613405,
+    "verdict": "consistent"
+   },
+   {
+    "paper": 0.81,
+    "quantity": "u30 D* p (ar1)",
+    "reconstructed": 0.818,
+    "verdict": "consistent"
+   },
+   {
+    "paper": 0.29,
+    "quantity": "u30 D* p (isotonic)",
+    "reconstructed": 0.306,
+    "verdict": "consistent"
+   },
+   {
+    "paper": 0.008,
+    "quantity": "u30 Lambda p",
+    "reconstructed": 0.007,
+    "verdict": "consistent"
+   },
+   {
+    "paper": 2.0,
+    "quantity": "u30 Lambda argmax period (months)",
+    "reconstructed": 2.007017543859649,
+    "verdict": "consistent"
+   },
+   {
+    "paper": 0.94,
+    "quantity": "u50 lag-1 autocorrelation",
+    "reconstructed": 0.9377890441901645,
+    "verdict": "consistent"
+   },
+   {
+    "paper": "about half",
+    "quantity": "u50 share of power in bins 18-24",
+    "reconstructed": 0.48971924079563806,
+    "verdict": "consistent"
+   },
+   {
+    "paper": 0.73,
+    "quantity": "u50 D* p (ar1)",
+    "reconstructed": 0.716,
+    "verdict": "consistent"
+   },
+   {
+    "paper": 0.2,
+    "quantity": "u50 D* p (isotonic)",
+    "reconstructed": 0.21,
+    "verdict": "consistent"
+   },
+   {
+    "paper": 0.016,
+    "quantity": "u50 Lambda p",
+    "reconstructed": 0.018,
+    "verdict": "consistent"
+   },
+   {
+    "paper": 27.2,
+    "quantity": "u50 Lambda argmax period (months)",
+    "reconstructed": 27.238095238095237,
+    "verdict": "consistent"
+   },
+   {
+    "paper": 3,
+    "quantity": "v2_30_to_50 lag",
+    "reconstructed": 3,
+    "verdict": "consistent"
+   },
+   {
+    "paper": 0.001,
+    "quantity": "v2_30_to_50 adjusted p",
+    "reconstructed": 0.001,
+    "verdict": "consistent"
+   },
+   {
+    "paper": 1,
+    "quantity": "v3_30_to_50 lag",
+    "reconstructed": 1,
+    "verdict": "consistent"
+   },
+   {
+    "paper": 0.002,
+    "quantity": "v3_30_to_50 adjusted p",
+    "reconstructed": 0.001,
+    "verdict": "consistent"
+   },
+   {
+    "paper": 10,
+    "quantity": "v2_50_to_30 lag",
+    "reconstructed": 10,
+    "verdict": "consistent"
+   },
+   {
+    "paper": 0.008,
+    "quantity": "v2_50_to_30 adjusted p",
+    "reconstructed": 0.008,
+    "verdict": "consistent"
+   },
+   {
+    "paper": 1,
+    "quantity": "v3_50_to_30 lag",
+    "reconstructed": 1,
+    "verdict": "consistent"
+   },
+   {
+    "paper": 0.027,
+    "quantity": "v3_50_to_30 adjusted p",
+    "reconstructed": 0.025,
+    "verdict": "consistent"
+   }
+  ]
+ },
+ "environment": {
+  "numpy": "2.5.3",
+  "python": "3.13.18",
+  "scipy": "1.18.1"
+ },
+ "exact_reproductions": [
+  {
+   "committed": [
+    1,
+    6,
+    44,
+    52,
+    53,
+    61,
+    98,
+    118,
+    193,
+    221,
+    235,
+    238,
+    251,
+    263,
+    291,
+    311,
+    321,
+    334,
+    336,
+    337,
+    345,
+    374,
+    383,
+    390,
+    394
+   ],
+   "match": true,
+   "reconstructed": [
+    1,
+    6,
+    44,
+    52,
+    53,
+    61,
+    98,
+    118,
+    193,
+    221,
+    235,
+    238,
+    251,
+    263,
+    291,
+    311,
+    321,
+    334,
+    336,
+    337,
+    345,
+    374,
+    383,
+    390,
+    394
+   ],
+   "row": "size/ar1_0.0"
+  },
+  {
+   "committed": [
+    25,
+    70,
+    79,
+    107,
+    146,
+    204,
+    212,
+    242,
+    255,
+    269,
+    281,
+    295,
+    299,
+    302,
+    354,
+    355
+   ],
+   "match": true,
+   "reconstructed": [
+    25,
+    70,
+    79,
+    107,
+    146,
+    204,
+    212,
+    242,
+    255,
+    269,
+    281,
+    295,
+    299,
+    302,
+    354,
+    355
+   ],
+   "row": "size/ar1_0.5"
+  },
+  {
+   "committed": [
+    0,
+    26,
+    53,
+    54,
+    60,
+    61,
+    97,
+    116,
+    159,
+    174,
+    179,
+    207,
+    235,
+    255,
+    286,
+    304,
+    359,
+    362,
+    387
+   ],
+   "match": true,
+   "reconstructed": [
+    0,
+    26,
+    53,
+    54,
+    60,
+    61,
+    97,
+    116,
+    159,
+    174,
+    179,
+    207,
+    235,
+    255,
+    286,
+    304,
+    359,
+    362,
+    387
+   ],
+   "row": "size/ar1_0.9"
+  },
+  {
+   "committed": [
+    12,
+    23,
+    37,
+    68,
+    81,
+    110,
+    119,
+    127,
+    137,
+    165,
+    167,
+    190,
+    193,
+    212,
+    223,
+    227,
+    250,
+    259,
+    275,
+    285,
+    317,
+    321,
+    331,
+    345,
+    348
+   ],
+   "match": true,
+   "reconstructed": [
+    12,
+    23,
+    37,
+    68,
+    81,
+    110,
+    119,
+    127,
+    137,
+    165,
+    167,
+    190,
+    193,
+    212,
+    223,
+    227,
+    250,
+    259,
+    275,
+    285,
+    317,
+    321,
+    331,
+    345,
+    348
+   ],
+   "row": "size/ar1_0.97"
+  },
+  {
+   "committed": {
+    "any": 200,
+    "exact": 200,
+    "other": 0,
+    "reverse": 0
+   },
+   "match": true,
+   "reconstructed": {
+    "any": 200,
+    "exact": 200,
+    "other": 0,
+    "reverse": 0
+   },
+   "row": "memory/ar1_0.0"
+  },
+  {
+   "committed": {
+    "any": 199,
+    "exact": 199,
+    "other": 2,
+    "reverse": 0
+   },
+   "match": true,
+   "reconstructed": {
+    "any": 199,
+    "exact": 199,
+    "other": 2,
+    "reverse": 0
+   },
+   "row": "memory/ar1_0.5"
+  },
+  {
+   "committed": {
+    "any": 152,
+    "exact": 152,
+    "other": 26,
+    "reverse": 19
+   },
+   "match": true,
+   "reconstructed": {
+    "any": 152,
+    "exact": 152,
+    "other": 26,
+    "reverse": 19
+   },
+   "row": "memory/ar1_0.8"
+  },
+  {
+   "committed": {
+    "any": 78,
+    "exact": 76,
+    "other": 37,
+    "reverse": 31
+   },
+   "match": true,
+   "reconstructed": {
+    "any": 78,
+    "exact": 76,
+    "other": 37,
+    "reverse": 31
+   },
+   "row": "memory/ar1_0.9"
+  }
+ ],
+ "findings": [
+  {
+   "evidence": {
+    "ar1_0.0": [
+     1.0,
+     1.0
+    ],
+    "ar1_0.5": [
+     0.9966666666666667,
+     1.0
+    ],
+    "ar1_0.8": [
+     0.73,
+     1.0
+    ],
+    "ar1_0.9": [
+     0.4,
+     1.0
+    ],
+    "ar1_0.97": [
+     0.11333333333333333,
+     1.0
+    ],
+    "ar2_0.95": [
+     0.14,
+     1.0
+    ]
+   },
+   "holds": true,
+   "id": "F1"
+  },
+  {
+   "evidence": {
+    "ar1_0.0": [
+     0.0,
+     0.0
+    ],
+    "ar1_0.5": [
+     0.0,
+     0.0
+    ],
+    "ar1_0.8": [
+     0.09,
+     0.0
+    ],
+    "ar1_0.9": [
+     0.15666666666666668,
+     0.0
+    ],
+    "ar1_0.97": [
+     0.10666666666666667,
+     0.0
+    ],
+    "ar2_0.95": [
+     0.03,
+     0.0
+    ]
+   },
+   "holds": true,
+   "id": "F2"
+  },
+  {
+   "evidence": {
+    "ar1_0.0": {
+     "granger": 0.0425,
+     "v2": 0.0625,
+     "v3": 0.065
+    },
+    "ar1_0.5": {
+     "granger": 0.0575,
+     "v2": 0.04,
+     "v3": 0.065
+    },
+    "ar1_0.9": {
+     "granger": 0.05,
+     "v2": 0.0475,
+     "v3": 0.0575
+    },
+    "ar1_0.97": {
+     "granger": 0.0575,
+     "v2": 0.0625,
+     "v3": 0.04
+    },
+    "ar2_0.95": {
+     "granger": 0.045,
+     "v2": 0.0575,
+     "v3": 0.0375
+    }
+   },
+   "holds": true,
+   "id": "F3"
+  },
+  {
+   "evidence": {
+    "c0.1": [
+     0.21333333333333335,
+     0.21
+    ],
+    "c0.2": [
+     0.8833333333333333,
+     0.8766666666666667
+    ],
+    "c0.3": [
+     1.0,
+     1.0
+    ],
+    "c0.4": [
+     1.0,
+     1.0
+    ],
+    "c0.5": [
+     1.0,
+     1.0
+    ]
+   },
+   "holds": true,
+   "id": "F4"
+  },
+  {
+   "evidence": {
+    "v2_exact": 0.14,
+    "v3_exact": 1.0
+   },
+   "holds": true,
+   "id": "F5"
+  },
+  {
+   "evidence": {
+    "ar1_0.9": 0.9866666666666667,
+    "ar1_0.97": 0.9966666666666667
+   },
+   "holds": true,
+   "id": "F6"
+  },
+  {
+   "evidence": {
+    "ar1_0.0": {
+     "dstar_ar1": 0.05333333333333334,
+     "dstar_isotonic": 0.03,
+     "lambda": 0.043333333333333335
+    },
+    "ar1_0.5": {
+     "dstar_ar1": 0.03666666666666667,
+     "dstar_isotonic": 0.02,
+     "lambda": 0.03333333333333333
+    },
+    "ar1_0.9": {
+     "dstar_ar1": 0.03666666666666667,
+     "dstar_isotonic": 0.013333333333333334,
+     "lambda": 0.03333333333333333
+    },
+    "ar1_0.97": {
+     "dstar_ar1": 0.08333333333333333,
+     "dstar_isotonic": 0.02,
+     "lambda": 0.02666666666666667
+    },
+    "ar1_0.9_plus_white": {
+     "dstar_ar1": 0.5766666666666667,
+     "dstar_isotonic": 0.006666666666666667,
+     "lambda": 0.04666666666666667
+    }
+   },
+   "holds": true,
+   "id": "F7"
+  },
+  {
+   "evidence": {
+    "depth_fixed_cut": 0.995,
+    "dstar_ar1": 0.045,
+    "dstar_isotonic": 0.035,
+    "lambda": 0.81
+   },
+   "holds": true,
+   "id": "F8"
+  },
+  {
+   "evidence": {
+    "within_one_bin": 0.9753086419753086
+   },
+   "holds": true,
+   "id": "F9"
+  },
+  {
+   "evidence": {
+    "ar2_0.8": 0.025,
+    "ar2_0.9": 0.05
+   },
+   "holds": true,
+   "id": "F10"
+  },
+  {
+   "evidence": {
+    "u30": {
+     "dstar_ar1_p": 0.818,
+     "dstar_isotonic_p": 0.306,
+     "lambda_p": 0.007
+    },
+    "u50": {
+     "dstar_ar1_p": 0.716,
+     "dstar_isotonic_p": 0.21,
+     "lambda_p": 0.018
+    }
+   },
+   "holds": true,
+   "id": "F11"
+  },
+  {
+   "evidence": {
+    "v2_30_to_50": 0.001,
+    "v3_30_to_50": 0.001
+   },
+   "holds": true,
+   "id": "F12"
+  }
+ ],
+ "protocol_id": "drr-v3-reconstruction-v1",
+ "protocol_sha256": "88079def296b14fda88b4753e362c17ba4446d7146cc249e8758e442cd2053e2",
+ "provenance": "This implementation is an independent reconstruction of the experimental procedures described in Woodyard (2026), using the documented mathematical definitions, simulation parameters, random seeds, and repository snapshot. The original execution scripts and machine-readable results were unavailable. Implementation choices not specified in the manuscript are explicitly documented as reconstruction assumptions. All reported replication results are generated by the reconstructed implementation and are not represented as recovered original outputs.",
+ "results": {
+  "long_run": {
+   "0.5": {
+    "ar_orders": [
+     1,
+     1
+    ],
+    "phi": 0.5,
+    "reverse_corr_prewhitened": 0.0004992736623278463,
+    "reverse_corr_raw": 0.03742124815813044,
+    "seed": 20860925
+   },
+   "0.9": {
+    "ar_orders": [
+     1,
+     1
+    ],
+    "phi": 0.9,
+    "reverse_corr_prewhitened": -0.000239843470272345,
+    "reverse_corr_raw": 0.21770241886034994,
+    "seed": 20861925
+   },
+   "0.97": {
+    "ar_orders": [
+     1,
+     1
+    ],
+    "phi": 0.97,
+    "reverse_corr_prewhitened": 0.002711141909058585,
+    "reverse_corr_raw": 0.27676170034422776,
+    "seed": 20862925
+   }
+  },
+  "memory": {
+   "ar1_0.0": {
+    "coupling": 0.3,
+    "granger_any": {
+     "ci95": [
+      0.9873570287754538,
+      0.9999999999999998
+     ],
+     "count": 300,
+     "rate": 1.0,
+     "trials": 300
+    },
+    "granger_exact": {
+     "ci95": [
+      0.9873570287754538,
+      0.9999999999999998
+     ],
+     "count": 300,
+     "rate": 1.0,
+     "trials": 300
+    },
+    "granger_reverse": {
+     "ci95": [
+      0.0018301483579117855,
+      0.023977583250306973
+     ],
+     "count": 2,
+     "rate": 0.006666666666666667,
+     "trials": 300
+    },
+    "lag": 2,
+    "process": {
+     "kind": "ar1",
+     "phi": 0.0
+    },
+    "seed": 20560925,
+    "v2_any": {
+     "ci95": [
+      0.9873570287754538,
+      0.9999999999999998
+     ],
+     "count": 300,
+     "rate": 1.0,
+     "trials": 300
+    },
+    "v2_exact": {
+     "ci95": [
+      0.9873570287754538,
+      0.9999999999999998
+     ],
+     "count": 300,
+     "rate": 1.0,
+     "trials": 300
+    },
+    "v2_first_200_counts": {
+     "any": 200,
+     "exact": 200,
+     "other": 0,
+     "reverse": 0
+    },
+    "v2_reverse": {
+     "ci95": [
+      8.673617379884035e-19,
+      0.012642971224546034
+     ],
+     "count": 0,
+     "rate": 0.0,
+     "trials": 300
+    },
+    "v3_any": {
+     "ci95": [
+      0.9873570287754538,
+      0.9999999999999998
+     ],
+     "count": 300,
+     "rate": 1.0,
+     "trials": 300
+    },
+    "v3_exact": {
+     "ci95": [
+      0.9873570287754538,
+      0.9999999999999998
+     ],
+     "count": 300,
+     "rate": 1.0,
+     "trials": 300
+    },
+    "v3_reverse": {
+     "ci95": [
+      8.673617379884035e-19,
+      0.012642971224546034
+     ],
+     "count": 0,
+     "rate": 0.0,
+     "trials": 300
+    }
+   },
+   "ar1_0.5": {
+    "coupling": 0.3,
+    "granger_any": {
+     "ci95": [
+      0.9873570287754538,
+      0.9999999999999998
+     ],
+     "count": 300,
+     "rate": 1.0,
+     "trials": 300
+    },
+    "granger_exact": {
+     "ci95": [
+      0.9760224167496929,
+      0.998169851642088
+     ],
+     "count": 298,
+     "rate": 0.9933333333333333,
+     "trials": 300
+    },
+    "granger_reverse": {
+     "ci95": [
+      8.673617379884035e-19,
+      0.012642971224546034
+     ],
+     "count": 0,
+     "rate": 0.0,
+     "trials": 300
+    },
+    "lag": 2,
+    "process": {
+     "kind": "ar1",
+     "phi": 0.5
+    },
+    "seed": 20561925,
+    "v2_any": {
+     "ci95": [
+      0.9813633063054688,
+      0.9994113422781488
+     ],
+     "count": 299,
+     "rate": 0.9966666666666667,
+     "trials": 300
+    },
+    "v2_exact": {
+     "ci95": [
+      0.9813633063054688,
+      0.9994113422781488
+     ],
+     "count": 299,
+     "rate": 0.9966666666666667,
+     "trials": 300
+    },
+    "v2_first_200_counts": {
+     "any": 199,
+     "exact": 199,
+     "other": 2,
+     "reverse": 0
+    },
+    "v2_reverse": {
+     "ci95": [
+      8.673617379884035e-19,
+      0.012642971224546034
+     ],
+     "count": 0,
+     "rate": 0.0,
+     "trials": 300
+    },
+    "v3_any": {
+     "ci95": [
+      0.9873570287754538,
+      0.9999999999999998
+     ],
+     "count": 300,
+     "rate": 1.0,
+     "trials": 300
+    },
+    "v3_exact": {
+     "ci95": [
+      0.9873570287754538,
+      0.9999999999999998
+     ],
+     "count": 300,
+     "rate": 1.0,
+     "trials": 300
+    },
+    "v3_reverse": {
+     "ci95": [
+      8.673617379884035e-19,
+      0.012642971224546034
+     ],
+     "count": 0,
+     "rate": 0.0,
+     "trials": 300
+    }
+   },
+   "ar1_0.8": {
+    "coupling": 0.3,
+    "granger_any": {
+     "ci95": [
+      0.9873570287754538,
+      0.9999999999999998
+     ],
+     "count": 300,
+     "rate": 1.0,
+     "trials": 300
+    },
+    "granger_exact": {
+     "ci95": [
+      0.8161683876490509,
+      0.8947286730692758
+     ],
+     "count": 258,
+     "rate": 0.86,
+     "trials": 300
+    },
+    "granger_reverse": {
+     "ci95": [
+      0.005196961739358857,
+      0.03377553025253262
+     ],
+     "count": 4,
+     "rate": 0.013333333333333334,
+     "trials": 300
+    },
+    "lag": 2,
+    "process": {
+     "kind": "ar1",
+     "phi": 0.8
+    },
+    "seed": 20562925,
+    "v2_any": {
+     "ci95": [
+      0.6770882626256942,
+      0.7770959706110145
+     ],
+     "count": 219,
+     "rate": 0.73,
+     "trials": 300
+    },
+    "v2_exact": {
+     "ci95": [
+      0.6770882626256942,
+      0.7770959706110145
+     ],
+     "count": 219,
+     "rate": 0.73,
+     "trials": 300
+    },
+    "v2_first_200_counts": {
+     "any": 152,
+     "exact": 152,
+     "other": 26,
+     "reverse": 19
+    },
+    "v2_reverse": {
+     "ci95": [
+      0.06259022560547936,
+      0.12777701079864834
+     ],
+     "count": 27,
+     "rate": 0.09,
+     "trials": 300
+    },
+    "v3_any": {
+     "ci95": [
+      0.9873570287754538,
+      0.9999999999999998
+     ],
+     "count": 300,
+     "rate": 1.0,
+     "trials": 300
+    },
+    "v3_exact": {
+     "ci95": [
+      0.9873570287754538,
+      0.9999999999999998
+     ],
+     "count": 300,
+     "rate": 1.0,
+     "trials": 300
+    },
+    "v3_reverse": {
+     "ci95": [
+      8.673617379884035e-19,
+      0.012642971224546034
+     ],
+     "count": 0,
+     "rate": 0.0,
+     "trials": 300
+    }
+   },
+   "ar1_0.9": {
+    "coupling": 0.3,
+    "granger_any": {
+     "ci95": [
+      0.9873570287754538,
+      0.9999999999999998
+     ],
+     "count": 300,
+     "rate": 1.0,
+     "trials": 300
+    },
+    "granger_exact": {
+     "ci95": [
+      0.6355391960366674,
+      0.739656474898005
+     ],
+     "count": 207,
+     "rate": 0.69,
+     "trials": 300
+    },
+    "granger_reverse": {
+     "ci95": [
+      0.005196961739358857,
+      0.03377553025253262
+     ],
+     "count": 4,
+     "rate": 0.013333333333333334,
+     "trials": 300
+    },
+    "lag": 2,
+    "process": {
+     "kind": "ar1",
+     "phi": 0.9
+    },
+    "seed": 20563925,
+    "v2_any": {
+     "ci95": [
+      0.35582394979935006,
+      0.4664517850210681
+     ],
+     "count": 123,
+     "rate": 0.41,
+     "trials": 300
+    },
+    "v2_exact": {
+     "ci95": [
+      0.3461651905860969,
+      0.4563634036588123
+     ],
+     "count": 120,
+     "rate": 0.4,
+     "trials": 300
+    },
+    "v2_first_200_counts": {
+     "any": 78,
+     "exact": 76,
+     "other": 37,
+     "reverse": 31
+    },
+    "v2_reverse": {
+     "ci95": [
+      0.11990681678878562,
+      0.2021080234520693
+     ],
+     "count": 47,
+     "rate": 0.15666666666666668,
+     "trials": 300
+    },
+    "v3_any": {
+     "ci95": [
+      0.9873570287754538,
+      0.9999999999999998
+     ],
+     "count": 300,
+     "rate": 1.0,
+     "trials": 300
+    },
+    "v3_exact": {
+     "ci95": [
+      0.9873570287754538,
+      0.9999999999999998
+     ],
+     "count": 300,
+     "rate": 1.0,
+     "trials": 300
+    },
+    "v3_reverse": {
+     "ci95": [
+      8.673617379884035e-19,
+      0.012642971224546034
+     ],
+     "count": 0,
+     "rate": 0.0,
+     "trials": 300
+    }
+   },
+   "ar1_0.97": {
+    "coupling": 0.3,
+    "granger_any": {
+     "ci95": [
+      0.9873570287754538,
+      0.9999999999999998
+     ],
+     "count": 300,
+     "rate": 1.0,
+     "trials": 300
+    },
+    "granger_exact": {
+     "ci95": [
+      0.540271195643406,
+      0.6506178299198485
+     ],
+     "count": 179,
+     "rate": 0.5966666666666667,
+     "trials": 300
+    },
+    "granger_reverse": {
+     "ci95": [
+      0.005196961739358857,
+      0.03377553025253262
+     ],
+     "count": 4,
+     "rate": 0.013333333333333334,
+     "trials": 300
+    },
+    "lag": 2,
+    "process": {
+     "kind": "ar1",
+     "phi": 0.97
+    },
+    "seed": 20564925,
+    "v2_any": {
+     "ci95": [
+      0.11110518744033696,
+      0.19116251222500888
+     ],
+     "count": 44,
+     "rate": 0.14666666666666667,
+     "trials": 300
+    },
+    "v2_exact": {
+     "ci95": [
+      0.082244501875291,
+      0.15419939587169124
+     ],
+     "count": 34,
+     "rate": 0.11333333333333333,
+     "trials": 300
+    },
+    "v2_first_200_counts": {
+     "any": 30,
+     "exact": 23,
+     "other": 26,
+     "reverse": 21
+    },
+    "v2_reverse": {
+     "ci95": [
+      0.07657584904594214,
+      0.14670328831736743
+     ],
+     "count": 32,
+     "rate": 0.10666666666666667,
+     "trials": 300
+    },
+    "v3_any": {
+     "ci95": [
+      0.9873570287754538,
+      0.9999999999999998
+     ],
+     "count": 300,
+     "rate": 1.0,
+     "trials": 300
+    },
+    "v3_exact": {
+     "ci95": [
+      0.9873570287754538,
+      0.9999999999999998
+     ],
+     "count": 300,
+     "rate": 1.0,
+     "trials": 300
+    },
+    "v3_reverse": {
+     "ci95": [
+      8.673617379884035e-19,
+      0.012642971224546034
+     ],
+     "count": 0,
+     "rate": 0.0,
+     "trials": 300
+    }
+   },
+   "ar2_0.95": {
+    "coupling": 0.3,
+    "granger_any": {
+     "ci95": [
+      0.9873570287754538,
+      0.9999999999999998
+     ],
+     "count": 300,
+     "rate": 1.0,
+     "trials": 300
+    },
+    "granger_exact": {
+     "ci95": [
+      8.673617379884035e-19,
+      0.012642971224546034
+     ],
+     "count": 0,
+     "rate": 0.0,
+     "trials": 300
+    },
+    "granger_reverse": {
+     "ci95": [
+      0.0018301483579117855,
+      0.023977583250306973
+     ],
+     "count": 2,
+     "rate": 0.006666666666666667,
+     "trials": 300
+    },
+    "lag": 2,
+    "process": {
+     "kind": "ar2_oscillator",
+     "r": 0.95
+    },
+    "seed": 20565925,
+    "v2_any": {
+     "ci95": [
+      0.2697753585604896,
+      0.3747761110803469
+     ],
+     "count": 96,
+     "rate": 0.32,
+     "trials": 300
+    },
+    "v2_exact": {
+     "ci95": [
+      0.10527132693072412,
+      0.18383161235094903
+     ],
+     "count": 42,
+     "rate": 0.14,
+     "trials": 300
+    },
+    "v2_first_200_counts": {
+     "any": 65,
+     "exact": 26,
+     "other": 10,
+     "reverse": 5
+    },
+    "v2_reverse": {
+     "ci95": [
+      0.01586185380943231,
+      0.05602253914164096
+     ],
+     "count": 9,
+     "rate": 0.03,
+     "trials": 300
+    },
+    "v3_any": {
+     "ci95": [
+      0.9873570287754538,
+      0.9999999999999998
+     ],
+     "count": 300,
+     "rate": 1.0,
+     "trials": 300
+    },
+    "v3_exact": {
+     "ci95": [
+      0.9873570287754538,
+      0.9999999999999998
+     ],
+     "count": 300,
+     "rate": 1.0,
+     "trials": 300
+    },
+    "v3_reverse": {
+     "ci95": [
+      8.673617379884035e-19,
+      0.012642971224546034
+     ],
+     "count": 0,
+     "rate": 0.0,
+     "trials": 300
+    }
+   }
+  },
+  "power_curve": {
+   "c0.1": {
+    "coupling": 0.1,
+    "granger_any": {
+     "ci95": [
+      0.1677218007333024,
+      0.25961112257693425
+     ],
+     "count": 63,
+     "rate": 0.21,
+     "trials": 300
+    },
+    "granger_exact": {
+     "ci95": [
+      0.09657536941275233,
+      0.17278042929341172
+     ],
+     "count": 39,
+     "rate": 0.13,
+     "trials": 300
+    },
+    "granger_reverse": {
+     "ci95": [
+      0.005196961739358857,
+      0.03377553025253262
+     ],
+     "count": 4,
+     "rate": 0.013333333333333334,
+     "trials": 300
+    },
+    "lag": 2,
+    "process": {
+     "kind": "ar1",
+     "phi": 0.9
+    },
+    "seed": 20660925,
+    "v2_any": {
+     "ci95": [
+      0.025496448084407246,
+      0.07271746563401146
+     ],
+     "count": 13,
+     "rate": 0.043333333333333335,
+     "trials": 300
+    },
+    "v2_exact": {
+     "ci95": [
+      0.00713947735063333,
+      0.0384153948330945
+     ],
+     "count": 5,
+     "rate": 0.016666666666666666,
+     "trials": 300
+    },
+    "v2_first_200_counts": {
+     "any": 10,
+     "exact": 5,
+     "other": 10,
+     "reverse": 4
+    },
+    "v2_reverse": {
+     "ci95": [
+      0.011347660299125234,
+      0.04737197226827532
+     ],
+     "count": 7,
+     "rate": 0.023333333333333334,
+     "trials": 300
+    },
+    "v3_any": {
+     "ci95": [
+      0.1707525956382275,
+      0.2631627078638455
+     ],
+     "count": 64,
+     "rate": 0.21333333333333335,
+     "trials": 300
+    },
+    "v3_exact": {
+     "ci95": [
+      0.1677218007333024,
+      0.25961112257693425
+     ],
+     "count": 63,
+     "rate": 0.21,
+     "trials": 300
+    },
+    "v3_reverse": {
+     "ci95": [
+      0.003406618437715286,
+      0.02898349336233983
+     ],
+     "count": 3,
+     "rate": 0.01,
+     "trials": 300
+    }
+   },
+   "c0.2": {
+    "coupling": 0.2,
+    "granger_any": {
+     "ci95": [
+      0.8346262759711767,
+      0.9091826857063321
+     ],
+     "count": 263,
+     "rate": 0.8766666666666667,
+     "trials": 300
+    },
+    "granger_exact": {
+     "ci95": [
+      0.5100989219821965,
+      0.6215486818545306
+     ],
+     "count": 170,
+     "rate": 0.5666666666666667,
+     "trials": 300
+    },
+    "granger_reverse": {
+     "ci95": [
+      0.0018301483579117855,
+      0.023977583250306973
+     ],
+     "count": 2,
+     "rate": 0.006666666666666667,
+     "trials": 300
+    },
+    "lag": 2,
+    "process": {
+     "kind": "ar1",
+     "phi": 0.9
+    },
+    "seed": 20661925,
+    "v2_any": {
+     "ci95": [
+      0.11403246871185316,
+      0.194817611145329
+     ],
+     "count": 45,
+     "rate": 0.15,
+     "trials": 300
+    },
+    "v2_exact": {
+     "ci95": [
+      0.10236514609208625,
+      0.1801554129977505
+     ],
+     "count": 41,
+     "rate": 0.13666666666666666,
+     "trials": 300
+    },
+    "v2_first_200_counts": {
+     "any": 31,
+     "exact": 28,
+     "other": 12,
+     "reverse": 10
+    },
+    "v2_reverse": {
+     "ci95": [
+      0.027998933682334012,
+      0.07679736022792105
+     ],
+     "count": 14,
+     "rate": 0.04666666666666667,
+     "trials": 300
+    },
+    "v3_any": {
+     "ci95": [
+      0.8420668566758442,
+      0.9149068653853369
+     ],
+     "count": 265,
+     "rate": 0.8833333333333333,
+     "trials": 300
+    },
+    "v3_exact": {
+     "ci95": [
+      0.8420668566758442,
+      0.9149068653853369
+     ],
+     "count": 265,
+     "rate": 0.8833333333333333,
+     "trials": 300
+    },
+    "v3_reverse": {
+     "ci95": [
+      0.0018301483579117855,
+      0.023977583250306973
+     ],
+     "count": 2,
+     "rate": 0.006666666666666667,
+     "trials": 300
+    }
+   },
+   "c0.3": {
+    "coupling": 0.3,
+    "granger_any": {
+     "ci95": [
+      0.9873570287754538,
+      0.9999999999999998
+     ],
+     "count": 300,
+     "rate": 1.0,
+     "trials": 300
+    },
+    "granger_exact": {
+     "ci95": [
+      0.6562544981888744,
+      0.7584354538968162
+     ],
+     "count": 213,
+     "rate": 0.71,
+     "trials": 300
+    },
+    "granger_reverse": {
+     "ci95": [
+      8.673617379884035e-19,
+      0.012642971224546034
+     ],
+     "count": 0,
+     "rate": 0.0,
+     "trials": 300
+    },
+    "lag": 2,
+    "process": {
+     "kind": "ar1",
+     "phi": 0.9
+    },
+    "seed": 20662925,
+    "v2_any": {
+     "ci95": [
+      0.2950585411049252,
+      0.40215197007060216
+     ],
+     "count": 104,
+     "rate": 0.3466666666666667,
+     "trials": 300
+    },
+    "v2_exact": {
+     "ci95": [
+      0.2760784389482685,
+      0.3816377910762407
+     ],
+     "count": 98,
+     "rate": 0.32666666666666666,
+     "trials": 300
+    },
+    "v2_first_200_counts": {
+     "any": 67,
+     "exact": 63,
+     "other": 30,
+     "reverse": 26
+    },
+    "v2_reverse": {
+     "ci95": [
+      0.11110518744033696,
+      0.19116251222500888
+     ],
+     "count": 44,
+     "rate": 0.14666666666666667,
+     "trials": 300
+    },
+    "v3_any": {
+     "ci95": [
+      0.9873570287754538,
+      0.9999999999999998
+     ],
+     "count": 300,
+     "rate": 1.0,
+     "trials": 300
+    },
+    "v3_exact": {
+     "ci95": [
+      0.9873570287754538,
+      0.9999999999999998
+     ],
+     "count": 300,
+     "rate": 1.0,
+     "trials": 300
+    },
+    "v3_reverse": {
+     "ci95": [
+      8.673617379884035e-19,
+      0.012642971224546034
+     ],
+     "count": 0,
+     "rate": 0.0,
+     "trials": 300
+    }
+   },
+   "c0.4": {
+    "coupling": 0.4,
+    "granger_any": {
+     "ci95": [
+      0.9873570287754538,
+      0.9999999999999998
+     ],
+     "count": 300,
+     "rate": 1.0,
+     "trials": 300
+    },
+    "granger_exact": {
+     "ci95": [
+      0.7475056887150938,
+      0.8383261483583421
+     ],
+     "count": 239,
+     "rate": 0.7966666666666666,
+     "trials": 300
+    },
+    "granger_reverse": {
+     "ci95": [
+      0.005196961739358857,
+      0.03377553025253262
+     ],
+     "count": 4,
+     "rate": 0.013333333333333334,
+     "trials": 300
+    },
+    "lag": 2,
+    "process": {
+     "kind": "ar1",
+     "phi": 0.9
+    },
+    "seed": 20663925,
+    "v2_any": {
+     "ci95": [
+      0.6631855651003921,
+      0.7646691473689714
+     ],
+     "count": 215,
+     "rate": 0.7166666666666667,
+     "trials": 300
+    },
+    "v2_exact": {
+     "ci95": [
+      0.6597183711272249,
+      0.7615539611503023
+     ],
+     "count": 214,
+     "rate": 0.7133333333333334,
+     "trials": 300
+    },
+    "v2_first_200_counts": {
+     "any": 140,
+     "exact": 140,
+     "other": 58,
+     "reverse": 55
+    },
+    "v2_reverse": {
+     "ci95": [
+      0.2509396637848768,
+      0.35411752470494157
+     ],
+     "count": 90,
+     "rate": 0.3,
+     "trials": 300
+    },
+    "v3_any": {
+     "ci95": [
+      0.9873570287754538,
+      0.9999999999999998
+     ],
+     "count": 300,
+     "rate": 1.0,
+     "trials": 300
+    },
+    "v3_exact": {
+     "ci95": [
+      0.9873570287754538,
+      0.9999999999999998
+     ],
+     "count": 300,
+     "rate": 1.0,
+     "trials": 300
+    },
+    "v3_reverse": {
+     "ci95": [
+      8.673617379884035e-19,
+      0.012642971224546034
+     ],
+     "count": 0,
+     "rate": 0.0,
+     "trials": 300
+    }
+   },
+   "c0.5": {
+    "coupling": 0.5,
+    "granger_any": {
+     "ci95": [
+      0.9873570287754538,
+      0.9999999999999998
+     ],
+     "count": 300,
+     "rate": 1.0,
+     "trials": 300
+    },
+    "granger_exact": {
+     "ci95": [
+      0.7725668011129554,
+      0.859341697303335
+     ],
+     "count": 246,
+     "rate": 0.82,
+     "trials": 300
+    },
+    "granger_reverse": {
+     "ci95": [
+      0.0018301483579117855,
+      0.023977583250306973
+     ],
+     "count": 2,
+     "rate": 0.006666666666666667,
+     "trials": 300
+    },
+    "lag": 2,
+    "process": {
+     "kind": "ar1",
+     "phi": 0.9
+    },
+    "seed": 20664925,
+    "v2_any": {
+     "ci95": [
+      0.8646182980304887,
+      0.9318497051817106
+     ],
+     "count": 271,
+     "rate": 0.9033333333333333,
+     "trials": 300
+    },
+    "v2_exact": {
+     "ci95": [
+      0.8646182980304887,
+      0.9318497051817106
+     ],
+     "count": 271,
+     "rate": 0.9033333333333333,
+     "trials": 300
+    },
+    "v2_first_200_counts": {
+     "any": 179,
+     "exact": 179,
+     "other": 95,
+     "reverse": 94
+    },
+    "v2_reverse": {
+     "ci95": [
+      0.4404895596001963,
+      0.5529280602079671
+     ],
+     "count": 149,
+     "rate": 0.49666666666666665,
+     "trials": 300
+    },
+    "v3_any": {
+     "ci95": [
+      0.9873570287754538,
+      0.9999999999999998
+     ],
+     "count": 300,
+     "rate": 1.0,
+     "trials": 300
+    },
+    "v3_exact": {
+     "ci95": [
+      0.9873570287754538,
+      0.9999999999999998
+     ],
+     "count": 300,
+     "rate": 1.0,
+     "trials": 300
+    },
+    "v3_reverse": {
+     "ci95": [
+      8.673617379884035e-19,
+      0.012642971224546034
+     ],
+     "count": 0,
+     "rate": 0.0,
+     "trials": 300
+    }
+   }
+  },
+  "qbo": {
+   "first_month": "1979-01",
+   "last_month": "2026-08",
+   "n_months": 572,
+   "rooting": {
+    "v2_30_to_50": {
+     "lag": 3,
+     "p_adj": 0.001,
+     "p_raw": 0.001,
+     "passes_candidate_gate": true,
+     "score": 0.890650930174729,
+     "significant": true
+    },
+    "v2_50_to_30": {
+     "lag": 10,
+     "p_adj": 0.008,
+     "p_raw": 0.008,
+     "passes_candidate_gate": false,
+     "score": 0.7598115094043212,
+     "significant": false
+    },
+    "v3_30_to_50": {
+     "lag": 1,
+     "p_adj": 0.001,
+     "p_raw": 0.001,
+     "passes_candidate_gate": true,
+     "score": 0.21509236997859413,
+     "significant": true
+    },
+    "v3_50_to_30": {
+     "lag": 1,
+     "p_adj": 0.025,
+     "p_raw": 0.024,
+     "passes_candidate_gate": false,
+     "score": 0.19785595377994908,
+     "significant": false
+    },
+    "v3_ar_orders": {
+     "u30": 10,
+     "u50": 12
+    }
+   },
+   "spectral": {
+    "u30": {
+     "band_18_24_variance_share": 0.5254597478613405,
+     "depth": 0.4342226239570646,
+     "dstar_ar1_p": 0.818,
+     "dstar_isotonic_p": 0.306,
+     "lag1_autocorrelation": 0.9527625133707848,
+     "lambda": 16.66439378567102,
+     "lambda_argmax_bin": 285,
+     "lambda_argmax_period_months": 2.007017543859649,
+     "lambda_p": 0.007,
+     "qbo_band_max_bin": 21,
+     "qbo_band_max_period_months": 27.238095238095237,
+     "qbo_band_max_ratio": 10.007409126603902
+    },
+    "u50": {
+     "band_18_24_variance_share": 0.48971924079563806,
+     "depth": 0.4377033580566734,
+     "dstar_ar1_p": 0.716,
+     "dstar_isotonic_p": 0.21,
+     "lag1_autocorrelation": 0.9377890441901645,
+     "lambda": 12.890335555138257,
+     "lambda_argmax_bin": 21,
+     "lambda_argmax_period_months": 27.238095238095237,
+     "lambda_p": 0.018,
+     "qbo_band_max_bin": 21,
+     "qbo_band_max_period_months": 27.238095238095237,
+     "qbo_band_max_ratio": 12.890335555138257
+    }
+   }
+  },
+  "resonance": {
+   "ar1_0.0": {
+    "depth_fixed_cut": {
+     "ci95": [
+      0.025496448084407246,
+      0.07271746563401146
+     ],
+     "count": 13,
+     "rate": 0.043333333333333335,
+     "trials": 300
+    },
+    "dstar_ar1": {
+     "ci95": [
+      0.03309191251909646,
+      0.08486914177483133
+     ],
+     "count": 16,
+     "rate": 0.05333333333333334,
+     "trials": 300
+    },
+    "dstar_isotonic": {
+     "ci95": [
+      0.01586185380943231,
+      0.05602253914164096
+     ],
+     "count": 9,
+     "rate": 0.03,
+     "trials": 300
+    },
+    "family": {
+     "kind": "ar1",
+     "phi": 0.0
+    },
+    "lambda": {
+     "ci95": [
+      0.025496448084407246,
+      0.07271746563401146
+     ],
+     "count": 13,
+     "rate": 0.043333333333333335,
+     "trials": 300
+    },
+    "lambda_rejection_bins": [
+     239,
+     27,
+     148,
+     239,
+     254,
+     179,
+     255,
+     255,
+     7,
+     159,
+     118,
+     33,
+     5
+    ],
+    "lambda_within_one_bin_of_line": 0.07692307692307693,
+    "seed": 20260926
+   },
+   "ar1_0.5": {
+    "depth_fixed_cut": {
+     "ci95": [
+      0.3333235932848012,
+      0.44287548019276246
+     ],
+     "count": 116,
+     "rate": 0.38666666666666666,
+     "trials": 300
+    },
+    "dstar_ar1": {
+     "ci95": [
+      0.02059530516285303,
+      0.06445384817189295
+     ],
+     "count": 11,
+     "rate": 0.03666666666666667,
+     "trials": 300
+    },
+    "dstar_isotonic": {
+     "ci95": [
+      0.009197631557703617,
+      0.042939620817860576
+     ],
+     "count": 6,
+     "rate": 0.02,
+     "trials": 300
+    },
+    "family": {
+     "kind": "ar1",
+     "phi": 0.5
+    },
+    "lambda": {
+     "ci95": [
+      0.01820494733885481,
+      0.06026182580405482
+     ],
+     "count": 10,
+     "rate": 0.03333333333333333,
+     "trials": 300
+    },
+    "lambda_rejection_bins": [
+     233,
+     254,
+     102,
+     49,
+     139,
+     223,
+     255,
+     189,
+     254,
+     45
+    ],
+    "lambda_within_one_bin_of_line": 0.0,
+    "seed": 20261926
+   },
+   "ar1_0.9": {
+    "depth_fixed_cut": {
+     "ci95": [
+      0.9662244697474675,
+      0.9948030382606411
+     ],
+     "count": 296,
+     "rate": 0.9866666666666667,
+     "trials": 300
+    },
+    "dstar_ar1": {
+     "ci95": [
+      0.02059530516285303,
+      0.06445384817189295
+     ],
+     "count": 11,
+     "rate": 0.03666666666666667,
+     "trials": 300
+    },
+    "dstar_isotonic": {
+     "ci95": [
+      0.005196961739358857,
+      0.03377553025253262
+     ],
+     "count": 4,
+     "rate": 0.013333333333333334,
+     "trials": 300
+    },
+    "family": {
+     "kind": "ar1",
+     "phi": 0.9
+    },
+    "lambda": {
+     "ci95": [
+      0.01820494733885481,
+      0.06026182580405482
+     ],
+     "count": 10,
+     "rate": 0.03333333333333333,
+     "trials": 300
+    },
+    "lambda_rejection_bins": [
+     254,
+     255,
+     247,
+     255,
+     63,
+     178,
+     59,
+     255,
+     255,
+     241
+    ],
+    "lambda_within_one_bin_of_line": 0.0,
+    "seed": 20262926
+   },
+   "ar1_0.97": {
+    "depth_fixed_cut": {
+     "ci95": [
+      0.9813633063054688,
+      0.9994113422781488
+     ],
+     "count": 299,
+     "rate": 0.9966666666666667,
+     "trials": 300
+    },
+    "dstar_ar1": {
+     "ci95": [
+      0.057080874056394275,
+      0.12012160196406074
+     ],
+     "count": 25,
+     "rate": 0.08333333333333333,
+     "trials": 300
+    },
+    "dstar_isotonic": {
+     "ci95": [
+      0.009197631557703617,
+      0.042939620817860576
+     ],
+     "count": 6,
+     "rate": 0.02,
+     "trials": 300
+    },
+    "family": {
+     "kind": "ar1",
+     "phi": 0.97
+    },
+    "lambda": {
+     "ci95": [
+      0.01357306980864708,
+      0.05172894295058982
+     ],
+     "count": 8,
+     "rate": 0.02666666666666667,
+     "trials": 300
+    },
+    "lambda_rejection_bins": [
+     211,
+     254,
+     160,
+     253,
+     76,
+     255,
+     252,
+     255
+    ],
+    "lambda_within_one_bin_of_line": 0.0,
+    "seed": 20263926
+   },
+   "ar1_0.9_plus_white": {
+    "depth_fixed_cut": {
+     "ci95": [
+      0.8383421861729838,
+      0.912049155696361
+     ],
+     "count": 264,
+     "rate": 0.88,
+     "trials": 300
+    },
+    "dstar_ar1": {
+     "ci95": [
+      0.5201332672229635,
+      0.6312614771892728
+     ],
+     "count": 173,
+     "rate": 0.5766666666666667,
+     "trials": 300
+    },
+    "dstar_isotonic": {
+     "ci95": [
+      0.0018301483579117855,
+      0.023977583250306973
+     ],
+     "count": 2,
+     "rate": 0.006666666666666667,
+     "trials": 300
+    },
+    "family": {
+     "kind": "ar1_plus_white",
+     "phi": 0.9,
+     "white_db": 0.0
+    },
+    "lambda": {
+     "ci95": [
+      0.027998933682334012,
+      0.07679736022792105
+     ],
+     "count": 14,
+     "rate": 0.04666666666666667,
+     "trials": 300
+    },
+    "lambda_rejection_bins": [
+     184,
+     209,
+     254,
+     231,
+     255,
+     103,
+     39,
+     23,
+     254,
+     170,
+     161,
+     255,
+     255,
+     104
+    ],
+    "lambda_within_one_bin_of_line": 0.0,
+    "seed": 20264926
+   },
+   "ar2_0.8": {
+    "depth_fixed_cut": {
+     "ci95": [
+      0.8448196800887696,
+      0.9302925120731899
+     ],
+     "count": 179,
+     "rate": 0.895,
+     "trials": 200
+    },
+    "dstar_ar1": {
+     "ci95": [
+      1.734723475976807e-18,
+      0.018845326377266575
+     ],
+     "count": 0,
+     "rate": 0.0,
+     "trials": 200
+    },
+    "dstar_isotonic": {
+     "ci95": [
+      0.017055542008567192,
+      0.07047061152229073
+     ],
+     "count": 7,
+     "rate": 0.035,
+     "trials": 200
+    },
+    "family": {
+     "kind": "ar2_oscillator",
+     "r": 0.8
+    },
+    "lambda": {
+     "ci95": [
+      0.010724719651761264,
+      0.05717834040664198
+     ],
+     "count": 5,
+     "rate": 0.025,
+     "trials": 200
+    },
+    "lambda_rejection_bins": [
+     74,
+     251,
+     181,
+     219,
+     174
+    ],
+    "lambda_within_one_bin_of_line": 0.0,
+    "seed": 20273926
+   },
+   "ar2_0.9": {
+    "depth_fixed_cut": {
+     "ci95": [
+      0.9167032959981803,
+      0.976147456998507
+     ],
+     "count": 191,
+     "rate": 0.955,
+     "trials": 200
+    },
+    "dstar_ar1": {
+     "ci95": [
+      1.734723475976807e-18,
+      0.018845326377266575
+     ],
+     "count": 0,
+     "rate": 0.0,
+     "trials": 200
+    },
+    "dstar_isotonic": {
+     "ci95": [
+      0.15045200926098115,
+      0.2608551865653788
+     ],
+     "count": 40,
+     "rate": 0.2,
+     "trials": 200
+    },
+    "family": {
+     "kind": "ar2_oscillator",
+     "r": 0.9
+    },
+    "lambda": {
+     "ci95": [
+      0.02738264560076393,
+      0.08957814813877599
+     ],
+     "count": 10,
+     "rate": 0.05,
+     "trials": 200
+    },
+    "lambda_rejection_bins": [
+     30,
+     112,
+     109,
+     187,
+     30,
+     34,
+     29,
+     112,
+     37,
+     30
+    ],
+    "lambda_within_one_bin_of_line": 0.0,
+    "seed": 20274926
+   },
+   "ar2_0.95": {
+    "depth_fixed_cut": {
+     "ci95": [
+      0.9568342712073097,
+      0.9948857622067417
+     ],
+     "count": 197,
+     "rate": 0.985,
+     "trials": 200
+    },
+    "dstar_ar1": {
+     "ci95": [
+      0.02738264560076393,
+      0.08957814813877599
+     ],
+     "count": 10,
+     "rate": 0.05,
+     "trials": 200
+    },
+    "dstar_isotonic": {
+     "ci95": [
+      0.4708228918895333,
+      0.6076694820002854
+     ],
+     "count": 108,
+     "rate": 0.54,
+     "trials": 200
+    },
+    "family": {
+     "kind": "ar2_oscillator",
+     "r": 0.95
+    },
+    "lambda": {
+     "ci95": [
+      0.3778060100295335,
+      0.5142669758719658
+     ],
+     "count": 89,
+     "rate": 0.445,
+     "trials": 200
+    },
+    "lambda_rejection_bins": [
+     30,
+     30,
+     30,
+     29,
+     31,
+     34,
+     32,
+     28,
+     31,
+     255,
+     31,
+     50,
+     34,
+     32,
+     34,
+     33,
+     32,
+     32,
+     31,
+     31,
+     30,
+     32,
+     31,
+     33,
+     33,
+     30,
+     31,
+     32,
+     23,
+     246,
+     30,
+     253,
+     34,
+     31,
+     253,
+     31,
+     32,
+     35,
+     30,
+     27,
+     33,
+     31,
+     31,
+     29,
+     32,
+     33,
+     32,
+     32,
+     32,
+     34,
+     28,
+     35,
+     28,
+     34,
+     37,
+     31,
+     34,
+     32,
+     32,
+     35,
+     29,
+     33,
+     29,
+     28,
+     30,
+     30,
+     30,
+     33,
+     27,
+     31,
+     32,
+     31,
+     34,
+     34,
+     32,
+     33,
+     30,
+     31,
+     32,
+     31,
+     34,
+     31,
+     30,
+     31,
+     255,
+     30,
+     31,
+     31,
+     32
+    ],
+    "lambda_within_one_bin_of_line": 0.5056179775280899,
+    "seed": 20275926
+   },
+   "line_ar1_0.9_a0.25": {
+    "depth_fixed_cut": {
+     "ci95": [
+      0.942821659593358,
+      0.9892752803482386
+     ],
+     "count": 195,
+     "rate": 0.975,
+     "trials": 200
+    },
+    "dstar_ar1": {
+     "ci95": [
+      0.013820314340111346,
+      0.06389429245451925
+     ],
+     "count": 6,
+     "rate": 0.03,
+     "trials": 200
+    },
+    "dstar_isotonic": {
+     "ci95": [
+      0.0027466581335444384,
+      0.0357217617161768
+     ],
+     "count": 2,
+     "rate": 0.01,
+     "trials": 200
+    },
+    "family": {
+     "amplitude": 0.25,
+     "kind": "line_in_ar1",
+     "phi": 0.9
+    },
+    "lambda": {
+     "ci95": [
+      0.08197992706375512,
+      0.17234252098296743
+     ],
+     "count": 24,
+     "rate": 0.12,
+     "trials": 200
+    },
+    "lambda_rejection_bins": [
+     32,
+     32,
+     142,
+     250,
+     32,
+     255,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     149,
+     32,
+     243,
+     249,
+     32,
+     244,
+     7,
+     32
+    ],
+    "lambda_within_one_bin_of_line": 0.6666666666666666,
+    "seed": 20269926
+   },
+   "line_ar1_0.9_a0.5": {
+    "depth_fixed_cut": {
+     "ci95": [
+      0.9722262956021069,
+      0.9991168312843989
+     ],
+     "count": 199,
+     "rate": 0.995,
+     "trials": 200
+    },
+    "dstar_ar1": {
+     "ci95": [
+      0.023852543001492997,
+      0.0832967040018196
+     ],
+     "count": 9,
+     "rate": 0.045,
+     "trials": 200
+    },
+    "dstar_isotonic": {
+     "ci95": [
+      0.017055542008567192,
+      0.07047061152229073
+     ],
+     "count": 7,
+     "rate": 0.035,
+     "trials": 200
+    },
+    "family": {
+     "amplitude": 0.5,
+     "kind": "line_in_ar1",
+     "phi": 0.9
+    },
+    "lambda": {
+     "ci95": [
+      0.7499876129240015,
+      0.8583282847220932
+     ],
+     "count": 162,
+     "rate": 0.81,
+     "trials": 200
+    },
+    "lambda_rejection_bins": [
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     255,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     250,
+     32,
+     32,
+     32,
+     32,
+     113,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     225,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32
+    ],
+    "lambda_within_one_bin_of_line": 0.9753086419753086,
+    "seed": 20270926
+   },
+   "line_ar1_0.9_a0.75": {
+    "depth_fixed_cut": {
+     "ci95": [
+      0.9722262956021069,
+      0.9991168312843989
+     ],
+     "count": 199,
+     "rate": 0.995,
+     "trials": 200
+    },
+    "dstar_ar1": {
+     "ci95": [
+      0.00511423779325831,
+      0.04316572879269026
+     ],
+     "count": 3,
+     "rate": 0.015,
+     "trials": 200
+    },
+    "dstar_isotonic": {
+     "ci95": [
+      0.10289350642004402,
+      0.20048667530781522
+     ],
+     "count": 29,
+     "rate": 0.145,
+     "trials": 200
+    },
+    "family": {
+     "amplitude": 0.75,
+     "kind": "line_in_ar1",
+     "phi": 0.9
+    },
+    "lambda": {
+     "ci95": [
+      0.9811546736227335,
+      1.0
+     ],
+     "count": 200,
+     "rate": 1.0,
+     "trials": 200
+    },
+    "lambda_rejection_bins": [
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     109,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32
+    ],
+    "lambda_within_one_bin_of_line": 0.995,
+    "seed": 20271926
+   },
+   "line_ar1_0.9_a1.0": {
+    "depth_fixed_cut": {
+     "ci95": [
+      0.9811546736227335,
+      1.0
+     ],
+     "count": 200,
+     "rate": 1.0,
+     "trials": 200
+    },
+    "dstar_ar1": {
+     "ci95": [
+      0.15928412069979,
+      0.2716461685990246
+     ],
+     "count": 42,
+     "rate": 0.21,
+     "trials": 200
+    },
+    "dstar_isotonic": {
+     "ci95": [
+      0.4609168291500183,
+      0.5979524512673458
+     ],
+     "count": 106,
+     "rate": 0.53,
+     "trials": 200
+    },
+    "family": {
+     "amplitude": 1.0,
+     "kind": "line_in_ar1",
+     "phi": 0.9
+    },
+    "lambda": {
+     "ci95": [
+      0.9811546736227335,
+      1.0
+     ],
+     "count": 200,
+     "rate": 1.0,
+     "trials": 200
+    },
+    "lambda_rejection_bins": [
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     255,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32
+    ],
+    "lambda_within_one_bin_of_line": 0.995,
+    "seed": 20272926
+   },
+   "line_white_a0.25": {
+    "depth_fixed_cut": {
+     "ci95": [
+      0.06970748792681017,
+      0.1551803199112304
+     ],
+     "count": 21,
+     "rate": 0.105,
+     "trials": 200
+    },
+    "dstar_ar1": {
+     "ci95": [
+      0.08197992706375512,
+      0.17234252098296743
+     ],
+     "count": 24,
+     "rate": 0.12,
+     "trials": 200
+    },
+    "dstar_isotonic": {
+     "ci95": [
+      0.049840585889759974,
+      0.12598948826714396
+     ],
+     "count": 16,
+     "rate": 0.08,
+     "trials": 200
+    },
+    "family": {
+     "amplitude": 0.25,
+     "kind": "line_in_white"
+    },
+    "lambda": {
+     "ci95": [
+      0.3250834313746962,
+      0.4590625404283025
+     ],
+     "count": 78,
+     "rate": 0.39,
+     "trials": 200
+    },
+    "lambda_rejection_bins": [
+     32,
+     32,
+     32,
+     102,
+     167,
+     32,
+     32,
+     32,
+     32,
+     32,
+     252,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     47,
+     247,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     79,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     168,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32
+    ],
+    "lambda_within_one_bin_of_line": 0.9102564102564102,
+    "seed": 20265926
+   },
+   "line_white_a0.5": {
+    "depth_fixed_cut": {
+     "ci95": [
+      0.8681041292843443,
+      0.9462542498225244
+     ],
+     "count": 183,
+     "rate": 0.915,
+     "trials": 200
+    },
+    "dstar_ar1": {
+     "ci95": [
+      0.874010511732856,
+      0.9501594141102401
+     ],
+     "count": 184,
+     "rate": 0.92,
+     "trials": 200
+    },
+    "dstar_isotonic": {
+     "ci95": [
+      0.7883930940765792,
+      0.8886036307231068
+     ],
+     "count": 169,
+     "rate": 0.845,
+     "trials": 200
+    },
+    "family": {
+     "amplitude": 0.5,
+     "kind": "line_in_white"
+    },
+    "lambda": {
+     "ci95": [
+      0.9811546736227335,
+      1.0
+     ],
+     "count": 200,
+     "rate": 1.0,
+     "trials": 200
+    },
+    "lambda_rejection_bins": [
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32
+    ],
+    "lambda_within_one_bin_of_line": 1.0,
+    "seed": 20266926
+   },
+   "line_white_a0.75": {
+    "depth_fixed_cut": {
+     "ci95": [
+      0.9811546736227335,
+      1.0
+     ],
+     "count": 200,
+     "rate": 1.0,
+     "trials": 200
+    },
+    "dstar_ar1": {
+     "ci95": [
+      0.9811546736227335,
+      1.0
+     ],
+     "count": 200,
+     "rate": 1.0,
+     "trials": 200
+    },
+    "dstar_isotonic": {
+     "ci95": [
+      0.9811546736227335,
+      1.0
+     ],
+     "count": 200,
+     "rate": 1.0,
+     "trials": 200
+    },
+    "family": {
+     "amplitude": 0.75,
+     "kind": "line_in_white"
+    },
+    "lambda": {
+     "ci95": [
+      0.9811546736227335,
+      1.0
+     ],
+     "count": 200,
+     "rate": 1.0,
+     "trials": 200
+    },
+    "lambda_rejection_bins": [
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32
+    ],
+    "lambda_within_one_bin_of_line": 1.0,
+    "seed": 20267926
+   },
+   "line_white_a1.0": {
+    "depth_fixed_cut": {
+     "ci95": [
+      0.9811546736227335,
+      1.0
+     ],
+     "count": 200,
+     "rate": 1.0,
+     "trials": 200
+    },
+    "dstar_ar1": {
+     "ci95": [
+      0.9811546736227335,
+      1.0
+     ],
+     "count": 200,
+     "rate": 1.0,
+     "trials": 200
+    },
+    "dstar_isotonic": {
+     "ci95": [
+      0.9811546736227335,
+      1.0
+     ],
+     "count": 200,
+     "rate": 1.0,
+     "trials": 200
+    },
+    "family": {
+     "amplitude": 1.0,
+     "kind": "line_in_white"
+    },
+    "lambda": {
+     "ci95": [
+      0.9811546736227335,
+      1.0
+     ],
+     "count": 200,
+     "rate": 1.0,
+     "trials": 200
+    },
+    "lambda_rejection_bins": [
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32
+    ],
+    "lambda_within_one_bin_of_line": 1.0,
+    "seed": 20268926
+   }
+  },
+  "size": {
+   "ar1_0.0": {
+    "false_positive_trials": {
+     "granger": [
+      1,
+      6,
+      52,
+      98,
+      110,
+      118,
+      125,
+      193,
+      221,
+      235,
+      238,
+      251,
+      263,
+      288,
+      334,
+      358,
+      374
+     ],
+     "v2": [
+      1,
+      6,
+      44,
+      52,
+      53,
+      61,
+      98,
+      118,
+      193,
+      221,
+      235,
+      238,
+      251,
+      263,
+      291,
+      311,
+      321,
+      334,
+      336,
+      337,
+      345,
+      374,
+      383,
+      390,
+      394
+     ],
+     "v3": [
+      1,
+      6,
+      15,
+      44,
+      52,
+      53,
+      61,
+      98,
+      110,
+      118,
+      152,
+      193,
+      238,
+      263,
+      268,
+      290,
+      291,
+      308,
+      311,
+      336,
+      337,
+      343,
+      345,
+      383,
+      390,
+      398
+     ]
+    },
+    "granger": {
+     "ci95": [
+      0.026701694991131116,
+      0.06700205432475019
+     ],
+     "count": 17,
+     "rate": 0.0425,
+     "trials": 400
+    },
+    "process": {
+     "kind": "ar1",
+     "phi": 0.0
+    },
+    "seed": 20270925,
+    "v2": {
+     "ci95": [
+      0.04268914141220244,
+      0.09063411613030699
+     ],
+     "count": 25,
+     "rate": 0.0625,
+     "trials": 400
+    },
+    "v3": {
+     "ci95": [
+      0.04474048189620036,
+      0.09353521417463759
+     ],
+     "count": 26,
+     "rate": 0.065,
+     "trials": 400
+    }
+   },
+   "ar1_0.5": {
+    "false_positive_trials": {
+     "granger": [
+      25,
+      35,
+      70,
+      79,
+      85,
+      107,
+      125,
+      181,
+      207,
+      212,
+      213,
+      248,
+      249,
+      267,
+      269,
+      270,
+      295,
+      310,
+      319,
+      349,
+      352,
+      355,
+      389
+     ],
+     "v2": [
+      25,
+      70,
+      79,
+      107,
+      146,
+      204,
+      212,
+      242,
+      255,
+      269,
+      281,
+      295,
+      299,
+      302,
+      354,
+      355
+     ],
+     "v3": [
+      2,
+      5,
+      30,
+      63,
+      70,
+      80,
+      91,
+      107,
+      125,
+      131,
+      212,
+      213,
+      242,
+      248,
+      255,
+      267,
+      269,
+      270,
+      277,
+      281,
+      295,
+      310,
+      319,
+      349,
+      354,
+      389
+     ]
+    },
+    "granger": {
+     "ci95": [
+      0.038617542757733075,
+      0.08480083772811935
+     ],
+     "count": 23,
+     "rate": 0.0575,
+     "trials": 400
+    },
+    "process": {
+     "kind": "ar1",
+     "phi": 0.5
+    },
+    "seed": 20280925,
+    "v2": {
+     "ci95": [
+      0.024769063069711758,
+      0.06398224771784103
+     ],
+     "count": 16,
+     "rate": 0.04,
+     "trials": 400
+    },
+    "v3": {
+     "ci95": [
+      0.04474048189620036,
+      0.09353521417463759
+     ],
+     "count": 26,
+     "rate": 0.065,
+     "trials": 400
+    }
+   },
+   "ar1_0.9": {
+    "false_positive_trials": {
+     "granger": [
+      0,
+      76,
+      78,
+      79,
+      80,
+      97,
+      117,
+      123,
+      132,
+      152,
+      212,
+      225,
+      226,
+      237,
+      241,
+      248,
+      296,
+      318,
+      386,
+      399
+     ],
+     "v2": [
+      0,
+      26,
+      53,
+      54,
+      60,
+      61,
+      97,
+      116,
+      159,
+      174,
+      179,
+      207,
+      235,
+      255,
+      286,
+      304,
+      359,
+      362,
+      387
+     ],
+     "v3": [
+      9,
+      13,
+      14,
+      53,
+      58,
+      67,
+      75,
+      76,
+      78,
+      117,
+      123,
+      152,
+      155,
+      199,
+      233,
+      248,
+      279,
+      287,
+      295,
+      351,
+      366,
+      386,
+      394
+     ]
+    },
+    "granger": {
+     "ci95": [
+      0.03259742983714726,
+      0.07596363506371961
+     ],
+     "count": 20,
+     "rate": 0.05,
+     "trials": 400
+    },
+    "process": {
+     "kind": "ar1",
+     "phi": 0.9
+    },
+    "seed": 20290925,
+    "v2": {
+     "ci95": [
+      0.030617076962711882,
+      0.07299154940982647
+     ],
+     "count": 19,
+     "rate": 0.0475,
+     "trials": 400
+    },
+    "v3": {
+     "ci95": [
+      0.038617542757733075,
+      0.08480083772811935
+     ],
+     "count": 23,
+     "rate": 0.0575,
+     "trials": 400
+    }
+   },
+   "ar1_0.97": {
+    "false_positive_trials": {
+     "granger": [
+      1,
+      14,
+      27,
+      37,
+      114,
+      152,
+      178,
+      182,
+      193,
+      194,
+      209,
+      223,
+      231,
+      233,
+      250,
+      251,
+      260,
+      262,
+      265,
+      266,
+      318,
+      321,
+      387
+     ],
+     "v2": [
+      12,
+      23,
+      37,
+      68,
+      81,
+      110,
+      119,
+      127,
+      137,
+      165,
+      167,
+      190,
+      193,
+      212,
+      223,
+      227,
+      250,
+      259,
+      275,
+      285,
+      317,
+      321,
+      331,
+      345,
+      348
+     ],
+     "v3": [
+      29,
+      37,
+      38,
+      52,
+      59,
+      114,
+      152,
+      153,
+      182,
+      186,
+      193,
+      194,
+      221,
+      250,
+      321,
+      387
+     ]
+    },
+    "granger": {
+     "ci95": [
+      0.038617542757733075,
+      0.08480083772811935
+     ],
+     "count": 23,
+     "rate": 0.0575,
+     "trials": 400
+    },
+    "process": {
+     "kind": "ar1",
+     "phi": 0.97
+    },
+    "seed": 20300925,
+    "v2": {
+     "ci95": [
+      0.04268914141220244,
+      0.09063411613030699
+     ],
+     "count": 25,
+     "rate": 0.0625,
+     "trials": 400
+    },
+    "v3": {
+     "ci95": [
+      0.024769063069711758,
+      0.06398224771784103
+     ],
+     "count": 16,
+     "rate": 0.04,
+     "trials": 400
+    }
+   },
+   "ar2_0.95": {
+    "false_positive_trials": {
+     "granger": [
+      12,
+      55,
+      61,
+      187,
+      200,
+      220,
+      227,
+      229,
+      236,
+      266,
+      282,
+      285,
+      290,
+      306,
+      336,
+      389,
+      390,
+      396
+     ],
+     "v2": [
+      0,
+      10,
+      13,
+      31,
+      51,
+      69,
+      181,
+      191,
+      212,
+      213,
+      215,
+      248,
+      253,
+      259,
+      297,
+      305,
+      314,
+      339,
+      364,
+      368,
+      384,
+      389,
+      392
+     ],
+     "v3": [
+      42,
+      126,
+      155,
+      159,
+      187,
+      220,
+      229,
+      271,
+      279,
+      291,
+      292,
+      336,
+      386,
+      390,
+      396
+     ]
+    },
+    "granger": {
+     "ci95": [
+      0.028651458653886006,
+      0.07000472919032381
+     ],
+     "count": 18,
+     "rate": 0.045,
+     "trials": 400
+    },
+    "process": {
+     "kind": "ar2_oscillator",
+     "r": 0.95
+    },
+    "seed": 20310925,
+    "v2": {
+     "ci95": [
+      0.038617542757733075,
+      0.08480083772811935
+     ],
+     "count": 23,
+     "rate": 0.0575,
+     "trials": 400
+    },
+    "v3": {
+     "ci95": [
+      0.022855029814710867,
+      0.060943842444513396
+     ],
+     "count": 15,
+     "rate": 0.0375,
+     "trials": 400
+    }
+   }
+  }
+ },
+ "runtime_seconds": 692.4,
+ "schema_version": "drr-v3-reconstruction-1",
+ "smoke": false
+}
