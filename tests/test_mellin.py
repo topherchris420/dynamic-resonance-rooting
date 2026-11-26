@@ -46,6 +46,29 @@ def test_log_spectrum_and_mode_recovery():
     assert result["relative_sse"] < 1e-20
 
 
+@pytest.mark.parametrize("n", [64, 67], ids=["even-power-of-two", "odd-prime"])
+def test_log_spectrum_matches_direct_dft_in_every_bin(n):
+    du = 0.125
+    beta = 0.3
+    samples = np.arange(n)
+    x = np.exp(0.75 + du * samples)
+    # DC, an off-bin tone, and nonzero energy in the highest positive bin.
+    weighted = (
+        0.8
+        + 0.35 * np.sin(2 * np.pi * 4.25 * samples / n + 0.1)
+        + 0.6 * np.cos(2 * np.pi * (n // 2) * samples / n)
+    )
+    frequency, amplitude = log_spectrum(x, x**beta * weighted, beta=beta)
+
+    bins = np.arange(n // 2 + 1)
+    basis = np.exp(-2j * np.pi * bins[:, None] * samples / n)
+    two_sided = np.abs(basis @ weighted) / n
+    # Real inputs have conjugate pairs, except for DC and the even Nyquist bin.
+    multiplicity = np.where((bins == 0) | (2 * bins == n), 1, 2)
+    np.testing.assert_allclose(frequency, 2 * np.pi * bins / (n * du), rtol=1e-12, atol=1e-12)
+    np.testing.assert_allclose(amplitude, multiplicity * two_sided, rtol=1e-12, atol=1e-12)
+
+
 def test_window_and_kernel():
     result = window_excess([1, 4, 9], [-10, 3, 9], 0.5, 2)
     assert result["max_normalized"] == pytest.approx(3)
