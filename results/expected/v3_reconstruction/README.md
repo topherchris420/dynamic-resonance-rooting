@@ -4,13 +4,31 @@ This implementation is an independent reconstruction of the experimental procedu
 
 Protocol `drr-v3-reconstruction-v1` (SHA-256 `88079def296b...`). Environment: Python 3.13.18, NumPy 2.5.3, SciPy 1.18.1. Runtime 692.4 s on 4 workers.
 
-Regenerate: `python scripts/run_v3_reconstruction.py --workers 4 --output results/expected/v3_reconstruction/v3_reconstruction.json`.
+## Replay the registered study
+
+Use Python 3.12 from the repository root. These commands use the same dependency constraints as [the replay workflow](../../../.github/workflows/v3-reconstruction.yml). They write to a separate directory and check the new run against the committed artifact.
+
+```bash
+python -m pip install -e ".[dev]" -c experiments/financial_holdout/requirements.txt
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+  python scripts/run_v3_reconstruction.py --workers 4 \
+  --output results/reproduction/v3_reconstruction.json \
+  --verify-against results/expected/v3_reconstruction/v3_reconstruction.json
+```
+
+A matching run prints `PASS`. The comparator checks counts, labels and trial
+indices exactly, allows small floating-point differences, and excludes runtime
+and environment metadata. The recorded run took about 12 minutes on four
+workers; your runtime will vary. For a wiring check only, use `--smoke`, omit
+`--verify-against`, and write to a different output file. A smoke run is not
+evidence for the registered findings. See the [registered protocol](../../../experiments/v3_reconstruction/protocol.json)
+and the [November 2026 manuscript (PDF)](https://github.com/topherchris420/dynamic-resonance-rooting/blob/1b1ab6b7372d3457c5a2760789f60d2def3dc49d/paper/drr-v3/main.pdf).
 
 ## Summary
 
 - Exact reproductions of committed v2 rows: 8 of 8 match.
-- Monte Carlo rates compared with the paper (two-sided Fisher exact test, Holm across all cells): 123 of 123 consistent.
-- Long-run correlations within 0.01 of the paper: 5 of 6.
+- None of the 123 Monte Carlo rate comparisons with the paper was statistically significant after Holm correction of the two-sided Fisher tests. This does not establish equivalence; the manuscript discusses the tests’ power.
+- Five of six long-run correlations were within the registered 0.01 tolerance. The reverse correlation at φ = 0.9 missed it: 0.228 as published, 0.218 in the reconstruction, and 0.219 from the theoretical expression.
 - QBO quantities consistent under the registered rules: 20 of 20.
 - Registered findings that hold: 12 of 12.
 
@@ -32,6 +50,8 @@ Regenerate: `python scripts/run_v3_reconstruction.py --workers 4 --output result
 | F12 | yes |
 
 ## Every Monte Carlo cell
+
+In the verdict column, “consistent” means that the comparison did not detect a statistically significant difference after correction.
 
 | Cell | Paper | Reconstructed | Fisher p | Holm p | Verdict |
 |---|---|---|---|---|---|

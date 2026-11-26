@@ -8,7 +8,7 @@ Dynamic Resonance Rooting (DRR) is an open-source Python research framework for 
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8%2B-0B5D63)](pyproject.toml)
 [![MIT license](https://img.shields.io/badge/license-MIT-0B5D63)](LICENSE)
 
-**[Run your first analysis](#quick-start)** · **[Explore the browser lab](#live-lab)** · **[Inspect the evidence](#what-the-evidence-says)** · **[Contribute](#contribute)**
+**[Run your first analysis](#quick-start)** · **[Explore the browser lab](#live-lab)** · **[Inspect the evidence](#what-the-evidence-says)** · **[Read the paper](https://github.com/topherchris420/dynamic-resonance-rooting/blob/1b1ab6b7372d3457c5a2760789f60d2def3dc49d/paper/drr-v3/main.pdf)**
 
 [![Dynamic Resonance Rooting: resonance detection, rooting analysis, and stability diagnostics](assets/drr-hero.svg)](#live-lab)
 
@@ -146,6 +146,7 @@ The default uses **99 circular-shift surrogates with max-statistic correction**.
 
 | Evidence | What it establishes | Read the record |
 | --- | --- | --- |
+| **November 2026 manuscript and v3 reconstruction** | A fresh implementation recovered all 12 preregistered findings. None of 123 Monte Carlo comparisons was statistically significant after correction, which does not establish equivalence. One separate long-run reverse-correlation check missed its registered tolerance. | [Manuscript (PDF)](https://github.com/topherchris420/dynamic-resonance-rooting/blob/1b1ab6b7372d3457c5a2760789f60d2def3dc49d/paper/drr-v3/main.pdf) · [Protocol](experiments/v3_reconstruction/protocol.json) · [Results and replay](results/expected/v3_reconstruction/README.md#replay-the-registered-study) |
 | **Synthetic oscillator** | Recovery of a known injected frequency and lag; a specification check | [Reproduction guide](docs/reproducibility.md) |
 | **Monte Carlo calibration** | False-alarm rates and detection power on specified simulated systems; resonance depth remains descriptive | [Benchmarks](DRR_BENCHMARKS.md) · [Artifact](results/expected/rooting_calibration_study.json) |
 | **Dependent-noise study** | Near-nominal false-alarm rates for the default circular-shift null on tested stationary long-memory processes; every tested null fails on random walks | [Protocol and outcomes](docs/MATH_RESEARCH.md) · [Artifact](results/expected/dependent_noise_null_study.json) |
