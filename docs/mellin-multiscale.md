@@ -17,7 +17,7 @@ For a nontrivial Dirichlet character, the corresponding expression uses Re χ(n)
 ## Reproduce
 
 ```bash
-python -m pip install -e .
+python -m pip install -e ".[dev]"
 python -m pytest tests/test_mellin.py -q
 python -c "import json; from drr_framework.mellin import benchmark; print(json.dumps(benchmark(), indent=2))"
 ```
