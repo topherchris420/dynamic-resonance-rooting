@@ -5,7 +5,6 @@ type: software
 authors:
   - family-names: Woodyard
     given-names: Christopher
-year: 2026
 license: MIT
 repository-code: "https://github.com/topherchris420/dynamic-resonance-rooting"
 abstract: "Reference implementation and reproducibility harness for Dynamic Resonance Rooting, a computational framework for resonance, rooting, and stability analysis in complex adaptive systems."
